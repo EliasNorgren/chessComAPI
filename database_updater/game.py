@@ -1,5 +1,6 @@
 import datetime
 import json
+import copy
 
 class Game():
     def __init__(self, game_json : dict, user : str) -> None:
@@ -76,3 +77,48 @@ class Game():
         
         # Convert UNIX timestamp to datetime object
         self.archive_date = datetime.datetime.fromtimestamp(game_json["end_time"])
+
+        self.user_playing_as_white : bool
+        self.user_rating : int
+        self.opponent_rating : int
+        self.user_result : str
+        self.opponent_result : str
+        if game_json["white"]["username"].lower() == user :
+            self.user_playing_as_white = True
+            self.user_rating =  game_json["white"]["rating"]
+            self.opponent_rating = game_json["black"]["rating"]
+            self.user_result = game_json["white"]["result"]
+            self.opponent_result = game_json["black"]["result"]
+        elif game_json["black"]["username"].lower() == user :
+            self.user_playing_as_white = False
+            self.user_rating = game_json["black"]["rating"]
+            self.opponent_rating = game_json["white"]["rating"]
+            self.user_result = game_json["black"]["result"]
+            self.opponent_result = game_json["white"]["result"]
+        else :
+            print("Error user not found playing as either black or white")
+            print(json.dumps(game_json, indent=2))
+            exit(0)
+
+    def __str__(self) -> str:
+        selfCopy = copy.deepcopy(self)
+        selfCopy.archive_date = str(selfCopy.archive_date)
+        return json.dumps(selfCopy.__dict__, indent=4)
+    
+    def is_before(self, otherGame : 'Game') -> bool :
+        if self.archive_date < otherGame.archive_date :
+            return True
+        return False
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Game):
+            return NotImplemented
+        
+        return (
+            self.uuid == other.uuid and
+            self.url == other.url and
+            self.user == other.user and
+            self.end_time == other.end_time and
+            self.white_username == other.white_username and
+            self.black_username == other.black_username
+        )

@@ -33,7 +33,12 @@ CREATE TABLE IF NOT EXISTS matches (
     black_username TEXT,
     black_uuid TEXT,
     totalFens TEXT,
-    archiveDate DATE
+    archiveDate DATE,
+    user_playing_as_white BOOLEAN,
+    user_rating INTEGER,
+    opponent_rating INTEGER,
+    user_result TEXT,
+    opponent_result TEXT
 )
 ''')
 

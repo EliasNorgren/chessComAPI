@@ -24,12 +24,14 @@ class DataBase():
 
         if latest_entry :
             game = Game(self.__convert_database_entry_to_json(latest_entry), user)
+            conn.close()
+            return game
 
         # Close the connection
         conn.close()
 
         # Return the result
-        return game
+        return None
     
     def insert_game(self, game : Game) :
         conn = sqlite3.connect(self.database_file_path)
@@ -43,8 +45,9 @@ class DataBase():
                 tcn, uuid, initial_setup, fen, time_class, rules,
                 white_rating, white_result, white_id, white_username, white_uuid,
                 black_rating, black_result, black_id, black_username, black_uuid,
-                totalFens, archiveDate
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                totalFens, archiveDate, user_playing_as_white, user_rating, opponent_rating, user_result, 
+                opponent_result
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
 
             # Values to be inserted
@@ -54,7 +57,8 @@ class DataBase():
                 game.initial_setup, game.fen, game.time_class, game.rules,
                 game.white_rating, game.white_result, game.white_id, game.white_username, game.white_uuid,
                 game.black_rating, game.black_result, game.black_id, game.black_username, game.black_uuid,
-                game.total_fens, game.archive_date
+                game.total_fens, game.archive_date, game.user_playing_as_white, game.user_rating, game.opponent_rating,
+                game.user_result, game.opponent_result
             )
 
             # Execute the INSERT statement
@@ -66,6 +70,7 @@ class DataBase():
 
         except sqlite3.Error as e:
             print(f"Error inserting game: {e}")
+            print(game)
         except sqlite3.IntegrityError:
             print("Game with the same uuid already exists. Skipping insertion.")
 
