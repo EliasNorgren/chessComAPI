@@ -9,7 +9,7 @@ class DataBase():
 
     def get_filtered_ids(self, filter_info : FilterInfo) -> str:
         
-        ids = self.get_all_ids()
+        ids = self.get_all_ids(filter_info)
         if filter_info.date_range == None :
             filter_info.date_range = FilterInfo.DateRange(datetime.datetime.min, datetime.datetime.max)
         query = f'''
@@ -18,15 +18,33 @@ class DataBase():
                 AND id IN ({ids})
         '''
         params = (filter_info.date_range.start_date, filter_info.date_range.end_date)
-        ids = self.do_filter_query(filter_info, query, params)
-        
+        ids = self.do_filter_query(query, params)
+
+        if filter_info.user_rating_range != None :
+            query = f'''
+                SELECT id FROM matches
+                WHERE user_rating > ? AND user_rating < ? 
+                AND id in({ids})
+            '''
+            params = (filter_info.user_rating_range.start, filter_info.user_rating_range.end)
+            ids = self.do_filter_query(query, params)
+
+        if filter_info.opponent_rating_range != None :
+            query = f'''
+                SELECT id FROM matches
+                WHERE opponent_rating > ? AND opponent_rating < ? 
+                AND id in({ids})
+            '''
+            params = (filter_info.opponent_rating_range.start, filter_info.opponent_rating_range.end)
+            ids = self.do_filter_query(query, params)
+
         return ids
 
-    def get_all_ids(self) :
+    def get_all_ids(self, filter_info : FilterInfo) :
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
-        query = '''
-            SELECT id FROM matches
+        query = f'''
+            SELECT id FROM matches WHERE user = "{filter_info.user}"
         '''
         cursor.execute(query)
         results = cursor.fetchall()
@@ -34,7 +52,7 @@ class DataBase():
         ids_str = ','.join(map(str, ids))
         return ids_str
 
-    def do_filter_query(self, filter_info : FilterInfo, query : str, params) :
+    def do_filter_query(self, query : str, params) :
         
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
@@ -73,7 +91,7 @@ class DataBase():
         latest_entry = cursor.fetchone()
 
         if latest_entry :
-            game = Game(self.__convert_database_entry_to_json(latest_entry), user)
+            game = Game(self.convert_database_entry_to_json(latest_entry), user)
             conn.close()
             return game
 
@@ -128,38 +146,44 @@ class DataBase():
             # Close the connection
             conn.close()
 
-    def __convert_database_entry_to_json(self, db_entry):
+    def convert_database_entry_to_json(self, db_entry):
         return {
-                "url": db_entry[2],
-                "pgn": db_entry[3],
-                "time_control": db_entry[4],
-                "end_time": db_entry[5],
-                "rated": db_entry[6],
-                "accuracies": {
-                    "white": db_entry[7],
-                    "black": db_entry[8]
-                },
-                "tcn": db_entry[9],
-                "uuid": db_entry[10],
-                "initial_setup": db_entry[11],
-                "fen": db_entry[12],
-                "time_class": db_entry[13],
-                "rules": db_entry[14],
-                "white": {
-                    "rating": db_entry[15],
-                    "result": db_entry[16],
-                    "@id": db_entry[17],
-                    "username": db_entry[18],
-                    "uuid": db_entry[19]
-                },
-                "black": {
-                    "rating": db_entry[20],
-                    "result": db_entry[21],
-                    "@id": db_entry[22],
-                    "username": db_entry[23],
-                    "uuid": db_entry[24]
-                },
-                "total_fens": db_entry[25],
-                "archive_date": db_entry[26]
-            }
+            "url": db_entry[2],
+            "pgn": db_entry[3],
+            "time_control": db_entry[4],
+            "end_time": db_entry[5],
+            "rated": db_entry[6],
+            "accuracies": {
+                "white": db_entry[7],
+                "black": db_entry[8]
+            },
+            "tcn": db_entry[9],
+            "uuid": db_entry[10],
+            "initial_setup": db_entry[11],
+            "fen": db_entry[12],
+            "time_class": db_entry[13],
+            "rules": db_entry[14],
+            "white": {
+                "rating": db_entry[15],
+                "result": db_entry[16],
+                "@id": db_entry[17],
+                "username": db_entry[18],
+                "uuid": db_entry[19]
+            },
+            "black": {
+                "rating": db_entry[20],
+                "result": db_entry[21],
+                "@id": db_entry[22],
+                "username": db_entry[23],
+                "uuid": db_entry[24]
+            },
+            "total_fens": db_entry[25],
+            "archive_date": db_entry[26],
+            "user_playing_as_white": db_entry[27],
+            "user_rating": db_entry[28],
+            "opponent_rating": db_entry[29],
+            "user_result": db_entry[30],
+            "opponent_result": db_entry[31],
+            "opponent_user": db_entry[32]
+        }
     
