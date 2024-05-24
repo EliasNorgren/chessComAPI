@@ -1,11 +1,61 @@
 from game import Game
 import sqlite3
-
+from filter_info import FilterInfo
+import datetime
 
 class DataBase():
     def __init__(self) -> None:
         self.database_file_path = "SQL/chess_games.db"
 
+    def get_filtered_ids(self, filter_info : FilterInfo) -> str:
+        
+        ids = self.get_all_ids()
+        if filter_info.date_range == None :
+            filter_info.date_range = FilterInfo.DateRange(datetime.datetime.min, datetime.datetime.max)
+        query = f'''
+            SELECT id FROM matches WHERE 
+                archiveDate > ? AND archiveDate < ? 
+                AND id IN ({ids})
+        '''
+        params = (filter_info.date_range.start_date, filter_info.date_range.end_date)
+        ids = self.do_filter_query(filter_info, query, params)
+        
+        return ids
+
+    def get_all_ids(self) :
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        query = '''
+            SELECT id FROM matches
+        '''
+        cursor.execute(query)
+        results = cursor.fetchall()
+        ids = [item[0] for item in results]
+        ids_str = ','.join(map(str, ids))
+        return ids_str
+
+    def do_filter_query(self, filter_info : FilterInfo, query : str, params) :
+        
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+        ids = [item[0] for item in results]
+        ids_str = ','.join(map(str, ids))
+        return ids_str
+
+    def query(self, query_string: str):
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        results = None
+        try:
+            cursor.execute(query_string)  # Execute the query
+            results = cursor.fetchall()   # Fetch all the results
+        except sqlite3.Error as e:
+            print(f"Error querying: {e}, {query_string}")
+        finally:
+            conn.close()  # Ensure the connection is closed
+            return results  # Return the results
     
     def get_latest_game(self, user : str) -> Game :
         # Connect to the database
@@ -46,8 +96,8 @@ class DataBase():
                 white_rating, white_result, white_id, white_username, white_uuid,
                 black_rating, black_result, black_id, black_username, black_uuid,
                 totalFens, archiveDate, user_playing_as_white, user_rating, opponent_rating, user_result, 
-                opponent_result
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                opponent_result, opponent_user
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
 
             # Values to be inserted
@@ -58,7 +108,7 @@ class DataBase():
                 game.white_rating, game.white_result, game.white_id, game.white_username, game.white_uuid,
                 game.black_rating, game.black_result, game.black_id, game.black_username, game.black_uuid,
                 game.total_fens, game.archive_date, game.user_playing_as_white, game.user_rating, game.opponent_rating,
-                game.user_result, game.opponent_result
+                game.user_result, game.opponent_result, game.opponent_user
             )
 
             # Execute the INSERT statement

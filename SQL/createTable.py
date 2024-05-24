@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS matches (
     user_rating INTEGER,
     opponent_rating INTEGER,
     user_result TEXT,
-    opponent_result TEXT
+    opponent_result TEXT,
+    opponent_user TEXT
 )
 ''')
 

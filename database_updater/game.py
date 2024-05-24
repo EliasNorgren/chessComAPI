@@ -83,18 +83,21 @@ class Game():
         self.opponent_rating : int
         self.user_result : str
         self.opponent_result : str
+        self.opponent_user : str
         if game_json["white"]["username"].lower() == user :
             self.user_playing_as_white = True
             self.user_rating =  game_json["white"]["rating"]
             self.opponent_rating = game_json["black"]["rating"]
             self.user_result = game_json["white"]["result"]
             self.opponent_result = game_json["black"]["result"]
+            self.opponent_user = game_json["black"]["username"]
         elif game_json["black"]["username"].lower() == user :
             self.user_playing_as_white = False
             self.user_rating = game_json["black"]["rating"]
             self.opponent_rating = game_json["white"]["rating"]
             self.user_result = game_json["black"]["result"]
             self.opponent_result = game_json["white"]["result"]
+            self.opponent_user = game_json["white"]["username"]
         else :
             print("Error user not found playing as either black or white")
             print(json.dumps(game_json, indent=2))
