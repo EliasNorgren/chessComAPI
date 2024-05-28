@@ -53,17 +53,39 @@ class Parser():
             WHERE id in ({filtered_ids}) AND opponent_user = '{user}'
         ''')
         return [url_list[0] for url_list in res]
+    
+    def get_total_fens_substring(self, filter_info : FilterInfo, sub_string : str):
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        res = database.query(f'''
+            SELECT url,archivedate,totalFens 
+            FROM matches 
+            WHERE id IN ({filtered_ids}) AND totalFens like '%{sub_string}%';
+        ''')
+        modified_res = []
+        for r in res:
+            fen_list = r[2].split("&")
+            index = fen_list.index(sub_string)
+            # Convert tuple to list to allow modification
+            r_list = list(r)
+            r_list[2] = index
+            modified_res.append(r_list)
+        
+        return modified_res
 
 parser = Parser()
 dr = FilterInfo.DateRange(datetime.now() - timedelta(days=50), datetime.now())
 user_range = FilterInfo.RatingRange(0, 1000)
 opponent_range = FilterInfo.RatingRange(1000, 10000)
 filter_info = FilterInfo("Elias661", date_range=dr, user_range=user_range)
-res = parser.get_most_played_players(filter_info)
-for game in res :
-    print(game)
+# res = parser.get_most_played_players(filter_info)
+# for game in res :
+#     print(game)
 
-res = parser.get_games_against_player(filter_info, "camero90")
+# res = parser.get_games_against_player(filter_info, "camero90")
+filter_info = FilterInfo("Elias661")
+res = parser.get_total_fens_substring(filter_info, "r1bqkb1r/pppp1ppp/5n2/4P3/2Bp4/5Q2/PPPP1PPP/RNB1K2R b KQkq - 0 6")
+
 print(res)
 for url in res :
     print(url)
