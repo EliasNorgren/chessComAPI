@@ -123,8 +123,8 @@ class DataBase():
                 white_rating, white_result, white_id, white_username, white_uuid,
                 black_rating, black_result, black_id, black_username, black_uuid,
                 totalFens, archiveDate, user_playing_as_white, user_rating, opponent_rating, user_result, 
-                opponent_result, opponent_user
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                opponent_result, opponent_user, ECO, ECOurl
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             '''
 
             # Values to be inserted
@@ -135,7 +135,7 @@ class DataBase():
                 game.white_rating, game.white_result, game.white_id, game.white_username, game.white_uuid,
                 game.black_rating, game.black_result, game.black_id, game.black_username, game.black_uuid,
                 game.total_fens, game.archive_date, game.user_playing_as_white, game.user_rating, game.opponent_rating,
-                game.user_result, game.opponent_result, game.opponent_user
+                game.user_result, game.opponent_result, game.opponent_user, game.ECO, game.ECOurl
             )
 
             # Execute the INSERT statement

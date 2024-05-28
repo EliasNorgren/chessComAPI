@@ -40,7 +40,6 @@ def updateDB(user : str):
             inserted_games += 1
             
     print(f"{inserted_games} new games!")
-    # print(latest_game.archive_date)
 
 def latest_game_date_is_after_month_url(latest_game: Game, month_url: str):
     # https://api.chess.com/pub/player/erik/games/2008/03

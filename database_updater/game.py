@@ -1,6 +1,8 @@
 import datetime
 import json
 import copy
+import chess.pgn
+from io import StringIO
 
 class Game():
     def __init__(self, game_json : dict, user : str) -> None:
@@ -38,7 +40,7 @@ class Game():
         self.user = user
         self.url = game_json["url"]
         if "pgn" not in game_json:
-            print("PGN not set for game")
+            print("PGN not set for game (Ignoring to insert this value)")
             self.pgn = None
             self.total_fens = None
         else:
@@ -102,6 +104,16 @@ class Game():
             print("Error user not found playing as either black or white")
             print(json.dumps(game_json, indent=2))
             exit(0)
+
+        self.ECO : str = None
+        self.ECOurl : str = None
+        
+        if self.pgn != None :       
+            gamePGN = chess.pgn.read_game(StringIO(game_json["pgn"]))
+            if "ECO" in gamePGN.headers :
+                self.ECO = gamePGN.headers["ECO"]
+            if "ECOUrl" in gamePGN.headers :
+                self.ECOurl = gamePGN.headers["ECOUrl"]
 
     def __str__(self) -> str:
         selfCopy = copy.deepcopy(self)
