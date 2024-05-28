@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS matches (
     accuracies_white REAL,
     accuracies_black REAL,
     tcn TEXT,
-    uuid TEXT UNIQUE,
+    uuid TEXT,
     initial_setup TEXT,
     fen TEXT,
     time_class TEXT,

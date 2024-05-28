@@ -90,8 +90,9 @@ class DataBase():
         cursor = conn.cursor()
 
         # Query to get the latest entry based on archiveDate
-        cursor.execute('''
+        cursor.execute(f'''
         SELECT * FROM matches
+        WHERE user = '{user}'
         ORDER BY archiveDate DESC
         LIMIT 1
         ''')

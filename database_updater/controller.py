@@ -23,6 +23,7 @@ def updateDB(user : str):
     api = API()
     monthly_archive = api.get_monthly_archive(user)
     inserted_games = 0
+
     for month_url in monthly_archive :
         if latest_game != None and latest_game_date_is_after_month_url(latest_game, month_url):
             continue 

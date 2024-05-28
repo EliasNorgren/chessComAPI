@@ -48,11 +48,11 @@ class Parser():
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
         res = database.query(f'''
-            SELECT url 
+            SELECT url, user_result 
             FROM matches
             WHERE id in ({filtered_ids}) AND opponent_user = '{user}'
         ''')
-        return [url_list[0] for url_list in res]
+        return [f"{url_list[0]} {url_list[1]}" for url_list in res]
     
     def get_total_fens_substring(self, filter_info : FilterInfo, sub_string : str):
         database = DataBase()
@@ -82,14 +82,21 @@ dr = FilterInfo.DateRange(datetime.now() - timedelta(days=50), datetime.now())
 user_range = FilterInfo.RatingRange(0, 1000)
 opponent_range = FilterInfo.RatingRange(1000, 10000)
 filter_info = FilterInfo("Elias661", date_range=dr, user_range=user_range)
-# res = parser.get_most_played_players(filter_info)
+filter_info = FilterInfo("amraub")
+res = parser.get_most_played_players(filter_info)
+for game in res :
+    print(game)
+
+# res = parser.get_games_against_player(filter_info, "Elias661")
+
 # for game in res :
 #     print(game)
 
-# res = parser.get_games_against_player(filter_info, "camero90")
-filter_info = FilterInfo("Elias661", playing_as_white=True)
 
-# res = parser.get_total_fens_substring(filter_info, "r1bqkb1r/pppp1ppp/5n2/4P3/2Bp4/5Q2/PPPP1PPP/RNB1K2R b KQkq - 0 6")
+res = parser.get_total_fens_substring(filter_info, "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3")
+
+for r in res :
+    print(r)
 
 filter_info = FilterInfo("Elias661")
 parser.get_win_percentage_per_opening(filter_info)
