@@ -7,6 +7,7 @@ class FilterInfo():
                  date_range : 'DateRange' = None,
                  time_control_range : 'TimeControl' = None,
                  rated : bool = None,
+                 playing_as_white : bool = None
                  ) -> None:
         self.user = user.lower()
         self.user_rating_range = user_range
@@ -14,6 +15,7 @@ class FilterInfo():
         self.date_range = date_range
         self.time_control_range = time_control_range
         self.rated = rated
+        self.playing_as_white = playing_as_white
     
     class RatingRange():
         def __init__(self, start : int, end : int) -> None:

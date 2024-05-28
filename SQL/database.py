@@ -38,6 +38,15 @@ class DataBase():
             params = (filter_info.opponent_rating_range.start, filter_info.opponent_rating_range.end)
             ids = self.do_filter_query(query, params)
 
+        if filter_info.playing_as_white != None :
+            query = f'''
+                SELECT id FROM matches
+                WHERE user_playing_as_white = ? 
+                AND id in({ids})
+            '''
+            params = (filter_info.playing_as_white,)
+            ids = self.do_filter_query(query, params)            
+
         return ids
 
     def get_all_ids(self, filter_info : FilterInfo) :

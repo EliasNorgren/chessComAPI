@@ -1,5 +1,3 @@
-# Del av position på brädet som uppståt 
-# FEN som uppståt 
 # Högsta / lägsta accuracy
 # Längsta drag 
 # Snabbaste drag 
@@ -9,6 +7,7 @@
 # Rating över tid
 # Win % för varje timme under dygnet
 # Average time win, loss, draw
+# FEN longest in a game that apeared atleast twice
 
 import os
 import sys
@@ -72,6 +71,9 @@ class Parser():
             modified_res.append(r_list)
         
         return modified_res
+    
+    def get_win_percentage_per_opening(self, filter_info : FilterInfo):
+        pass
 
 parser = Parser()
 dr = FilterInfo.DateRange(datetime.now() - timedelta(days=50), datetime.now())
@@ -83,9 +85,10 @@ filter_info = FilterInfo("Elias661", date_range=dr, user_range=user_range)
 #     print(game)
 
 # res = parser.get_games_against_player(filter_info, "camero90")
-filter_info = FilterInfo("Elias661")
+filter_info = FilterInfo("Elias661", playing_as_white=True)
+
 res = parser.get_total_fens_substring(filter_info, "r1bqkb1r/pppp1ppp/5n2/4P3/2Bp4/5Q2/PPPP1PPP/RNB1K2R b KQkq - 0 6")
 
-print(res)
-for url in res :
-    print(url)
+
+for r in res :
+    print(r)
