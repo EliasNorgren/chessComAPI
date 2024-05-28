@@ -1,4 +1,3 @@
-# Get games against player
 # Del av position på brädet som uppståt 
 # FEN som uppståt 
 # Högsta / lägsta accuracy
@@ -26,7 +25,7 @@ from game import Game
 
 class Parser():
 
-    def get_most_played_players(self, filter_info : FilterInfo) -> list[Game]:
+    def get_most_played_players(self, filter_info : FilterInfo) -> list[tuple]:
         database = DataBase()
 
         filtered_ids = database.get_filtered_ids(filter_info)
@@ -39,20 +38,32 @@ class Parser():
             HAVING count > 1
             ORDER BY count DESC;
         ''')
-        print(res)
-        exit()
+
         # json_game_list = [database.convert_database_entry_to_json(json_game) for json_game in res]
         # game_list = [Game(game, filter_info.user) for game in json_game_list]
-        return game_list
+        return res
     
     
-
-
+    def get_games_against_player(self, filter_info : FilterInfo, user : str):
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        res = database.query(f'''
+            SELECT url 
+            FROM matches
+            WHERE id in ({filtered_ids}) AND opponent_user = '{user}'
+        ''')
+        return [url_list[0] for url_list in res]
 
 parser = Parser()
-dr = FilterInfo.DateRange(datetime.now() - timedelta(days=5), datetime.now())
+dr = FilterInfo.DateRange(datetime.now() - timedelta(days=50), datetime.now())
 user_range = FilterInfo.RatingRange(0, 1000)
+opponent_range = FilterInfo.RatingRange(1000, 10000)
 filter_info = FilterInfo("Elias661", date_range=dr, user_range=user_range)
 res = parser.get_most_played_players(filter_info)
 for game in res :
     print(game)
+
+res = parser.get_games_against_player(filter_info, "camero90")
+print(res)
+for url in res :
+    print(url)

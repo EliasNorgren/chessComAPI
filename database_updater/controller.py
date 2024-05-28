@@ -4,8 +4,10 @@ import os
 root_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)))
 SQL_path = os.path.join(root_dir, "SQL")
 database_updater_path = os.path.join(root_dir, "database_updater")
+database_parser_path = os.path.join(root_dir, "data_parser")
 sys.path.append(SQL_path)
 sys.path.append(database_updater_path)
+sys.path.append(database_parser_path)
 
 from game import Game
 from PGN_to_fen_list import extract_fens
@@ -24,7 +26,7 @@ def updateDB(user : str):
     for month_url in monthly_archive :
         if latest_game != None and latest_game_date_is_after_month_url(latest_game, month_url):
             continue 
-        print(month_url)
+        print(f"Fetching games from {'/'.join(month_url.split('/')[-2:])}")
         games = api.get_games_from_month(month_url)    
         for json_game in games :
             game = Game(json_game, user)
