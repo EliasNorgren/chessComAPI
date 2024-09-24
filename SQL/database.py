@@ -47,6 +47,15 @@ class DataBase():
             params = (filter_info.playing_as_white,)
             ids = self.do_filter_query(query, params)            
 
+        if filter_info.rated != None :
+            query = f'''
+                SELECT id FROM matches
+                WHERE rated = ? 
+                AND id in({ids})
+            '''
+            params = (filter_info.rated,)
+            ids = self.do_filter_query(query, params)       
+
         return ids
 
     def get_all_ids(self, filter_info : FilterInfo) :
@@ -73,6 +82,7 @@ class DataBase():
 
     def query(self, query_string: str):
         conn = sqlite3.connect(self.database_file_path)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         results = None
         try:

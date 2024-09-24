@@ -27,11 +27,13 @@ def updateDB(user : str):
     for month_url in monthly_archive :
         if latest_game != None and latest_game_date_is_after_month_url(latest_game, month_url):
             continue 
-        print(f"Fetching games from {'/'.join(month_url.split('/')[-2:])}")
+        print(f"Fetching and analyzing games from {'/'.join(month_url.split('/')[-2:])}")
         games = api.get_games_from_month(month_url)    
         for json_game in games :
             game = Game(json_game, user)
             if latest_game != None and game.is_before(latest_game) or game == latest_game:
+                continue
+            if game.user_result == 'kingofthehill' :
                 continue
             if game.pgn :
                 fens = extract_fens(game.pgn)

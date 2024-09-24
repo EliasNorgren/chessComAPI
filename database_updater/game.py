@@ -5,6 +5,7 @@ import chess.pgn
 from io import StringIO
 
 class Game():
+
     def __init__(self, game_json : dict, user : str) -> None:
         self.user : str
         self.url : str
