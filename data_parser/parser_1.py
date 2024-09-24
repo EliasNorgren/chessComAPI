@@ -215,6 +215,9 @@ class Parser():
             stats_per_week_day[weekday]['loss'] = 0
             stats_per_week_day[weekday]['draw'] = 0
             stats_per_week_day[weekday]['win'] = 0
+            stats_per_week_day[weekday]['acc'] = 0
+            stats_per_week_day[weekday]['acc_total'] = 0
+
 
             
         for game in res :
@@ -223,12 +226,23 @@ class Parser():
             # break
             sum += 1
             archive_date = datetime.strptime(game['archiveDate'], '%Y-%m-%d %H:%M:%S')
-            stats_per_week_day[index_to_week_day[archive_date.weekday()]][self.winLossOrDraw(game)] += 1
+            day_of_week = archive_date.weekday()
+            stats_per_week_day[index_to_week_day[day_of_week]][self.winLossOrDraw(game)] += 1
+            acc = self.__get_accuracy(game)
+            if acc != None :
+                stats_per_week_day[index_to_week_day[day_of_week]]['acc'] += acc
+                stats_per_week_day[index_to_week_day[day_of_week]]['acc_total'] += 1
+
+                
 
         for day in index_to_week_day :
             stats_per_week_day[day]['lossPercentage'] = round((stats_per_week_day[day]['loss'] / sum) * 100, 2)
             stats_per_week_day[day]['winPercentage'] = round((stats_per_week_day[day]['win'] / sum) * 100, 2) 
             stats_per_week_day[day]['drawPercentage'] = round((stats_per_week_day[day]['draw'] / sum) * 100, 2)
+            if stats_per_week_day[day]['acc_total'] != 0 :
+                stats_per_week_day[day]['acc'] = round((stats_per_week_day[day]['acc'] / stats_per_week_day[day]['acc_total']) , 2)
+                del(stats_per_week_day[day]['acc_total'])
+
 
         labels = index_to_week_day
         values = []
@@ -278,15 +292,16 @@ class Parser():
 
 parser = Parser()
 data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=26))
-filter_info = FilterInfo("Elias661", date_range=data_range)
+filter_info = FilterInfo("Elias661")
 
 # res = parser.get_games_by_eco(filter_info, eco="C45")
 
 # res = parser.get_total_fens_substring(filter_info, "r1bqkbnr/pppp1ppp/8/4p3/2BnP3/5N2/PPPP1PPP/RNBQK2R")
-# res = parser.get_wins_by_day_of_week(filter_info)
-res = parser.get_win_percentage_and_accuracy(filter_info)
+res = parser.get_wins_by_day_of_week(filter_info)
+# res = parser.get_win_percentage_and_accuracy(filter_info)
 
-print(res)
+for day in res :
+    print(f"{day} {res[day]}")
 # for r in res['games']:
 #     print(r)
 # print(res['stats'])
