@@ -48,7 +48,7 @@ class Parser():
         # game_list = [Game(game, filter_info.user) for game in json_game_list]
         return res
     
-    def winLossOrDraw (self, result : sqlite3.Row) -> str :
+    def __winLossOrDraw (self, result : sqlite3.Row) -> str :
         if result['user_result'] in ['win']:  
             return 'win'
         elif result['user_result'] in ['resigned', 'checkmated', 'timeout', 'abandoned'] :
@@ -96,7 +96,7 @@ class Parser():
 
         stats = {'loss' : 0, 'win' : 0, 'draw' : 0}
         for game in modified_res :
-            stats[self.winLossOrDraw(game)] += 1
+            stats[self.__winLossOrDraw(game)] += 1
         
         sum = stats['draw'] + stats['loss'] + stats['win']
         stats['win_percentage'] = round((stats['win'] / sum) * 100, 2) 
@@ -227,7 +227,7 @@ class Parser():
             sum += 1
             archive_date = datetime.strptime(game['archiveDate'], '%Y-%m-%d %H:%M:%S')
             day_of_week = archive_date.weekday()
-            stats_per_week_day[index_to_week_day[day_of_week]][self.winLossOrDraw(game)] += 1
+            stats_per_week_day[index_to_week_day[day_of_week]][self.__winLossOrDraw(game)] += 1
             acc = self.__get_accuracy(game)
             if acc != None :
                 stats_per_week_day[index_to_week_day[day_of_week]]['acc'] += acc
@@ -271,7 +271,7 @@ class Parser():
 
         for game in res :
             total_games += 1
-            stats[self.winLossOrDraw(game)] += 1
+            stats[self.__winLossOrDraw(game)] += 1
             acc = self.__get_accuracy(game)
             if  acc != None :
                 print(acc)
@@ -290,18 +290,48 @@ class Parser():
             return game['accuracies_black']
         return None
 
+    def get_stats_per_day(self, filter_info : FilterInfo) :
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        
+        res = database.query(f'''
+            SELECT *
+            FROM matches
+            WHERE id IN ({filtered_ids})
+            ORDER BY archivedate
+        ''')
+        stats_per_day = {}
+        labels = []
+        for game in res :
+            
+            archive_date = datetime.strptime(game['archiveDate'], '%Y-%m-%d %H:%M:%S').date().__str__()
+            if archive_date not in stats_per_day.keys() :
+                labels.append(archive_date)
+                stats_per_day[archive_date] = {}
+                stats_per_day[archive_date]['win'] = 0
+                stats_per_day[archive_date]['loss'] = 0
+                stats_per_day[archive_date]['draw'] = 0
+            stats_per_day[archive_date][self.__winLossOrDraw(game)] += 1
+
+        return stats_per_day
+
+
 parser = Parser()
-data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=26))
-filter_info = FilterInfo("Elias661")
+data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))
+filter_info = FilterInfo("amraub", date_range=data_range)
 
 # res = parser.get_games_by_eco(filter_info, eco="C45")
 
 # res = parser.get_total_fens_substring(filter_info, "r1bqkbnr/pppp1ppp/8/4p3/2BnP3/5N2/PPPP1PPP/RNBQK2R")
-res = parser.get_wins_by_day_of_week(filter_info)
+res = parser.get_stats_per_day(filter_info)
 # res = parser.get_win_percentage_and_accuracy(filter_info)
 
+
+
 for day in res :
-    print(f"{day} {res[day]}")
+    print(f"{day} {res[day]}")  
+
+print(len(res))
 # for r in res['games']:
 #     print(r)
 # print(res['stats'])

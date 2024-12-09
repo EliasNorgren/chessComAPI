@@ -56,3 +56,4 @@ def latest_game_date_is_after_month_url(latest_game: Game, month_url: str):
 
 
 updateDB("Elias661")
+updateDB("amraub")
