@@ -24,6 +24,7 @@ from database import DataBase
 from game import Game
 from collections import defaultdict
 
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sqlite3
@@ -274,7 +275,6 @@ class Parser():
             stats[self.__winLossOrDraw(game)] += 1
             acc = self.__get_accuracy(game)
             if  acc != None :
-                print(acc)
                 total_acuracy += acc
                 number_of_games_with_acc += 1
         acc = round((total_acuracy / number_of_games_with_acc), 2)
@@ -316,22 +316,28 @@ class Parser():
         return stats_per_day
 
 
-parser = Parser()
-data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))
-filter_info = FilterInfo("amraub", date_range=data_range)
+# parser = Parser()
+# data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))
 
 # res = parser.get_games_by_eco(filter_info, eco="C45")
 
 # res = parser.get_total_fens_substring(filter_info, "r1bqkbnr/pppp1ppp/8/4p3/2BnP3/5N2/PPPP1PPP/RNBQK2R")
-res = parser.get_stats_per_day(filter_info)
+# res = parser.get_stats_per_day(filter_info)
+
+# print("White")
+# filter_info = FilterInfo("elias661", playing_as_white = True)
 # res = parser.get_win_percentage_and_accuracy(filter_info)
+# for day in res :
+#     print(f"{day} {res[day]}")  
 
 
+# print("Black")
+# filter_info = FilterInfo("elias661", playing_as_white = False)
+# res = parser.get_win_percentage_and_accuracy(filter_info)
+# for day in res :
+#     print(f"{day} {res[day]}")  
 
-for day in res :
-    print(f"{day} {res[day]}")  
 
-print(len(res))
 # for r in res['games']:
 #     print(r)
 # print(res['stats'])

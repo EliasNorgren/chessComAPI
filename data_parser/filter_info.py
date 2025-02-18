@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 class FilterInfo():
 
     def __init__(self, user : str, user_range : 'RatingRange' = None, 

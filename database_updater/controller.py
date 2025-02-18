@@ -17,6 +17,7 @@ from api import API
 import json
 
 def updateDB(user : str):
+    print(f"Updating user {user}")
     user = user.lower()
     data_base = DataBase()
     latest_game = data_base.get_latest_game(user)
