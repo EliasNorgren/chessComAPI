@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import json
 
 class FilterInfo():
 
@@ -33,3 +33,18 @@ class FilterInfo():
         def __init__(self, lower : int, upper : int) -> None:
             self.lower = lower
             self.upper = upper
+            
+    def __str__(self):
+        res = ""
+        res += "user: " + self.user+ "\n"
+        res += "user_rating_range: " + self.user_rating_range.start + " - " + self.user_rating_range.end+ "\n"
+        res += "opponent_rating_range: " + self.opponent_rating_range.start + " - " + self.opponent_rating_range.end+ "\n"
+        if self.date_range != None :
+            res += "date_range: " + str(self.date_range.start_date) + " - " + str(self.date_range.end_date) + "\n"
+        else :
+            res += "date_range: None" + "\n"
+            
+        res += "time_control_range: " + self.time_control_range.lower + " - " + self.time_control_range.upper + "\n"
+        res += "rated: " + str(self.rated) + "\n"
+        res += "playing_as_white: " + str(self.playing_as_white) + "\n"
+        return res

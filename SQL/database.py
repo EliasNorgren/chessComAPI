@@ -166,7 +166,7 @@ class DataBase():
             # Close the connection
             conn.close()
 
-    def convert_database_entry_to_json(self, db_entry):
+    def convert_database_entry_to_json(self, db_entry : sqlite3.Row):
         return {
             "url": db_entry[2],
             "pgn": db_entry[3],

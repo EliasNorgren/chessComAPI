@@ -10,6 +10,10 @@ body {
   min-height: 100vh;
 }
 
+.root {
+  width: fit-content;
+}
+
 /* Container */
 .container {
   background: white;

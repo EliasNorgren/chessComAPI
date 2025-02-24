@@ -35,6 +35,7 @@ class Parser():
         database = DataBase()
 
         filtered_ids = database.get_filtered_ids(filter_info)
+        print(f"len {len(filtered_ids)}")
 
         res = database.query(f'''
             SELECT opponent_user ,COUNT(*) as count
@@ -45,9 +46,8 @@ class Parser():
             ORDER BY count DESC;
         ''')
 
-        # json_game_list = [database.convert_database_entry_to_json(json_game) for json_game in res]
-        # game_list = [Game(game, filter_info.user) for game in json_game_list]
-        return res
+        json_game_list = [{"opponent":row['opponent_user'], "count":row['count']} for row in res]
+        return json_game_list
     
     def __winLossOrDraw (self, result : sqlite3.Row) -> str :
         if result['user_result'] in ['win']:  
@@ -318,6 +318,9 @@ class Parser():
 
 # parser = Parser()
 # data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))
+# filter_info = FilterInfo("elias661", playing_as_white = True)
+# res = parser.get_most_played_players(filter_info)
+# print(res)
 
 # res = parser.get_games_by_eco(filter_info, eco="C45")
 
