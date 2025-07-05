@@ -36,15 +36,23 @@ class FilterInfo():
             
     def __str__(self):
         res = ""
-        res += "user: " + self.user+ "\n"
-        res += "user_rating_range: " + self.user_rating_range.start + " - " + self.user_rating_range.end+ "\n"
-        res += "opponent_rating_range: " + self.opponent_rating_range.start + " - " + self.opponent_rating_range.end+ "\n"
-        if self.date_range != None :
+        res += "user: " + self.user + "\n"
+        if self.user_rating_range is not None:
+            res += "user_rating_range: " + str(self.user_rating_range.start) + " - " + str(self.user_rating_range.end) + "\n"
+        else:
+            res += "user_rating_range: None\n"
+        if self.opponent_rating_range is not None:
+            res += "opponent_rating_range: " + str(self.opponent_rating_range.start) + " - " + str(self.opponent_rating_range.end) + "\n"
+        else:
+            res += "opponent_rating_range: None\n"
+        if self.date_range is not None:
             res += "date_range: " + str(self.date_range.start_date) + " - " + str(self.date_range.end_date) + "\n"
-        else :
-            res += "date_range: None" + "\n"
-            
-        res += "time_control_range: " + self.time_control_range.lower + " - " + self.time_control_range.upper + "\n"
+        else:
+            res += "date_range: None\n"
+        if self.time_control_range is not None:
+            res += "time_control_range: " + str(self.time_control_range.lower) + " - " + str(self.time_control_range.upper) + "\n"
+        else:
+            res += "time_control_range: None\n"
         res += "rated: " + str(self.rated) + "\n"
         res += "playing_as_white: " + str(self.playing_as_white) + "\n"
         return res

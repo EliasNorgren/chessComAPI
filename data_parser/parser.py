@@ -61,6 +61,19 @@ class Parser():
                 print(f"{key} - {result[key]}")
             print(f"Could not place result {result['user_result']} into draw, loss or win")
             exit(1)
+
+    def __winLossOrDrawWithString (self, result : str) -> str :
+        if result in ['win']:  
+            return 'win'
+        elif result in ['resigned', 'checkmated', 'timeout', 'abandoned'] :
+            return 'loss'
+        elif result in ['stalemate', 'insufficient', 'repetition', '50move', 'agreed', 'timevsinsufficient'] :
+            return 'draw'
+        else :
+            for key in result.keys() :
+                print(f"{key} - {result[key]}")
+            print(f"Could not place result {result['user_result']} into draw, loss or win")
+            exit(1)
     
     def get_games_against_player(self, filter_info : FilterInfo, user : str):
         database = DataBase()
@@ -97,7 +110,7 @@ class Parser():
 
         stats = {'loss' : 0, 'win' : 0, 'draw' : 0}
         for game in modified_res :
-            stats[self.__winLossOrDraw(game)] += 1
+            stats[self.__winLossOrDrawWithString(game[-1])] += 1
         
         sum = stats['draw'] + stats['loss'] + stats['win']
         stats['win_percentage'] = round((stats['win'] / sum) * 100, 2) 

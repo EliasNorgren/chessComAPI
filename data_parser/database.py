@@ -8,7 +8,7 @@ class DataBase():
         self.database_file_path = "SQL/chess_games.db"
 
     def get_filtered_ids(self, filter_info : FilterInfo) -> str:
-        
+        print(filter_info)
         ids = self.get_all_ids(filter_info)
         if filter_info.date_range == None :
             filter_info.date_range = FilterInfo.DateRange(datetime.datetime.min, datetime.datetime.max)

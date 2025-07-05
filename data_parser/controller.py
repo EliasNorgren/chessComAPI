@@ -1,10 +1,10 @@
 import sys
 import os
 
-root_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)))
-SQL_path = os.path.join(root_dir, "SQL")
-database_updater_path = os.path.join(root_dir, "database_updater")
-database_parser_path = os.path.join(root_dir, "data_parser")
+# root_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)))
+# SQL_path = os.path.join(root_dir, "SQL")
+# database_updater_path = os.path.join(root_dir, "database_updater")
+# database_parser_path = os.path.join(root_dir, "data_parser")
 # sys.path.append(SQL_path)
 # sys.path.append(database_updater_path)
 # sys.path.append(database_parser_path)
@@ -45,7 +45,7 @@ class DataBaseUpdater :
                 data_base.insert_game(game)
                 inserted_games += 1
                 
-        print(f"{inserted_games} new games!")
+        print(f"{inserted_games} new games to {user}!")
         return inserted_games
 
     def latest_game_date_is_after_month_url(self, latest_game: Game, month_url: str):
