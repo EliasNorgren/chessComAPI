@@ -14,3 +14,11 @@ def extract_fens(pgn_string) -> str:
         board.push(move)
         fens.append(board.fen())
     return "&".join(fens)
+
+def pgn_to_move_list(pgn_string: str) -> list:
+    move_list = []
+    pgn = StringIO(pgn_string)
+    game = chess.pgn.read_game(pgn)
+    for move in game.mainline_moves():
+        move_list.append(move.uci())
+    return move_list

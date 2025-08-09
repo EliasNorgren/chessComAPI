@@ -27,11 +27,37 @@ class Analyzer:
 
         self.engine = Stockfish(path=stockfish_engine_path, parameters=settings)
 
-    def analyze_game(self, move_list):
-        moves = ["f4"]
-        best_move = self.engine.get_top_moves(5)
-        print(f"Best move for position: {best_move}")
-        self.engine.set_position(moves)
+    def analyze_game(self, move_list: list, user_playing_as_white: bool) :
+        white_turn = True
+        for move in move_list:
+            if white_turn == user_playing_as_white:
+                best_move = self.engine.get_top_moves(1)
+            else:
+                self.engine.make_moves_from_current_position([move])
+                white_turn = not white_turn
+                continue
 
-analyzer = Analyzer()
-analyzer.analyze_game("PGN data here")  # Replace with actual PGN data
+            print(f'Stockfish suggests: {best_move}')
+            self.engine.make_moves_from_current_position([move])
+            eval = self.engine.get_evaluation()
+            move_classification = self.classify_move(eval['value'], best_move[0]['Centipawn'], move, best_move[0]['Move'])
+            print(f"Your move: {move}, evaluation: {eval} - {move_classification}")
+            board = self.engine.get_board_visual(user_playing_as_white)
+            print(board)
+            input("Press Enter to continue...")
+            white_turn = not white_turn
+
+    def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move):
+        
+        if played_move == best_move:
+            return "Best Move"
+
+        cp_loss = abs(best_eval_cp - played_eval_cp)
+        if cp_loss <= 50:
+            return "Great Move"
+        elif cp_loss <= 150:
+            return "Inaccuracy"
+        elif cp_loss <= 300:
+            return "Mistake"
+        else:
+            return "Blunder"

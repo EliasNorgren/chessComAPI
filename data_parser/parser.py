@@ -23,7 +23,8 @@ from filter_info import FilterInfo
 from database import DataBase
 from game import Game
 from collections import defaultdict
-from game_analyzer.analyzer import Analyzer
+from analyzer import Analyzer
+from PGN_to_fen_list import pgn_to_move_list
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -339,16 +340,33 @@ class Parser():
     def analyze_games(self, filter_info : FilterInfo, reanalyze_analyzed_games : bool):
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
-        
         games = database.query(f'''
-            SELECT pgn, analysis
+            SELECT pgn, analysis, id, user_playing_as_white, url
             FROM matches
             WHERE id IN ({filtered_ids})        
         ''')
 
         analyzer = Analyzer()
-
-        print(games)
+        no_games = len(games)
+        no_analyzed_games = 0
+        print(f"Analyzing {no_games} games")
+        for game in games:
+            id = game['id']
+            pgn = game['pgn']
+            analysis = game['analysis']
+            user_playing_as_white = game['user_playing_as_white']
+            if not (analysis is None or reanalyze_analyzed_games):
+                print(f"Game with id {id} already analyzed, skipping")
+                continue
+            url = game['url']
+            print(f"Analyzing game {url}")
+            moves = pgn_to_move_list(pgn)
+            analysis = analyzer.analyze_game(moves, user_playing_as_white)
+            database.update_analysis(id, analysis)
+            no_analyzed_games += 1
+            print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
+                
+            exit(1)
 
 # parser = Parser()
 # data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))

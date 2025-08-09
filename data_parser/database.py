@@ -13,12 +13,31 @@ class DataBase():
         if filter_info.date_range == None or (filter_info.date_range.start_date == None and filter_info.date_range.end_date == None):
             print('No date range provided, using all dates')
             filter_info.date_range = FilterInfo.DateRange(datetime.datetime.min, datetime.datetime.max)
-        query = f'''
-            SELECT id FROM matches WHERE 
-                archiveDate > ? AND archiveDate < ? 
-                AND id IN ({ids})
-        '''
-        params = (filter_info.date_range.start_date, filter_info.date_range.end_date)
+        
+        if filter_info.date_range.start_date != None and filter_info.date_range.end_date != None:
+            query = f'''
+                SELECT id FROM matches WHERE 
+                    archiveDate >= ? AND archiveDate < ? 
+                    AND id IN ({ids})
+            '''
+            params = (filter_info.date_range.start_date, filter_info.date_range.end_date)
+
+        if filter_info.date_range.start_date != None and filter_info.date_range.end_date == None:
+            query = f'''
+                SELECT id FROM matches WHERE 
+                    archiveDate >= ? 
+                    AND id IN ({ids})
+            '''
+            params = (filter_info.date_range.start_date,)
+        
+        if filter_info.date_range.start_date == None and filter_info.date_range.end_date != None:
+            query = f'''
+                SELECT id FROM matches WHERE 
+                    archiveDate < ? 
+                    AND id IN ({ids})
+            '''
+            params = (filter_info.date_range.end_date,)
+
         ids = self.do_filter_query(query, params)
 
         if filter_info.user_rating_range != None :
