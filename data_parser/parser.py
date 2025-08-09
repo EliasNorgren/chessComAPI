@@ -156,11 +156,6 @@ class Parser():
             loss_counts.append(stats['loss'])
             draw_counts.append(stats['draw'])
 
-        print(eco_codes)
-        print(win_counts)
-        print(loss_counts)
-        print(draw_counts)
-
         # Plotting
         plt.figure(figsize=(10, 6))
         bar_width = 0.2
@@ -175,6 +170,7 @@ class Parser():
         plt.legend()
 
         # Show plot
+        print("Saving plot to res.pdf")
         plt.savefig("res.pdf")
 
         eco_list = []
@@ -189,7 +185,7 @@ class Parser():
                 'ECO': eco,
                 'games': stats['games']
             })
-        eco_list_sorted = sorted(eco_list, key=lambda x: x['winpercentage'], reverse=True)
+        eco_list_sorted = sorted(eco_list, key=lambda x: x['games'], reverse=True)
 
         # Display the sorted list
         no_games = 0
@@ -197,13 +193,13 @@ class Parser():
             if item['games'] < 20 :
                 continue
             no_games = no_games + item['games']
-            print(item)
+        return eco_list_sorted
 
     def get_games_by_eco(self, filter_info : FilterInfo, eco : str):
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
         res = database.query(f'''
-            SELECT url, archivedate
+            SELECT url, archivedate, user_result
             FROM matches
             WHERE id IN ({filtered_ids}) AND ECO = "{eco}"
             ORDER BY archivedate
@@ -211,7 +207,7 @@ class Parser():
         res_dict = {}
         res_dict['games'] = []
         for game in res :
-            res_dict['games'].append(f"{game[0]}, {game[1]}")
+            res_dict['games'].append(f"{game[0]}, {game[1]}, {game[2]}")
 
         return res_dict 
     
