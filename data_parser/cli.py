@@ -1,15 +1,27 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 from filter_info import FilterInfo
 from parser import Parser
 from controller import DataBaseUpdater
 import json
 
+def str2bool(v):
+    print(f"Converting {v} to boolean")
+    if isinstance(v, bool):
+        print(f"Value is already a boolean: {v}")
+        return v
+    if v.lower() in ("yes", "true", "t", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "0"):
+        return False
+    else:
+        raise ArgumentTypeError("Boolean value expected.")
+
 def main():
     parser = ArgumentParser(description="ChessCom CLI Tool")
     parser.add_argument("user", type=str, help="Username for filtering games")
-    parser.add_argument("--rated", action="store_true", help="Filter for rated games")
-    parser.add_argument("--playing_as_white", action="store_true", help="Filter for games played as white")
+    parser.add_argument("--rated", type=str2bool, nargs="?", const=None, help="Filter for rated games (true/false)")
+    parser.add_argument("--playing_as_white", type=str2bool, nargs="?", const=None, help="Filter for games played as white (true/false)")
     parser.add_argument("--start_date", type=str, help="Start date for filtering games (YYYY-MM-DD)")
     parser.add_argument("--end_date", type=str, help="End date for filtering games (YYYY-MM-DD)")
     parser.add_argument("--update_database", action="store_true", help="Update the database with new games for the user")
@@ -34,25 +46,24 @@ def main():
     get_total_fens_substring_parser.add_argument("--substring", type=str, required=True, help="Get games where this FEN occured")
 
     args = parser.parse_args()
+    print(f"Parsed arguments: {args}")
     # If update_database is set, update the database for the user
     if args.update_database:
         
         updater = DataBaseUpdater()
         games = updater.updateDB(args.user)
         print(f"Updated {args.user} with {games} new games!")
-        return
 
     # Create FilterInfo instance
     date_range = None
-    if args.start_date and args.end_date:
+    start_date = None
+    end_date = None
+    if args.start_date :
         start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
+    if args.end_date :
         end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
-        date_range = FilterInfo.DateRange(start_date, end_date)
 
-    if hasattr(args, 'playing_as_white'):
-        args.playing_as_white = args.playing_as_white if args.playing_as_white else None
-    if hasattr(args, 'rated'):
-        args.rated = args.rated if args.rated else None
+    date_range = FilterInfo.DateRange(start_date, end_date)
 
     filter_info = FilterInfo(
         user=args.user,

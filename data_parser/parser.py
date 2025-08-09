@@ -208,7 +208,12 @@ class Parser():
             WHERE id IN ({filtered_ids}) AND ECO = "{eco}"
             ORDER BY archivedate
         ''')      
-        return res 
+        res_dict = {}
+        res_dict['games'] = []
+        for game in res :
+            res_dict['games'].append(f"{game[0]}, {game[1]}")
+
+        return res_dict 
     
     def get_wins_by_day_of_week(self, filter_info : FilterInfo) :
         database = DataBase()
@@ -290,7 +295,14 @@ class Parser():
             if  acc != None :
                 total_acuracy += acc
                 number_of_games_with_acc += 1
-        acc = round((total_acuracy / number_of_games_with_acc), 2)
+        if number_of_games_with_acc != 0 :
+            acc = round((total_acuracy / number_of_games_with_acc), 2)
+        else :
+            acc = None
+        stats["no_games"] = total_games
+        stats["no_games_with_acc"] = number_of_games_with_acc
+        if total_games == 0 :
+            return {'accuracy' : None, 'stats' : stats}
         stats['draw'] = round((stats['draw'] / total_games) * 100 , 2) 
         stats['loss'] = round((stats['loss'] / total_games) * 100 , 2) 
         stats['win'] = round((stats['win'] / total_games) * 100 , 2) 

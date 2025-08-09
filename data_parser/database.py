@@ -10,7 +10,8 @@ class DataBase():
     def get_filtered_ids(self, filter_info : FilterInfo) -> str:
         print(filter_info)
         ids = self.get_all_ids(filter_info)
-        if filter_info.date_range == None :
+        if filter_info.date_range == None or (filter_info.date_range.start_date == None and filter_info.date_range.end_date == None):
+            print('No date range provided, using all dates')
             filter_info.date_range = FilterInfo.DateRange(datetime.datetime.min, datetime.datetime.max)
         query = f'''
             SELECT id FROM matches WHERE 
