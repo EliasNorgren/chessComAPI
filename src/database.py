@@ -2,6 +2,7 @@ from game import Game
 import sqlite3
 from filter_info import FilterInfo
 import datetime
+import json
 
 class DataBase():
     def __init__(self) -> None:
@@ -189,7 +190,6 @@ class DataBase():
     def update_analysis(self, id, analysis) :
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
-        
         try:
             # SQL UPDATE statement
             update_statement = '''
@@ -199,7 +199,7 @@ class DataBase():
             '''
             
             # Execute the UPDATE statement
-            cursor.execute(update_statement, (analysis, id))
+            cursor.execute(update_statement, (json.dumps(analysis), id))
             # Commit changes to the database
             conn.commit()
             print(f"Analysis for game ID {id} updated successfully.")

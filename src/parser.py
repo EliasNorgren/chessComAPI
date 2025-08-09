@@ -30,6 +30,7 @@ from controller import DataBaseUpdater
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sqlite3
+import json
 
 class Parser():
 
@@ -358,6 +359,7 @@ class Parser():
             user_playing_as_white = game['user_playing_as_white']
             if not (analysis is None or reanalyze_analyzed_games):
                 print(f"Game with id {id} already analyzed, skipping")
+
                 continue
             url = game['url']
             print(f"Analyzing game {url}")
@@ -395,7 +397,7 @@ class Parser():
         user_playing_as_white = game['user_playing_as_white']
         if analysis and analysis != "" :
             print(f"Game with id {id} already analyzed")
-            return analysis
+            return json.loads(analysis)  # Return the existing analysis if it exists
 
         url = game['url']
         print(f"Analyzing game {url}")

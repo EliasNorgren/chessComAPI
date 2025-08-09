@@ -45,25 +45,46 @@ def review_move():
             move_idx += 1
         elif 'prev' in request.form and move_idx > 0:
             move_idx -= 1
+        elif 'firstMove' in request.form:
+            move_idx = 0
+        elif 'lastMove' in request.form:
+            move_idx = len(entries) - 1
         session[f'move_idx_{game_id}'] = move_idx
 
     entry = entries[move_idx]
     return render_template_string('''
+        <style>
+            body {
+                background: #302e2b;
+            }
+        </style>
         <h2>Game ID: {{ game_id }} | Move {{ move_idx + 1 }} / {{ total }}</h2>
-        <div style="font-size: 1.5em; margin-bottom: 10px;">
-            <strong>Move:</strong> {{ entry.move }}<br>
-             <strong>Classification: </strong><span style="color: {{ classification_color }};">{{ entry.classification }}</span><br>
-            <strong>Evaluation:</strong> {{ entry.evaluation }}<br>
-            <strong>Board:</strong> {{ entry.board }}
+        <div style="font-size: 1.5em; margin-bottom: 10px; background: #262522; border-radius: 16px; padding: 18px;">
+            <span style="color:#c3c2c1"><strong>Move:</strong> {{ entry.move }}</span><br>
+            <span style="color:#c3c2c1"><strong>Classification: </strong></span><span style="color: {{ classification_color }};">{{ entry.classification }}</span><br>
+            <span style="color:#c3c2c1"><strong>Evaluation:</strong> {{ entry.evaluation }}</span><br>
+            <span style="color:#c3c2c1"><strong>Board:</strong> {{ entry.board }}</span>
         </div>
-        <div style="max-width: 350px; margin-bottom: 20px;">
+        <div style="max-width: 350px; margin: 20px auto; display: block; text-align: center;">
             {{ entry.svg|safe }}
         </div>
-        <form method="post">
-            <button name="prev" type="submit" {% if move_idx == 0 %}disabled{% endif %}>Previous</button>
-            <button name="next" type="submit" {% if move_idx == total - 1 %}disabled{% endif %}>Next</button>
+        <form method="post" style="text-align: center;">
+            <button name="firstMove" type="submit""><--<--</button>
+            <button name="prev" type="submit" {% if move_idx == 0 %}disabled{% endif %}><--</button>
+            <button name="next" type="submit" {% if move_idx == total - 1 %}disabled{% endif %}>--></button>
+            <button name="lastMove" type="submit">-->-->></button>
         </form>
-    ''', entry=entry, move_idx=move_idx, total=len(entries), game_id=game_id, classification_color=classification_colors[entry["classification"]],)
+        <script>
+            document.addEventListener('keydown', function(event) {
+                if (event.key === "ArrowLeft") {
+                    document.querySelector('button[name="prev"]').click();
+                }
+                if (event.key === "ArrowRight") {
+                    document.querySelector('button[name="next"]').click();
+                }
+            });
+        </script>
+    ''', entry=entry, move_idx=move_idx, total=len(entries), game_id=game_id, classification_color=classification_colors.get(entry["classification"], "#c3c2c1"),)
 
 if __name__ == '__main__':
     app.run(debug=True)
