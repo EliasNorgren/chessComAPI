@@ -9,21 +9,26 @@ app.secret_key = "your_secret_key"  # Needed for session
 current_game_id = 1  # Default game ID, can be changed based on your logic
 analyze_game = None  # Placeholder for the game analysis logic
 
+classification_colors = {
+    "Best Move": "#749bbf",
+    "Good Move": "#81b64c",
+    "Inaccuracy": "#f7c631",
+    "Mistake": "#ff7769",
+    "Blunder": "#fa412d"
+}
+
 # Replace this with your real data loading logic
 def get_entries(game_id, user):
     global current_game_id, analyze_game
     if game_id == current_game_id:
         return analyze_game
     parser = Parser()
-    print("asd", flush=True)
     analyze_game = parser.analyze_games_by_url(game_id, user)
     current_game_id = game_id
     return analyze_game
 
 @app.route('/')
 def index():
-    print("asdasd")
-    # Redirect to a default game id, e.g., 1
     return redirect(url_for('review_move', id=1))
 
 @app.route('/review', methods=['GET', 'POST'])
@@ -47,7 +52,7 @@ def review_move():
         <h2>Game ID: {{ game_id }} | Move {{ move_idx + 1 }} / {{ total }}</h2>
         <div style="font-size: 1.5em; margin-bottom: 10px;">
             <strong>Move:</strong> {{ entry.move }}<br>
-            <strong>Classification:</strong> {{ entry.classification }}<br>
+             <strong>Classification: </strong><span style="color: {{ classification_color }};">{{ entry.classification }}</span><br>
             <strong>Evaluation:</strong> {{ entry.evaluation }}<br>
             <strong>Board:</strong> {{ entry.board }}
         </div>
@@ -58,7 +63,7 @@ def review_move():
             <button name="prev" type="submit" {% if move_idx == 0 %}disabled{% endif %}>Previous</button>
             <button name="next" type="submit" {% if move_idx == total - 1 %}disabled{% endif %}>Next</button>
         </form>
-    ''', entry=entry, move_idx=move_idx, total=len(entries), game_id=game_id)
+    ''', entry=entry, move_idx=move_idx, total=len(entries), game_id=game_id, classification_color=classification_colors[entry["classification"]],)
 
 if __name__ == '__main__':
     app.run(debug=True)
