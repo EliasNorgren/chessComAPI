@@ -5,4 +5,4 @@
 *.pdf
 *env/*
 */myenv/**
-data_parser/stockfish-*
+src/stockfish-*
