@@ -25,6 +25,7 @@ from game import Game
 from collections import defaultdict
 from analyzer import Analyzer
 from PGN_to_fen_list import pgn_to_move_list
+from controller import DataBaseUpdater
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -365,8 +366,44 @@ class Parser():
             database.update_analysis(id, analysis)
             no_analyzed_games += 1
             print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
-                
-            exit(1)
+
+    def analyze_games_by_url(self, url : str, user: str):
+        database = DataBase()
+        game = database.query(f'''
+            SELECT pgn, analysis, id, user_playing_as_white, url
+            FROM matches
+            WHERE url LIKE "%{url}%"        
+        ''')
+        if game is None or len(game) == 0:
+            print(f"No games found with url {url}, updating database for user {user}")
+            DataBaseUpdater().updateDB(user)
+            game = database.query(f'''
+                SELECT pgn, analysis, id, user_playing_as_white, url
+                FROM matches
+                WHERE url LIKE "%{url}%"        
+            ''')
+        if game is None or len(game) == 0:
+            print(f"No games found with url {url}")
+            return
+        
+        game = game[0]  # Assuming the query returns a single game
+        analyzer = Analyzer()
+
+        id = game['id']
+        pgn = game['pgn']
+        analysis = game['analysis']
+        user_playing_as_white = game['user_playing_as_white']
+        if analysis and analysis != "" :
+            print(f"Game with id {id} already analyzed")
+            return analysis
+
+        url = game['url']
+        print(f"Analyzing game {url}")
+        moves = pgn_to_move_list(pgn)
+        analysis = analyzer.analyze_game(moves, user_playing_as_white)
+        database.update_analysis(id, analysis)
+        return analysis
+
 
 # parser = Parser()
 # data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))

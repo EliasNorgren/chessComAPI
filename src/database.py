@@ -186,6 +186,27 @@ class DataBase():
             # Close the connection
             conn.close()
 
+    def update_analysis(self, id, analysis) :
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        
+        try:
+            # SQL UPDATE statement
+            update_statement = '''
+            UPDATE matches
+            SET analysis = ?
+            WHERE id = ?
+            '''
+            
+            # Execute the UPDATE statement
+            cursor.execute(update_statement, (analysis, id))
+            # Commit changes to the database
+            conn.commit()
+            print(f"Analysis for game ID {id} updated successfully.")
+
+        except sqlite3.Error as e:
+            print(f"Error updating analysis: {e}")
+
     def convert_database_entry_to_json(self, db_entry : sqlite3.Row):
         return {
             "url": db_entry[2],
