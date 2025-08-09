@@ -45,6 +45,9 @@ def main():
     get_total_fens_substring_parser = subparsers.add_parser("get_total_fens_substring")
     get_total_fens_substring_parser.add_argument("--substring", type=str, required=True, help="Get games where this FEN occured")
 
+    analyze_games_parser = subparsers.add_parser("analyze_games")
+    analyze_games_parser.add_argument("--reanalyze_analyzed_games", action="store_true", help="Reanalyze already analyzed games")
+
     args = parser.parse_args()
     print(f"Parsed arguments: {args}")
     # If update_database is set, update the database for the user
@@ -94,6 +97,9 @@ def main():
         result = parser_obj.get_win_percentage_per_opening(filter_info)
     elif args.command == "get_wins_by_day_of_week":
         result = parser_obj.get_wins_by_day_of_week(filter_info)
+    elif args.command == "analyze_games":
+        result = parser_obj.analyze_games(filter_info, reanalyze_analyzed_games=args.reanalyze_analyzed_games)
+        print(f"Analyzed {len(result)} games for user {args.user}")
     else:
         parser.error("Unknown command")
 

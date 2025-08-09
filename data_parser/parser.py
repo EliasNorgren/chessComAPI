@@ -23,7 +23,7 @@ from filter_info import FilterInfo
 from database import DataBase
 from game import Game
 from collections import defaultdict
-
+from game_analyzer.analyzer import Analyzer
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -336,6 +336,19 @@ class Parser():
 
         return stats_per_day
 
+    def analyze_games(self, filter_info : FilterInfo, reanalyze_analyzed_games : bool):
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        
+        games = database.query(f'''
+            SELECT pgn, analysis
+            FROM matches
+            WHERE id IN ({filtered_ids})        
+        ''')
+
+        analyzer = Analyzer()
+
+        print(games)
 
 # parser = Parser()
 # data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))

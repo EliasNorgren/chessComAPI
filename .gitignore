@@ -5,3 +5,4 @@
 *.pdf
 *env/*
 */myenv/**
+game_analyzer/stockfish-*
