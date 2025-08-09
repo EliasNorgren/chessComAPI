@@ -82,6 +82,12 @@ def review_move():
                 if (event.key === "ArrowRight") {
                     document.querySelector('button[name="next"]').click();
                 }
+                if (event.key == "ArrowUp") {
+                    document.querySelector('button[name="firstMove"]').click();
+                }
+                if (event.key == "ArrowDown") {
+                    document.querySelector('button[name="lastMove"]').click();
+                }
             });
         </script>
     ''', entry=entry, move_idx=move_idx, total=len(entries), game_id=game_id, classification_color=classification_colors.get(entry["classification"], "#c3c2c1"),)

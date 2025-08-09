@@ -5,6 +5,13 @@ import chess.svg
 
 class Analyzer:
     def __init__(self):
+        self.classification_colors = {
+            "Best Move": "#749bbf",
+            "Good Move": "#81b64c",
+            "Inaccuracy": "#f7c631",
+            "Mistake": "#ff7769",
+            "Blunder": "#fa412d"
+        }
         stockfish_engine_path = os.getenv("STOCKFISH_ENGINE_PATH")
         print(f"Using Stockfish engine at: {stockfish_engine_path}")
         if not stockfish_engine_path:
@@ -60,7 +67,7 @@ class Analyzer:
             if move_classification != "Best Move":
                 best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
                 arrows = [chess.svg.Arrow(best_move_uci.from_square, best_move_uci.to_square, color="#008612AC")]
-            fill = dict.fromkeys([uci_move.from_square, uci_move.to_square], "#B9ca42CC")
+            fill = dict.fromkeys([uci_move.from_square, uci_move.to_square], self.classification_colors.get(move_classification, "#48ff00"))
             colors = {
                 "square light": "#ebecd0",
                 "square dark": "#739552",
