@@ -34,7 +34,6 @@ function showMove(idx) {
     } else {
         evalText = "No evaluation available";
     }
-    console.log("Showing move:", move_idx, "Entry:", entry, "Meta:", meta);
     document.getElementById('move-info').innerHTML = `
         <span><strong>Move:</strong> ${entry.move}</span><br>
         <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
@@ -51,7 +50,6 @@ function showMove(idx) {
     document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
 
     let user_playing_as_white = meta.user_playing_as_white;
-    console.log("User playing as white:", user_playing_as_white);
     // Clamp eval to [-10, 10] for display (1000 centipawns)
     let evalClamped = Math.max(-1000, Math.min(1000, evalCp));
     // If user is playing as white, 100% = white wins; if black, 100% = black wins

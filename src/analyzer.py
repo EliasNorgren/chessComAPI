@@ -56,8 +56,6 @@ class Analyzer:
             self.engine.make_moves_from_current_position([move])
             self.engine.set_depth(self.engine_depth - 1)
             eval = self.engine.get_evaluation()
-            print(f"Best move: {best_move[0]}")
-            print(f"Played move: {uci_move}, Evaluation: {eval}")
             best_eval_cp = best_move[0]['Centipawn'] if best_move[0]['Centipawn'] is not None else best_move[0]['Mate']
             move_classification = self.classify_move(best_eval_cp=best_eval_cp,
                                                       played_eval_cp=eval['value'],
@@ -91,8 +89,6 @@ class Analyzer:
             
 
     def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move, best_eval_got_mate, played_move_got_mate, player_is_white):
-        print(f"Classifying move: {played_move}, Best Eval: {best_eval_cp}, Played Eval: {played_eval_cp}, Best Move: {best_move}, Best Eval Got Mate: {best_eval_got_mate}, Played Move Got Mate: {played_move_got_mate}")
-        
         # A mate exist and the player is the one winning
         if best_eval_got_mate and ((player_is_white and best_eval_cp > 0) or (not player_is_white and best_eval_cp < 0)):
             if best_eval_got_mate and str(played_move) != str(best_move) and not played_move_got_mate:
