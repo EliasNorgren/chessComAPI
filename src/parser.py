@@ -412,6 +412,7 @@ class Parser():
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
         analysis = analyzer.analyze_game(moves, user_playing_as_white)
+        white_accuracy, black_accuracy = self.average_accuracy(analysis)
         response = {
             "analysis": analysis,
             "opponent_user": game['opponent_user'],
@@ -421,10 +422,35 @@ class Parser():
             "url": url,
             "archiveDate": game['archiveDate'],
             "user_playing_as_white": user_playing_as_white,
+            "white_accuracy": white_accuracy,
+            "black_accuracy": black_accuracy,
         }
         database.update_analysis(id, response)
         return response
 
+
+    def average_accuracy(self, analysis) -> (float, float):  # type: ignore
+        white_total_acc = 0
+        black_total_acc = 0
+        white_no_moves = 0
+        black_no_moves = 0
+        white_turn = True
+
+        for move in analysis:
+            if 'score' in move and move['score'] is not None:
+                if white_turn:
+                    white_total_acc += move['score']
+                    white_no_moves += 1
+                else:
+                    black_total_acc += move['score']
+                    black_no_moves += 1
+            white_turn = not white_turn
+
+        # Calculate averages
+        white_acc = round((white_total_acc * 100) / white_no_moves, 2) if white_no_moves > 0 else 0.0
+        black_acc = round((black_total_acc * 100) / black_no_moves, 2) if black_no_moves > 0 else 0.0
+
+        return white_acc, black_acc
 
 # parser = Parser()
 # data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))

@@ -34,12 +34,13 @@ function showMove(idx) {
     } else {
         evalText = "No evaluation available";
     }
-
+    console.log("Showing move:", move_idx, "Entry:", entry, "Meta:", meta);
     document.getElementById('move-info').innerHTML = `
         <span><strong>Move:</strong> ${entry.move}</span><br>
         <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
         <span><strong>Evaluation:</strong> ${evalText}</span><br>
-        <span><strong>Board:</strong> ${entry.board}</span>
+        <span><strong>Board:</strong> ${entry.board}</span><br>
+        <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
     document.getElementById('game-header').innerText =

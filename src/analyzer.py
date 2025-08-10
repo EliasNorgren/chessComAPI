@@ -84,6 +84,7 @@ class Analyzer:
                 "classification": move_classification,
                 "svg": svg,
                 "board": chess_board.fen(),
+                "score": self.classification_to_score(move_classification),
             }
             result.append(entry)
         return result
@@ -125,3 +126,14 @@ class Analyzer:
             return "Mistake"
         else:
             return "Blunder"
+
+    def classification_to_score(self, classification):
+        classification_scores = {
+            "Best Move": 1.0,
+            "Good Move": 0.9,
+            "Inaccuracy": 0.7,
+            "Mistake": 0.4,
+            "Blunder": 0.0,
+            "Missed mate": 0.4
+        }
+        return classification_scores.get(classification, 0.0)
