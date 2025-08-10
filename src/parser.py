@@ -21,11 +21,11 @@ sys.path.append(database_updater_path)
 
 from filter_info import FilterInfo
 from database import DataBase
-from game import Game
 from collections import defaultdict
 from analyzer import Analyzer
 from PGN_to_fen_list import pgn_to_move_list
 from controller import DataBaseUpdater
+from entryCache import EntryCache
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -369,7 +369,7 @@ class Parser():
             no_analyzed_games += 1
             print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
 
-    def analyze_games_by_url(self, url : str, user: str):
+    def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid):
         database = DataBase()
         if url != None :
             game = database.query(f'''
@@ -412,7 +412,7 @@ class Parser():
         url = game['url']
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
-        analysis = analyzer.analyze_game(moves, user_playing_as_white)
+        analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
         white_accuracy, black_accuracy = self.average_accuracy(analysis)
         response = {
             "analysis": analysis,

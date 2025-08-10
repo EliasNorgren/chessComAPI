@@ -120,6 +120,10 @@
             border-radius: 8px;
             z-index: 2;
         }
+
+        #progress-ring {
+            transition: stroke-dashoffset 0.35s ease;
+        }
     </style>
 </head>
 
@@ -131,6 +135,17 @@
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
         </div>
         <div class="svg-board" id="svg-board"></div>
+        <div id="loading-container" style="text-align:center; margin: 2em;">
+            <svg id="loading-circle" width="200" height="200" viewBox="0 0 240 240">
+                <circle cx="120" cy="120" r="108" stroke="#444" stroke-width="24" fill="none" />
+                <circle id="progress-ring" cx="120" cy="120" r="108" stroke="#6cf" stroke-width="24" fill="none"
+                    stroke-linecap="round" stroke-dasharray="678.584" stroke-dashoffset="678.584"
+                    transform="rotate(-90 120 120)" />
+                <text id="loading-text" x="120" y="136" text-anchor="middle" font-size="44" fill="#6cf"
+                    font-family="Arial">0%</text>
+            </svg>
+        </div>
+
     </div>
     <div class="nav-btns">
         <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>

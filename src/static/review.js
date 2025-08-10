@@ -1,16 +1,83 @@
 let entries = [];
 let move_idx = 0;
 let meta = {};
-let params = new URLSearchParams(window.location.search);
-let url = '/review_data?' + params.toString();
-console.log("Fetching review data from:", url);
-fetch(url)
-    .then(response => response.json())
-    .then(data => {
-        entries = data.analysis;
-        meta = data;
-        showMove(0);
-    });
+
+const circle = document.getElementById('progress-ring');
+const radius = circle.r.baseVal.value;
+const circumference = 2 * Math.PI * radius;
+
+circle.style.strokeDasharray = `${circumference} ${circumference}`;
+circle.style.strokeDashoffset = circumference;
+
+function setProgress(percent) {
+    const offset = circumference - (percent / 100) * circumference;
+    circle.style.strokeDashoffset = offset;
+    document.getElementById('loading-text').textContent = `${percent}%`;
+}
+
+// setProgress(50)
+
+async function loadReviewData() {
+    document.getElementById('svg-board').style.display = 'none';
+    document.getElementById('eval-bar').style.display = 'none';
+
+    let url = '/review_data?' + new URLSearchParams(window.location.search).toString();
+    console.log("Fetching review data from:", url);
+    const initialResponse = await fetch(url);
+    const initialData = await initialResponse.json();
+    console.log("Received review data:", initialData);
+    uuid = initialData.uuid;
+
+    loading = true;
+    attempts = 0;
+
+    while (loading && attempts < 60) {
+        console.log("Waiting for review data to load... Attempt:", attempts + 1);
+        try {
+            const statusResponse = await fetch(`/get_entry_status?uuid=${uuid}`);
+            const statusData = await statusResponse.json();
+            console.log("Received status:", statusData);
+            if (statusData.error) {
+                console.error("Error fetching status:", statusData.error);
+                break; // Exit loop on error
+            }
+            if (typeof statusData == "string" && statusData.includes("loading")) {
+                let progress = 0;
+                const matches = statusData.match(/loading (\d+)/);
+                if (matches) {
+                    progress = parseInt(matches[1], 10);
+                }
+                console.log(`Loading progress: ${progress}%`);
+                setProgress(progress);
+                document.getElementById('loading-container').style.display = 'block';
+                await sleep(3000);
+                attempts++;
+            } else {
+                setProgress(100);
+                document.getElementById('loading-container').style.display = 'none';
+                document.getElementById('svg-board').style.display = '';
+                document.getElementById('eval-bar').style.display = '';
+                entries = statusData.analysis;
+                meta = statusData;
+                showMove(0);
+                loading = false; // stop the loop
+            }
+        } catch (error) {
+            console.error("Error fetching review data:", error);
+            attempts++;
+        }
+    }
+
+    if (attempts >= 60) {
+        console.warn("Reached max attempts, stopping load.");
+    }
+}
+
+loadReviewData();
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function showMove(idx) {
     move_idx = idx;
@@ -35,11 +102,11 @@ function showMove(idx) {
         evalText = "No evaluation available";
     }
     document.getElementById('move-info').innerHTML = `
-        <span><strong>Move:</strong> ${entry.move}</span><br>
-        <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
-        <span><strong>Evaluation:</strong> ${evalText}</span><br>
-        <span><strong>Board:</strong> ${entry.board}</span><br>
-        <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span>
+    <span><strong>Move:</strong> ${entry.move}</span><br>
+    <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
+    <span><strong>Evaluation:</strong> ${evalText}</span><br>
+    <span><strong>Board:</strong> ${entry.board}</span><br>
+    <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
     document.getElementById('game-header').innerText =
@@ -104,28 +171,6 @@ function showMove(idx) {
     document.getElementById('eval-bar-fill').style.height = percent + "%";
     document.getElementById('eval-bar-fill').style.bottom = 0;
 }
-
-// .eval-bar {
-//     width: 18px;
-//     height: 50vw;
-//     background-color: #403d39;
-//     border-radius: 8px;
-//     margin-right: 1.2em;
-//     position: relative;
-//     overflow: hidden;
-//     flex-shrink: 0;
-// }
-
-// .eval-bar-fill {
-//     position: absolute;
-//     /* left: 0; */
-//     width: 100%;
-//     background: #ffffff;
-//     transition: height 0.3s;
-//     border-radius: 8px;
-//     z-index: 2;
-// }
-
 function getColor(classification) {
     const colors = {
         "Best Move": "#749bbf",

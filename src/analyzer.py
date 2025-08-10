@@ -2,6 +2,7 @@ from stockfish import Stockfish
 import os
 import chess
 import chess.svg
+from entryCache import EntryCache
 
 class Analyzer:
     def __init__(self):
@@ -37,7 +38,7 @@ class Analyzer:
         self.engine = Stockfish(path=stockfish_engine_path, parameters=settings)
         self.engine_depth = 17
 
-    def analyze_game(self, move_list: list, user_playing_as_white: bool) :
+    def analyze_game(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
         orientation = chess.WHITE if user_playing_as_white else chess.BLACK
         result = []
         chess_board = chess.Board()
@@ -45,7 +46,9 @@ class Analyzer:
         no_moves = len(move_list)
         current_move = 0
         for move in move_list:
-            print(f"{current_move / no_moves * 100:.2f}%")
+            progress = f"{current_move / no_moves * 100:.2f}%"
+            print(progress)
+            entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({progress})")
             current_move += 1
             # Write svg to file
             uci_move = chess.Move.from_uci(move)
