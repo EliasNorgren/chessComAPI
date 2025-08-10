@@ -52,7 +52,6 @@ function showMove(idx) {
     let user_playing_as_white = meta.user_playing_as_white;
     // Clamp eval to [-10, 10] for display (1000 centipawns)
     let evalClamped = Math.max(-1000, Math.min(1000, evalCp));
-    console.log("Eval clamped:", evalClamped);
     // If user is playing as white, 100% = white wins; if black, 100% = black wins
     let percent;
     if (user_playing_as_white) {
@@ -60,7 +59,6 @@ function showMove(idx) {
     } else {
         percent = 50 + (evalClamped / 20); // 100 = black wins
     }
-    console.log("Percent:", percent);
     percent = Math.max(0, Math.min(100, percent));
     if (user_playing_as_white) {
         evalBarFillStyle = document.getElementById('eval-bar-fill').style;

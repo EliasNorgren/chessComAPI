@@ -100,12 +100,15 @@ class Analyzer:
                 # Still mating, but not the fastest way
                 return "Good Move"
         # A mate exist and the player is the one losing
-        elif best_eval_got_mate and ((player_is_white and best_eval_cp < 0) or (not player_is_white and best_eval_cp > 0)):
+        elif (best_eval_got_mate or played_move_got_mate) and ((player_is_white and best_eval_cp < 0) or (not player_is_white and best_eval_cp > 0)):
             if str(played_move) == str(best_move):
                 return "Best Move"
             elif played_move_got_mate and str(played_move) != str(best_move) and best_eval_got_mate and played_eval_cp == best_eval_cp:
                 # Best move was the same distance to mate, but not the best move
                 return "Good Move"
+            elif played_move_got_mate and str(played_move) != str(best_move) and not best_eval_got_mate:
+                # Player walked into a mate
+                return "Blunder"
             else :
                 # Not the best way to avoid mate
                 return "Inaccuracy"
