@@ -17,15 +17,19 @@ function showMove(idx) {
     let entry = entries[move_idx];
     let evaluation = entry.evaluation || {};
     let evalText = "";
+    let evalCp = 0;
     if (evaluation.type === "mate") {
         if (evaluation.value > 0) {
+            evalCp = 1000; // Convert to centipawns
             evalText = `White mate in ${evaluation.value}`;
         } else if (evaluation.value < 0) {
+            evalCp = -1000; // Convert to centipawns
             evalText = `Black mate in ${Math.abs(evaluation.value)}`;
         } else {
             evalText = "Game over";
         }
     } else if (evaluation.type === "cp") {
+        evalCp = evaluation.value;
         evalText = `${evaluation.value} centipawns`;
     } else {
         evalText = "No evaluation available";
@@ -44,6 +48,21 @@ function showMove(idx) {
     document.getElementById('firstMove').disabled = move_idx === 0;
     document.getElementById('next').disabled = move_idx === entries.length - 1;
     document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
+
+    let user_playing_as_white = meta.user_playing_as_white;
+    console.log("User playing as white:", user_playing_as_white);
+    // Clamp eval to [-10, 10] for display (1000 centipawns)
+    let evalClamped = Math.max(-1000, Math.min(1000, evalCp));
+    // If user is playing as white, 100% = white wins; if black, 100% = black wins
+    let percent;
+    if (user_playing_as_white) {
+        percent = 50 + (evalClamped / 20); // 100 = white wins
+    } else {
+        percent = 50 - (evalClamped / 20); // 100 = black wins
+    }
+    percent = Math.max(0, Math.min(100, percent));
+    document.getElementById('eval-bar-fill').style.height = percent + "%";
+    document.getElementById('eval-bar-fill').style.bottom = 0;
 }
 function getColor(classification) {
     const colors = {

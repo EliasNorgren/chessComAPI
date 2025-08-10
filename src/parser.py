@@ -419,7 +419,8 @@ class Parser():
             "user_rating": game['user_rating'],
             "user": user,
             "url": url,
-            "archiveDate": game['archiveDate']
+            "archiveDate": game['archiveDate'],
+            "user_playing_as_white": user_playing_as_white,
         }
         database.update_analysis(id, response)
         return response
