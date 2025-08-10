@@ -27,7 +27,7 @@ class Analyzer:
             "MultiPV": 1,
             "Skill Level": 20,
             "Move Overhead": 10,
-            "Minimum Thinking Time": 10,
+            "Minimum Thinking Time": 30,
             "Slow Mover": 100,
             "UCI_Chess960": "false",
             "UCI_LimitStrength": "false",
@@ -91,7 +91,7 @@ class Analyzer:
 
     def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move):
         
-        if best_eval_cp == None and played_move != best_move:
+        if best_eval_cp == None and str(played_move) != str(best_move):
             return "Missed mate"
 
         if str(played_move) == str(best_move):

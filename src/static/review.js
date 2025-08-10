@@ -15,10 +15,26 @@ fetch(url)
 function showMove(idx) {
     move_idx = idx;
     let entry = entries[move_idx];
+    let evaluation = entry.evaluation || {};
+    let evalText = "";
+    if (evaluation.type === "mate") {
+        if (evaluation.value > 0) {
+            evalText = `White mate in ${evaluation.value}`;
+        } else if (evaluation.value < 0) {
+            evalText = `Black mate in ${Math.abs(evaluation.value)}`;
+        } else {
+            evalText = "Game over";
+        }
+    } else if (evaluation.type === "cp") {
+        evalText = `${evaluation.value} centipawns`;
+    } else {
+        evalText = "No evaluation available";
+    }
+
     document.getElementById('move-info').innerHTML = `
         <span><strong>Move:</strong> ${entry.move}</span><br>
         <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
-        <span><strong>Evaluation:</strong> ${JSON.stringify(entry.evaluation)}</span><br>
+        <span><strong>Evaluation:</strong> ${evalText}</span><br>
         <span><strong>Board:</strong> ${entry.board}</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
