@@ -58,7 +58,7 @@ function showMove(idx) {
     if (user_playing_as_white) {
         percent = 50 + (evalClamped / 20); // 100 = white wins
     } else {
-        percent = 50 - (evalClamped / 20); // 100 = black wins
+        percent = 50 + (evalClamped / 20); // 100 = black wins
     }
     console.log("Percent:", percent);
     percent = Math.max(0, Math.min(100, percent));
@@ -88,7 +88,7 @@ function showMove(idx) {
 
         evalBarFillStyle.width = '18px';
         evalBarFillStyle.height = '50vw';
-        evalBarFillStyle.backgroundColor = '#403d39';
+        evalBarFillStyle.backgroundColor = '#ffffff';
         evalBarFillStyle.borderRadius = '8px';
         evalBarFillStyle.marginRight = '1.2em';
         evalBarFillStyle.position = 'relative';
@@ -98,7 +98,7 @@ function showMove(idx) {
         // evalBarStyle.position = 'absolute';
         evalBarStyle.left = '0';
         // evalBarStyle.width = '100%';
-        evalBarStyle.background = '#ffffff';
+        evalBarStyle.background = '#403d39';
         evalBarStyle.transition = 'height 0.3s';
         evalBarStyle.borderRadius = '8px';
         evalBarStyle.zIndex = '2';
