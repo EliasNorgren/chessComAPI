@@ -35,6 +35,7 @@ class Analyzer:
         }
 
         self.engine = Stockfish(path=stockfish_engine_path, parameters=settings)
+        self.engine_depth = 17
 
     def analyze_game(self, move_list: list, user_playing_as_white: bool) :
         orientation = chess.WHITE if user_playing_as_white else chess.BLACK
@@ -51,18 +52,20 @@ class Analyzer:
             san_move = chess_board.san(uci_move)
             chess_board.push(uci_move)
             best_move = self.engine.get_top_moves(1)
-            # print(f'Stockfish suggests: {best_move}')
+            self.engine.set_depth(self.engine_depth)
             self.engine.make_moves_from_current_position([move])
+            self.engine.set_depth(self.engine_depth - 1)
             eval = self.engine.get_evaluation()
-            move_classification = self.classify_move(best_eval_cp=best_move[0]['Centipawn'],
+            print(f"Best move: {best_move[0]}")
+            print(f"Played move: {uci_move}, Evaluation: {eval}")
+            best_eval_cp = best_move[0]['Centipawn'] if best_move[0]['Centipawn'] is not None else best_move[0]['Mate']
+            move_classification = self.classify_move(best_eval_cp=best_eval_cp,
                                                       played_eval_cp=eval['value'],
                                                       played_move=uci_move,
-                                                      best_move=best_move[0]['Move'])
-            # print(f"Evaluating move: {san_move}")
-            # print(f"Best move: {best_move[0]['Move']}, Centipawn: {best_move[0]['Centipawn']}, Score: {eval['value']}")
-            # print(f"Your move: {move}, evaluation: {eval} - {move_classification}")
-            # board_terminal = self.engine.get_board_visual(user_playing_as_white)
-            # print(board_terminal)
+                                                      best_move=best_move[0]['Move'],
+                                                      best_eval_got_mate=best_move[0]['Mate'] != None,
+                                                      played_move_got_mate=eval['type'] == 'mate',
+                                                      player_is_white=white_turn)
             arrows = []
             if move_classification != "Best Move":
                 best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
@@ -73,9 +76,6 @@ class Analyzer:
                 "square dark": "#739552",
             }
             svg = chess.svg.board(chess_board, size=400, orientation=orientation, fill=fill, arrows=arrows, colors=colors)
-            # with open(f"data_parser/moves/stockfish-{move}.svg", "w") as f:
-            #     f.write(svg)
-            # input("Press Enter to continue...")
             white_turn = not white_turn
             
             entry = {
@@ -89,10 +89,29 @@ class Analyzer:
         return result
             
 
-    def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move):
+    def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move, best_eval_got_mate, played_move_got_mate, player_is_white):
+        print(f"Classifying move: {played_move}, Best Eval: {best_eval_cp}, Played Eval: {played_eval_cp}, Best Move: {best_move}, Best Eval Got Mate: {best_eval_got_mate}, Played Move Got Mate: {played_move_got_mate}")
         
-        if best_eval_cp == None and str(played_move) != str(best_move):
-            return "Missed mate"
+        # A mate exist and the player is the one winning
+        if best_eval_got_mate and ((player_is_white and best_eval_cp > 0) or (not player_is_white and best_eval_cp < 0)):
+            if best_eval_got_mate and str(played_move) != str(best_move) and not played_move_got_mate:
+                return "Missed mate"
+            elif best_eval_got_mate and str(played_move) == str(best_move):
+                # Fastest way to win
+                return "Best Move"
+            else : #played_move_got_mate and str(played_move) == str(best_move) and best_eval_got_mate:
+                # Still mating, but not the fastest way
+                return "Good Move"
+        # A mate exist and the player is the one losing
+        elif best_eval_got_mate and ((player_is_white and best_eval_cp < 0) or (not player_is_white and best_eval_cp > 0)):
+            if str(played_move) == str(best_move):
+                return "Best Move"
+            elif played_move_got_mate and str(played_move) != str(best_move) and best_eval_got_mate and played_eval_cp == best_eval_cp:
+                # Best move was the same distance to mate, but not the best move
+                return "Good Move"
+            else :
+                # Not the best way to avoid mate
+                return "Inaccuracy"
 
         if str(played_move) == str(best_move):
             return "Best Move"
