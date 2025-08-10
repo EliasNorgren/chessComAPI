@@ -2,31 +2,93 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <meta charset="UTF-8">
     <title>Chess Review</title>
     <style>
         body {
             background: #302e2b;
             color: #c3c2c1;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
         .move-info {
-            font-size: 1.5em;
-            margin-bottom: 10px;
+            font-size: 1.2em;
+            margin: 1em auto 0.5em auto;
             background: #262522;
             border-radius: 16px;
-            padding: 18px;
+            padding: 1em;
+            max-width: 90vw;
+            width: 90vw;
+            box-sizing: border-box;
         }
 
         .svg-board {
-            max-width: 350px;
-            margin: 20px auto;
+            max-width: 95vw;
+            width: 50vw;
+            margin: 2em auto 1em auto;
             display: block;
             text-align: center;
         }
 
+        .svg-board svg {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
+        }
+
         .nav-btns {
             text-align: center;
+            margin-top: 1.5em;
+        }
+
+        .nav-btns button {
+            font-size: 2em;
+            padding: 0.4em 0.8em;
+            margin: 0 0.4em;
+            border-radius: 8px;
+            background: #23211e;
+            color: #c3c2c1;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            min-width: 2.5em;
+        }
+
+        .nav-btns button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btns button:hover:not(:disabled) {
+            background: #393733;
+        }
+
+        @media (max-width: 600px) {
+            .move-info {
+                font-size: 1em;
+                padding: 0.7em;
+                max-width: 98vw;
+            }
+
+            .svg-board {
+                width: 98vw;
+                margin: 1em auto;
+            }
+
+            .nav-btns button {
+                font-size: 1.3em;
+                padding: 0.3em 0.5em;
+                min-width: 2em;
+            }
+        }
+
+        h2#game-header {
+            text-align: center;
+            margin-top: 1.2em;
+            margin-bottom: 0.7em;
         }
     </style>
 </head>
@@ -36,10 +98,10 @@
     <div class="move-info" id="move-info"></div>
     <div class="svg-board" id="svg-board"></div>
     <div class="nav-btns">
-        <button id="firstMove"><--<--< </button>
-                <button id="prev"><--< </button>
-                        <button id="next">--></button>
-                        <button id="lastMove">-->-->></button>
+        <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>
+        <button id="prev" title="Previous Move"><i class="fa-solid fa-angle-left"></i></button>
+        <button id="next" title="Next Move"><i class="fa-solid fa-angle-right"></i></button>
+        <button id="lastMove" title="Last Move"><i class="fa-solid fa-angles-right"></i></button>
     </div>
     <script src="{{ url_for('static', filename='review.js') }}"></script>
 </body>
