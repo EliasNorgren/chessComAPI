@@ -52,6 +52,7 @@ function showMove(idx) {
     let user_playing_as_white = meta.user_playing_as_white;
     // Clamp eval to [-10, 10] for display (1000 centipawns)
     let evalClamped = Math.max(-1000, Math.min(1000, evalCp));
+    console.log("Eval clamped:", evalClamped);
     // If user is playing as white, 100% = white wins; if black, 100% = black wins
     let percent;
     if (user_playing_as_white) {
@@ -59,10 +60,74 @@ function showMove(idx) {
     } else {
         percent = 50 - (evalClamped / 20); // 100 = black wins
     }
+    console.log("Percent:", percent);
     percent = Math.max(0, Math.min(100, percent));
+    if (user_playing_as_white) {
+        evalBarFillStyle = document.getElementById('eval-bar-fill').style;
+        evalBarStyle = document.getElementById('eval-bar').style;
+
+        evalBarStyle.width = '18px';
+        evalBarStyle.height = '50vw';
+        evalBarStyle.backgroundColor = '#403d39';
+        evalBarStyle.borderRadius = '8px';
+        evalBarStyle.marginRight = '1.2em';
+        evalBarStyle.position = 'relative';
+        evalBarStyle.overflow = 'hidden';
+        evalBarStyle.flexShrink = '0';
+
+        evalBarFillStyle.position = 'absolute';
+        evalBarFillStyle.left = '0';
+        evalBarFillStyle.width = '100%';
+        evalBarFillStyle.background = '#ffffff';
+        evalBarFillStyle.transition = 'height 0.3s';
+        evalBarFillStyle.borderRadius = '8px';
+        evalBarFillStyle.zIndex = '2';
+    } else {
+        evalBarFillStyle = document.getElementById('eval-bar-fill').style;
+        evalBarStyle = document.getElementById('eval-bar').style;
+
+        evalBarFillStyle.width = '18px';
+        evalBarFillStyle.height = '50vw';
+        evalBarFillStyle.backgroundColor = '#403d39';
+        evalBarFillStyle.borderRadius = '8px';
+        evalBarFillStyle.marginRight = '1.2em';
+        evalBarFillStyle.position = 'relative';
+        evalBarFillStyle.overflow = 'hidden';
+        evalBarFillStyle.flexShrink = '0';
+
+        // evalBarStyle.position = 'absolute';
+        evalBarStyle.left = '0';
+        // evalBarStyle.width = '100%';
+        evalBarStyle.background = '#ffffff';
+        evalBarStyle.transition = 'height 0.3s';
+        evalBarStyle.borderRadius = '8px';
+        evalBarStyle.zIndex = '2';
+    };
     document.getElementById('eval-bar-fill').style.height = percent + "%";
     document.getElementById('eval-bar-fill').style.bottom = 0;
 }
+
+// .eval-bar {
+//     width: 18px;
+//     height: 50vw;
+//     background-color: #403d39;
+//     border-radius: 8px;
+//     margin-right: 1.2em;
+//     position: relative;
+//     overflow: hidden;
+//     flex-shrink: 0;
+// }
+
+// .eval-bar-fill {
+//     position: absolute;
+//     /* left: 0; */
+//     width: 100%;
+//     background: #ffffff;
+//     transition: height 0.3s;
+//     border-radius: 8px;
+//     z-index: 2;
+// }
+
 function getColor(classification) {
     const colors = {
         "Best Move": "#749bbf",
@@ -73,6 +138,7 @@ function getColor(classification) {
     };
     return colors[classification] || "#c3c2c1";
 }
+
 document.getElementById('firstMove').onclick = () => showMove(0);
 document.getElementById('prev').onclick = () => showMove(move_idx - 1);
 document.getElementById('next').onclick = () => showMove(move_idx + 1);
