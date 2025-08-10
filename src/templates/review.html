@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Review</title>
+    <style>
+        body {
+            background: #302e2b;
+            color: #c3c2c1;
+        }
+
+        .move-info {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            background: #262522;
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .svg-board {
+            max-width: 350px;
+            margin: 20px auto;
+            display: block;
+            text-align: center;
+        }
+
+        .nav-btns {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h2 id="game-header"></h2>
+    <div class="move-info" id="move-info"></div>
+    <div class="svg-board" id="svg-board"></div>
+    <div class="nav-btns">
+        <button id="firstMove"><--<--< </button>
+                <button id="prev"><--< </button>
+                        <button id="next">--></button>
+                        <button id="lastMove">-->-->></button>
+    </div>
+    <script src="{{ url_for('static', filename='review.js') }}"></script>
+</body>
+
+</html>
