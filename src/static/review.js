@@ -42,15 +42,16 @@ async function loadReviewData() {
                 break; // Exit loop on error
             }
             if (typeof statusData == "string" && statusData.includes("loading")) {
-                let progress = 0;
-                const matches = statusData.match(/loading (\d+)/);
-                if (matches) {
-                    progress = parseInt(matches[1], 10);
+
+                let progressPercent = 0;
+                if (!statusData.includes('loading 0')) {
+                    progressPercent = statusData.substring(statusData.indexOf('(') + 1, statusData.indexOf(')') - 1);
+                    progressPercent = parseInt(progressPercent, 10);
                 }
-                console.log(`Loading progress: ${progress}%`);
-                setProgress(progress);
+                console.log("Progress percent:", progressPercent);
+                setProgress(progressPercent);
                 document.getElementById('loading-container').style.display = 'block';
-                await sleep(3000);
+                await sleep(2000);
                 attempts++;
             } else {
                 setProgress(100);
