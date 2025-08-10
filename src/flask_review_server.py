@@ -1,13 +1,10 @@
-from flask import Flask, render_template_string, session, redirect, url_for, request
+from flask import Flask, render_template_string, jsonify, request
 import chess
 import chess.svg
 from parser import Parser
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
-
-current_game_id = 1  # Default game ID, can be changed based on your logic
-analyze_game = None  # Placeholder for the game analysis logic
 
 classification_colors = {
     "Best Move": "#749bbf",
@@ -19,78 +16,92 @@ classification_colors = {
 
 # Replace this with your real data loading logic
 def get_entries(game_id, user):
-    global current_game_id, analyze_game
-    if game_id == current_game_id:
-        return analyze_game
     parser = Parser()
     analyze_game = parser.analyze_games_by_url(game_id, user)
-    current_game_id = game_id
     return analyze_game
 
-@app.route('/')
-def index():
-    return redirect(url_for('review_move', id=1))
+@app.route('/review_data')
+def review_data():
+    game_id = request.args.get('id', default=None, type=int)
+    user = request.args.get('user', default='', type=str)
+    print(f"Fetching review data for game ID: {game_id}, user: {user}")
+    response = get_entries(game_id, user)
+    return jsonify(response)
 
-@app.route('/review', methods=['GET', 'POST'])
-def review_move():
-    game_id = request.args.get('id', default=1, type=int)
-    user = request.args.get('user', default='', type=str)  # Replace with actual user logic
-    entries = get_entries(game_id, user)
-    if not entries:
-        return "No entries found for this game ID.", 404
-    move_idx = session.get(f'move_idx_{game_id}', 0)
-
-    if request.method == 'POST':
-        if 'next' in request.form and move_idx < len(entries) - 1:
-            move_idx += 1
-        elif 'prev' in request.form and move_idx > 0:
-            move_idx -= 1
-        elif 'firstMove' in request.form:
-            move_idx = 0
-        elif 'lastMove' in request.form:
-            move_idx = len(entries) - 1
-        session[f'move_idx_{game_id}'] = move_idx
-
-    entry = entries[move_idx]
+@app.route('/review')
+def review_page():
     return render_template_string('''
         <style>
-            body {
-                background: #302e2b;
-            }
+            body { background: #302e2b; color: #c3c2c1; }
+            .move-info { font-size: 1.5em; margin-bottom: 10px; background: #262522; border-radius: 16px; padding: 18px; }
+            .svg-board { max-width: 350px; margin: 20px auto; display: block; text-align: center; }
+            .nav-btns { text-align: center; }
         </style>
-        <h2>Game ID: {{ game_id }} | Move {{ move_idx + 1 }} / {{ total }}</h2>
-        <div style="font-size: 1.5em; margin-bottom: 10px; background: #262522; border-radius: 16px; padding: 18px;">
-            <span style="color:#c3c2c1"><strong>Move:</strong> {{ entry.move }}</span><br>
-            <span style="color:#c3c2c1"><strong>Classification: </strong></span><span style="color: {{ classification_color }};">{{ entry.classification }}</span><br>
-            <span style="color:#c3c2c1"><strong>Evaluation:</strong> {{ entry.evaluation }}</span><br>
-            <span style="color:#c3c2c1"><strong>Board:</strong> {{ entry.board }}</span>
+        <h2 id="game-header"></h2>
+        <div class="move-info" id="move-info"></div>
+        <div class="svg-board" id="svg-board"></div>
+        <div class="nav-btns">
+            <button id="firstMove"><--<--</button>
+            <button id="prev"><--</button>
+            <button id="next">--></button>
+            <button id="lastMove">-->-->></button>
         </div>
-        <div style="max-width: 350px; margin: 20px auto; display: block; text-align: center;">
-            {{ entry.svg|safe }}
-        </div>
-        <form method="post" style="text-align: center;">
-            <button name="firstMove" type="submit""><--<--</button>
-            <button name="prev" type="submit" {% if move_idx == 0 %}disabled{% endif %}><--</button>
-            <button name="next" type="submit" {% if move_idx == total - 1 %}disabled{% endif %}>--></button>
-            <button name="lastMove" type="submit">-->-->></button>
-        </form>
         <script>
+            let entries = [];
+            let move_idx = 0;
+            let meta = {};
+            // Use safe URL encoding for query string
+            let params = new URLSearchParams(window.location.search);
+            let url = '/review_data?' + params.toString();
+            console.log("Fetching review data from:", url);
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    entries = data.analysis;
+                    meta = data;
+                    showMove(0);
+                });
+
+            function showMove(idx) {
+                move_idx = idx;
+                let entry = entries[move_idx];
+                document.getElementById('move-info').innerHTML = `
+                    <span><strong>Move:</strong> ${entry.move}</span><br>
+                    <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
+                    <span><strong>Evaluation:</strong> ${JSON.stringify(entry.evaluation)}</span><br>
+                    <span><strong>Board:</strong> ${entry.board}</span>
+                `;
+                document.getElementById('svg-board').innerHTML = entry.svg;
+                document.getElementById('game-header').innerText =
+                    `Game ID: ${meta.game_id || ""} | Move ${move_idx + 1} / ${entries.length} | ${meta.archiveDate || ""} | ${meta.user || ""} (${meta.user_rating || ""}) VS ${meta.opponent_user || ""} (${meta.opponent_rating || ""})`;
+                document.getElementById('prev').disabled = move_idx === 0;
+                document.getElementById('firstMove').disabled = move_idx === 0;
+                document.getElementById('next').disabled = move_idx === entries.length - 1;
+                document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
+            }
+            function getColor(classification) {
+                const colors = {
+                    "Best Move": "#749bbf",
+                    "Good Move": "#81b64c",
+                    "Inaccuracy": "#f7c631",
+                    "Mistake": "#ff7769",
+                    "Blunder": "#fa412d"
+                };
+                return colors[classification] || "#c3c2c1";
+            }
+            document.getElementById('firstMove').onclick = () => showMove(0);
+            document.getElementById('prev').onclick = () => showMove(move_idx - 1);
+            document.getElementById('next').onclick = () => showMove(move_idx + 1);
+            document.getElementById('lastMove').onclick = () => showMove(entries.length - 1);
             document.addEventListener('keydown', function(event) {
-                if (event.key === "ArrowLeft") {
-                    document.querySelector('button[name="prev"]').click();
-                }
-                if (event.key === "ArrowRight") {
-                    document.querySelector('button[name="next"]').click();
-                }
-                if (event.key == "ArrowUp") {
-                    document.querySelector('button[name="firstMove"]').click();
-                }
-                if (event.key == "ArrowDown") {
-                    document.querySelector('button[name="lastMove"]').click();
-                }
+                if (event.key === "ArrowLeft" && move_idx > 0) showMove(move_idx - 1);
+                if (event.key === "ArrowRight" && move_idx < entries.length - 1) showMove(move_idx + 1);
+                if (event.key === "ArrowDown") showMove(0);
+                if (event.key === "ArrowUp") showMove(entries.length - 1);
             });
         </script>
-    ''', entry=entry, move_idx=move_idx, total=len(entries), game_id=game_id, classification_color=classification_colors.get(entry["classification"], "#c3c2c1"),)
+    ''')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

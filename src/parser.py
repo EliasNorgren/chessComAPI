@@ -371,25 +371,34 @@ class Parser():
 
     def analyze_games_by_url(self, url : str, user: str):
         database = DataBase()
-        game = database.query(f'''
-            SELECT pgn, analysis, id, user_playing_as_white, url
-            FROM matches
-            WHERE url LIKE "%{url}%"        
-        ''')
-        if game is None or len(game) == 0:
-            print(f"No games found with url {url}, updating database for user {user}")
-            DataBaseUpdater().updateDB(user)
+        if url != None :
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate
                 FROM matches
-                WHERE url LIKE "%{url}%"        
+                WHERE url LIKE '%{url}%' AND user = '{user}'
             ''')
+            if game is None or len(game) == 0:
+                print(f"No games found with url {url}, updating database for user {user}")
+                DataBaseUpdater().updateDB(user)
+                game = database.query(f'''
+                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate
+                    FROM matches
+                    WHERE url LIKE "%{url}%" AND user = "{user}"
+                ''')
+        else :
+            game = database.query(f'''
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate
+                FROM matches
+                WHERE user == "{user}" 
+                ORDER BY archivedate DESC
+            ''')
+
         if game is None or len(game) == 0:
-            print(f"No games found with url {url}")
+            print(f"No games found with url {url} and user {user}")
             return
-        
+
         game = game[0]  # Assuming the query returns a single game
-        analyzer = Analyzer()
+       
 
         id = game['id']
         pgn = game['pgn']
@@ -398,13 +407,22 @@ class Parser():
         if analysis and analysis != "" :
             print(f"Game with id {id} already analyzed")
             return json.loads(analysis)  # Return the existing analysis if it exists
-
+        analyzer = Analyzer()
         url = game['url']
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
         analysis = analyzer.analyze_game(moves, user_playing_as_white)
-        database.update_analysis(id, analysis)
-        return analysis
+        response = {
+            "analysis": analysis,
+            "opponent_user": game['opponent_user'],
+            "opponent_rating": game['opponent_rating'],
+            "user_rating": game['user_rating'],
+            "user": user,
+            "url": url,
+            "archiveDate": game['archiveDate']
+        }
+        database.update_analysis(id, response)
+        return response
 
 
 # parser = Parser()
