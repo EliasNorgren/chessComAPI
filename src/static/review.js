@@ -30,7 +30,7 @@ async function loadReviewData() {
 
     loading = true;
     attempts = 0;
-
+    await sleep(150);
     while (loading && attempts < 60) {
         console.log("Waiting for review data to load... Attempt:", attempts + 1);
         try {
