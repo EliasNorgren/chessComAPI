@@ -92,6 +92,7 @@ class Analyzer:
             
 
     def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move, best_eval_got_mate, played_move_got_mate, player_is_white):
+        # print(f"Classifying move: {played_move}, Best move: {best_move}, Best eval: {best_eval_cp}, Played eval: {played_eval_cp}, Player is white: {player_is_white}, Best eval got mate: {best_eval_got_mate}, Played move got mate: {played_move_got_mate}")
         # A mate exist and the player is the one winning
         if best_eval_got_mate and ((player_is_white and best_eval_cp > 0) or (not player_is_white and best_eval_cp < 0)):
             if best_eval_got_mate and str(played_move) != str(best_move) and not played_move_got_mate:
@@ -103,17 +104,16 @@ class Analyzer:
                 # Still mating, but not the fastest way
                 return "Good Move"
         # A mate exist and the player is the one losing
-        elif (best_eval_got_mate or played_move_got_mate) and ((player_is_white and best_eval_cp < 0) or (not player_is_white and best_eval_cp > 0)):
+        elif (played_move_got_mate) and ((player_is_white and played_eval_cp < 0) or (not player_is_white and played_eval_cp > 0)):
             if str(played_move) == str(best_move):
                 return "Best Move"
-            elif played_move_got_mate and str(played_move) != str(best_move) and best_eval_got_mate and played_eval_cp == best_eval_cp:
+            elif str(played_move) != str(best_move) and played_eval_cp == best_eval_cp:
                 # Best move was the same distance to mate, but not the best move
                 return "Good Move"
-            elif played_move_got_mate and str(played_move) != str(best_move) and not best_eval_got_mate:
+            elif str(played_move) != str(best_move) and not best_eval_got_mate:
                 # Player walked into a mate
                 return "Blunder"
             else :
-                # Not the best way to avoid mate
                 return "Inaccuracy"
 
         if str(played_move) == str(best_move):
