@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS matches (
     opponent_user TEXT,
     ECO TEXT,
     ECOurl TEXT,
-    analysis TEXT,
+    analysis TEXT
 )
 ''')
 
