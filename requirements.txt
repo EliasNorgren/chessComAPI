@@ -1,0 +1,7 @@
+chess==1.11.1
+Flask==3.1.1
+Flask_Cors==5.0.0
+matplotlib==3.10.5
+Requests==2.32.4
+seaborn==0.13.2
+stockfish==3.28.0
