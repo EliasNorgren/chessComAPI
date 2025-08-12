@@ -26,6 +26,16 @@
             box-sizing: border-box;
         }
 
+
+        .move-classifications {
+            font-size: 1.2em;
+            background: #262522;
+            border-radius: 16px;
+            padding: 1em;
+            margin-left: 1em;
+            margin-right: 1em;
+        }
+
         .svg-board {
             max-width: 95vw;
             width: 50vw;
@@ -95,10 +105,9 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             width: 100%;
-            max-width: 95vw;
-            margin: 2em auto 1em auto;
+            margin-top: 2em;
         }
 
         .eval-bar {
@@ -125,28 +134,66 @@
         #progress-ring {
             transition: stroke-dashoffset 0.35s ease;
         }
+
+        .classification-table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto;
+            font-family: Arial, sans-serif;
+            background: #1e1e1e;
+            color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .classification-table th,
+        .classification-table td {
+            padding: 8px 12px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .classification-table th {
+            background-color: #333;
+            font-weight: bold;
+        }
+
+        .classification-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .white-count {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .black-count {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
     </style>
 </head>
 
 <body>
     <h2 id="game-header"></h2>
     <div class="move-info" id="move-info"></div>
+    <div id="loading-container" style="text-align:center; margin: 2em;">
+        <svg id="loading-circle" width="200" height="200" viewBox="0 0 240 240">
+            <circle cx="120" cy="120" r="108" stroke="#444" stroke-width="24" fill="none" />
+            <circle id="progress-ring" cx="120" cy="120" r="108" stroke="#6cf" stroke-width="24" fill="none"
+                stroke-linecap="round" stroke-dasharray="678.584" stroke-dashoffset="678.584"
+                transform="rotate(-90 120 120)" />
+            <text id="loading-text" x="120" y="136" text-anchor="middle" font-size="44" fill="#6cf"
+                font-family="Arial">0%</text>
+        </svg>
+    </div>
     <div class="board-flex">
+        <div id="move-classifications" class="move-classifications"></div>
         <div class="eval-bar" id="eval-bar">
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
         </div>
         <div class="svg-board" id="svg-board"></div>
-        <div id="loading-container" style="text-align:center; margin: 2em;">
-            <svg id="loading-circle" width="200" height="200" viewBox="0 0 240 240">
-                <circle cx="120" cy="120" r="108" stroke="#444" stroke-width="24" fill="none" />
-                <circle id="progress-ring" cx="120" cy="120" r="108" stroke="#6cf" stroke-width="24" fill="none"
-                    stroke-linecap="round" stroke-dasharray="678.584" stroke-dashoffset="678.584"
-                    transform="rotate(-90 120 120)" />
-                <text id="loading-text" x="120" y="136" text-anchor="middle" font-size="44" fill="#6cf"
-                    font-family="Arial">0%</text>
-            </svg>
-        </div>
-
     </div>
     <div class="nav-btns">
         <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>

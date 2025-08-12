@@ -413,7 +413,7 @@ class Parser():
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
         analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
-        white_accuracy, black_accuracy = self.average_accuracy(analysis)
+        white_accuracy, black_accuracy, classification_frequency = self.average_accuracy(analysis)
         response = {
             "analysis": analysis,
             "opponent_user": game['opponent_user'],
@@ -425,12 +425,32 @@ class Parser():
             "user_playing_as_white": user_playing_as_white,
             "white_accuracy": white_accuracy,
             "black_accuracy": black_accuracy,
+            "classification_frequency": classification_frequency,
         }
         database.update_analysis(id, response)
         return response
 
 
-    def average_accuracy(self, analysis) -> (float, float):  # type: ignore
+    def average_accuracy(self, analysis) -> (float, float, dict):  # type: ignore
+        classification_frequency = {
+            "white" : {
+                    "Best Move": 0,
+                    "Good Move": 0,
+                    "Inaccuracy": 0,
+                    "Mistake": 0,
+                    "Blunder": 0,
+                    "Missed mate": 0
+            },
+            "black" : {
+                    "Best Move": 0,
+                    "Good Move": 0,
+                    "Inaccuracy": 0,
+                    "Mistake": 0,
+                    "Blunder": 0,
+                    "Missed mate": 0
+            }
+        }
+        
         white_total_acc = 0
         black_total_acc = 0
         white_no_moves = 0
@@ -438,6 +458,12 @@ class Parser():
         white_turn = True
 
         for move in analysis:
+            turn = "white" if white_turn else "black"
+            if move.get('classification') is not None and move['classification'] in classification_frequency[turn]:
+                classification_frequency[turn][move['classification']] += 1
+            else :
+                classification_frequency[turn]['Other'] = classification_frequency.get('Other', 0) + 1
+
             if 'score' in move and move['score'] is not None:
                 if white_turn:
                     white_total_acc += move['score']
@@ -451,37 +477,5 @@ class Parser():
         white_acc = round((white_total_acc * 100) / white_no_moves, 2) if white_no_moves > 0 else 0.0
         black_acc = round((black_total_acc * 100) / black_no_moves, 2) if black_no_moves > 0 else 0.0
 
-        return white_acc, black_acc
-
-# parser = Parser()
-# data_range = FilterInfo.DateRange(datetime(year=2024, month=9, day=23), datetime(year=2024, month=9, day=30))
-# filter_info = FilterInfo("elias661", playing_as_white = True)
-# res = parser.get_most_played_players(filter_info)
-# print(res)
-
-# res = parser.get_games_by_eco(filter_info, eco="C45")
-
-# res = parser.get_total_fens_substring(filter_info, "r1bqkbnr/pppp1ppp/8/4p3/2BnP3/5N2/PPPP1PPP/RNBQK2R")
-# res = parser.get_stats_per_day(filter_info)
-
-# print("White")
-# filter_info = FilterInfo("elias661", playing_as_white = True)
-# res = parser.get_win_percentage_and_accuracy(filter_info)
-# for day in res :
-#     print(f"{day} {res[day]}")  
-
-
-# print("Black")
-# filter_info = FilterInfo("elias661", playing_as_white = False)
-# res = parser.get_win_percentage_and_accuracy(filter_info)
-# for day in res :
-#     print(f"{day} {res[day]}")  
-
-
-# for r in res['games']:
-#     print(r)
-# print(res['stats'])
-
-# parser.get_win_percentage_per_opening(filter_info)
-
+        return white_acc, black_acc, classification_frequency
 

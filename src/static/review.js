@@ -20,6 +20,7 @@ function setProgress(percent) {
 async function loadReviewData() {
     document.getElementById('svg-board').style.display = 'none';
     document.getElementById('eval-bar').style.display = 'none';
+    document.getElementById('move-classifications').style.display = 'none';
 
     let url = '/review_data?' + new URLSearchParams(window.location.search).toString();
     console.log("Fetching review data from:", url);
@@ -27,41 +28,43 @@ async function loadReviewData() {
     const initialData = await initialResponse.json();
     console.log("Received review data:", initialData);
     uuid = initialData.uuid;
-
-    loading = true;
     attempts = 0;
     await sleep(150);
-    while (loading && attempts < 60) {
-        console.log("Waiting for review data to load... Attempt:", attempts + 1);
+    while (attempts < 60) {
         try {
             const statusResponse = await fetch(`/get_entry_status?uuid=${uuid}`);
             const statusData = await statusResponse.json();
-            console.log("Received status:", statusData);
             if (statusData.error) {
                 console.error("Error fetching status:", statusData.error);
                 break; // Exit loop on error
             }
             if (typeof statusData == "string" && statusData.includes("loading")) {
-
                 let progressPercent = 0;
                 if (!statusData.includes('loading 0')) {
                     progressPercent = statusData.substring(statusData.indexOf('(') + 1, statusData.indexOf(')') - 1);
                     progressPercent = parseInt(progressPercent, 10);
                 }
-                console.log("Progress percent:", progressPercent);
+                console.log("Attempt ", attempts, "Progress percent:", progressPercent);
                 setProgress(progressPercent);
                 document.getElementById('loading-container').style.display = 'block';
                 await sleep(2000);
                 attempts++;
             } else {
+                console.log("Final status data:", statusData);
                 setProgress(100);
                 document.getElementById('loading-container').style.display = 'none';
                 document.getElementById('svg-board').style.display = '';
                 document.getElementById('eval-bar').style.display = '';
+                document.getElementById('move-classifications').style.display = '';
                 entries = statusData.analysis;
                 meta = statusData;
+                user_color = meta.user_playing_as_white ? "white" : "black";
+                opponent_color = meta.user_playing_as_white ? "black" : "white";
+                classification_frequency_user = meta.classification_frequency[user_color];
+                classification_frequency_opponent = meta.classification_frequency[opponent_color];
+                setClassificationFrequency(classification_frequency_user, classification_frequency_opponent);
                 showMove(0);
-                loading = false; // stop the loop
+                break
             }
         } catch (error) {
             console.error("Error fetching review data:", error);
@@ -75,6 +78,55 @@ async function loadReviewData() {
 }
 
 loadReviewData();
+
+function setClassificationFrequency(classification_frequency_user, classification_frequency_opponent) {
+    const classifications = [
+        "Best Move",
+        "Good Move",
+        "Inaccuracy",
+        "Mistake",
+        "Blunder",
+        "Missed mate",
+    ];
+
+    let classificationContainer = document.getElementById('move-classifications');
+    classificationContainer.innerHTML = ''; // Clear previous content
+
+    // Create table
+    let table = document.createElement('table');
+    table.classList.add('classification-table');
+
+    // Table header
+    let thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>Move Type</th>
+            <th>User</th>
+            <th>Opponent</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    // Table body
+    let tbody = document.createElement('tbody');
+
+    for (let classification of classifications) {
+        let color = getColor(classification);
+        let count_user = classification_frequency_user[classification] || 0;
+        let count_opponent = classification_frequency_opponent[classification] || 0;
+
+        let row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="color:${color}; font-weight:bold;">${classification}</td>
+            <td class="white-count">${count_user}</td>
+            <td class="black-count">${count_opponent}</td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    table.appendChild(tbody);
+    classificationContainer.appendChild(table);
+}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -110,8 +162,10 @@ function showMove(idx) {
     <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
+    url_id_split = meta.url.split("/");
+    url_id = url_id_split[url_id_split.length - 1];
     document.getElementById('game-header').innerText =
-        `Game ID: ${meta.game_id || ""} | Move ${move_idx + 1} / ${entries.length} | ${meta.archiveDate || ""} | ${meta.user || ""} (${meta.user_rating || ""}) VS ${meta.opponent_user || ""} (${meta.opponent_rating || ""})`;
+        `Game ID: ${url_id} | Move ${move_idx + 1} / ${entries.length} | ${meta.archiveDate || ""} | ${meta.user || ""} (${meta.user_rating || ""}) VS ${meta.opponent_user || ""} (${meta.opponent_rating || ""})`;
     document.getElementById('prev').disabled = move_idx === 0;
     document.getElementById('firstMove').disabled = move_idx === 0;
     document.getElementById('next').disabled = move_idx === entries.length - 1;
@@ -178,7 +232,8 @@ function getColor(classification) {
         "Good Move": "#81b64c",
         "Inaccuracy": "#f7c631",
         "Mistake": "#ff7769",
-        "Blunder": "#fa412d"
+        "Blunder": "#fa412d",
+        "Missed mate:": "#1eff00ff",
     };
     return colors[classification] || "#c3c2c1";
 }
