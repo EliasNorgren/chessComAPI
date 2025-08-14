@@ -372,7 +372,7 @@ class Parser():
         database = DataBase()
         if url != None :
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
                 FROM matches
                 WHERE url LIKE '%{url}%' AND user = '{user}'
             ''')
@@ -380,14 +380,14 @@ class Parser():
                 print(f"No games found with url {url}, updating database for user {user}")
                 DataBaseUpdater().updateDB(user)
                 game = database.query(f'''
-                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control
+                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
                     FROM matches
                     WHERE url LIKE "%{url}%" AND user = "{user}"
                 ''')
         else :
             DataBaseUpdater().updateDB(user)
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
                 FROM matches
                 WHERE user == "{user}" 
                 ORDER BY archivedate DESC
@@ -430,6 +430,8 @@ class Parser():
             "black_accuracy": black_accuracy,
             "classification_frequency": classification_frequency,
             "time_control": int(time_control),
+            "user_result": game["user_result"],
+            "opponent_result": game["opponent_result"]
         }
         database.update_analysis(id, response)
         return response

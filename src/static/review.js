@@ -159,7 +159,8 @@ function showMove(idx) {
     <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
     <span><strong>Evaluation:</strong> ${evalText}</span><br>
     <span><strong>Board:</strong> ${entry.board}</span><br>
-    <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span>
+    <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span><br>
+    <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
     url_id_split = meta.url.split("/");
