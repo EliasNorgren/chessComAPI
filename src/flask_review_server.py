@@ -11,7 +11,7 @@ app.secret_key = "your_secret_key"  # Needed for session
 entryCache = EntryCache()
 
 # Replace this with your real data loading logic
-def calculate_entries(game_id, user, uuid):
+def calculate_entries(game_id, user, uuid, head_minus):
     print(f"Fetching review data for game ID: {game_id}, user: {user}")
     global entryCache
     parser = Parser()
@@ -25,9 +25,10 @@ def review_data():
     entryCache.set_entry(new_uuid, "loading 0") 
     game_id = request.args.get('id', default=None, type=int)
     user = request.args.get('user', default='', type=str)
+    head_minus = request.args.get('head_minus', default=0, type=int)
     if user == '':
         return jsonify({"error": "User parameter is required"}), 400
-    threading.Thread(target=calculate_entries, args=(game_id, user, new_uuid)).start()
+    threading.Thread(target=calculate_entries, args=(game_id, user, new_uuid, head_minus)).start()
     response = {
         "uuid": str(new_uuid)
     }

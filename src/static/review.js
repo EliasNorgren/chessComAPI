@@ -15,8 +15,6 @@ function setProgress(percent) {
     document.getElementById('loading-text').textContent = `${percent}%`;
 }
 
-// setProgress(50)
-
 async function loadReviewData() {
     document.getElementById('svg-board').style.display = 'none';
     document.getElementById('eval-bar').style.display = 'none';
@@ -63,7 +61,9 @@ async function loadReviewData() {
                 classification_frequency_user = meta.classification_frequency[user_color];
                 classification_frequency_opponent = meta.classification_frequency[opponent_color];
                 setClassificationFrequency(classification_frequency_user, classification_frequency_opponent);
-                showMove(0);
+                // renderClockTime(meta.time_control, true)
+                // renderClockTime(meta.time_control, false)
+                showMove(0)
                 break
             }
         } catch (error) {
@@ -170,8 +170,40 @@ function showMove(idx) {
     document.getElementById('firstMove').disabled = move_idx === 0;
     document.getElementById('next').disabled = move_idx === entries.length - 1;
     document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
-
+    let white_turn = move_idx % 2;
     let user_playing_as_white = meta.user_playing_as_white;
+    let now_it_is_users_turn = user_playing_as_white && white_turn
+    // console.log("white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_white_turn ", now_it_is_users_turn)
+    if (idx == 0) {
+        renderClockTime(entries[move_idx].clock_time, true)
+        renderClockTime(meta.time_control, false)
+    } else {
+        renderClockTime(entries[move_idx].clock_time, !now_it_is_users_turn)
+    }
+    renderEvalBar(evalCp, user_playing_as_white);
+}
+
+function renderClockTime(clock_time, render_lower_time_control) {
+    let clock_time_str = clock_time.toString()
+    let decimal = ""
+    if (clock_time_str.includes('.')) {
+        decimal = clock_time_str.substring(clock_time_str.indexOf('.'), clock_time_str.length)
+    }
+    let clockTimeElementID = render_lower_time_control ? "lower_time" : "upper_time"
+    let clockTimeElement = document.getElementById(clockTimeElementID);
+    clock_time = Math.floor(clock_time)
+    if (clock_time !== null) {
+        let minutes = Math.floor(clock_time / 60);
+        let seconds = clock_time - minutes * 60;
+        // console.log("clock_time ", clock_time, " minutes ", minutes, " seconds ", seconds, " decimal ", decimal)
+        clockTimeElement.innerText = `Clock Time: ${minutes}:${seconds.toString().padStart(2, '0')}${decimal}`;
+    } else {
+        clockTimeElement.innerText = "Clock Time: Not available";
+    }
+}
+
+
+function renderEvalBar(evalCp, user_playing_as_white) {
     // Clamp eval to [-10, 10] for display (1000 centipawns)
     let evalClamped = Math.max(-1000, Math.min(1000, evalCp));
     // If user is playing as white, 100% = white wins; if black, 100% = black wins
@@ -226,6 +258,7 @@ function showMove(idx) {
     document.getElementById('eval-bar-fill').style.height = percent + "%";
     document.getElementById('eval-bar-fill').style.bottom = 0;
 }
+
 function getColor(classification) {
     const colors = {
         "Best Move": "#749bbf",
@@ -233,9 +266,13 @@ function getColor(classification) {
         "Inaccuracy": "#f7c631",
         "Mistake": "#ff7769",
         "Blunder": "#fa412d",
-        "Missed mate:": "#1eff00ff",
+        "Missed mate": "#c3c2c1",
     };
-    return colors[classification] || "#c3c2c1";
+    if (!colors[classification]) {
+        console.warn(`No color defined for classification: ${classification}`);
+        throw new Error(`Unknown classification: ${classification}`);
+    }
+    return colors[classification];
 }
 
 document.getElementById('firstMove').onclick = () => showMove(0);

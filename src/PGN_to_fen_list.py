@@ -19,6 +19,10 @@ def pgn_to_move_list(pgn_string: str) -> list:
     move_list = []
     pgn = StringIO(pgn_string)
     game = chess.pgn.read_game(pgn)
-    for move in game.mainline_moves():
-        move_list.append(move.uci())
+
+    nodes = list(game.mainline())  # Convert to list first
+    for node in nodes:  # skip root node (no move)
+        move = node.move
+        clock_time = node.clock()  # remaining time in seconds or None
+        move_list.append((move.uci(), clock_time))
     return move_list

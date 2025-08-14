@@ -45,7 +45,8 @@ class Analyzer:
         white_turn = True
         no_moves = len(move_list)
         current_move = 0
-        for move in move_list:
+        for move, clock_time in move_list:
+            print(f"Analyzing move {current_move + 1}/{no_moves}: {move} (Clock: {clock_time})")
             progress = f"{current_move / no_moves * 100:.2f}%"
             print(progress)
             entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({progress})")
@@ -86,6 +87,7 @@ class Analyzer:
                 "svg": svg,
                 "board": chess_board.fen(),
                 "score": self.classification_to_score(move_classification),
+                "clock_time": clock_time,
             }
             result.append(entry)
         return result

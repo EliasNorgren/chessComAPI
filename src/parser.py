@@ -36,7 +36,6 @@ class Parser():
 
     def get_most_played_players(self, filter_info : FilterInfo) -> list[tuple]:
         database = DataBase()
-
         filtered_ids = database.get_filtered_ids(filter_info)
         print(f"len {len(filtered_ids)}")
 
@@ -373,7 +372,7 @@ class Parser():
         database = DataBase()
         if url != None :
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control
                 FROM matches
                 WHERE url LIKE '%{url}%' AND user = '{user}'
             ''')
@@ -381,14 +380,14 @@ class Parser():
                 print(f"No games found with url {url}, updating database for user {user}")
                 DataBaseUpdater().updateDB(user)
                 game = database.query(f'''
-                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate
+                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control
                     FROM matches
                     WHERE url LIKE "%{url}%" AND user = "{user}"
                 ''')
         else :
             DataBaseUpdater().updateDB(user)
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control
                 FROM matches
                 WHERE user == "{user}" 
                 ORDER BY archivedate DESC
@@ -412,6 +411,10 @@ class Parser():
         url = game['url']
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
+        time_control = game['time_control']
+        if '+' in time_control:
+            time_control = time_control.split('+')[0]
+        
         analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
         white_accuracy, black_accuracy, classification_frequency = self.average_accuracy(analysis)
         response = {
@@ -426,6 +429,7 @@ class Parser():
             "white_accuracy": white_accuracy,
             "black_accuracy": black_accuracy,
             "classification_frequency": classification_frequency,
+            "time_control": int(time_control),
         }
         database.update_analysis(id, response)
         return response

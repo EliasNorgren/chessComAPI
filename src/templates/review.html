@@ -172,6 +172,13 @@
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: 4px;
         }
+
+        .upper_time {
+            background: beige;
+            padding: 1em;
+            border-radius: 1em;
+            color: black;
+        }
     </style>
 </head>
 
@@ -194,6 +201,10 @@
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
         </div>
         <div class="svg-board" id="svg-board"></div>
+        <div id="clock-time">
+            <div id="upper_time"></div>
+            <div id="lower_time"></div>
+        </div>
     </div>
     <div class="nav-btns">
         <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>
