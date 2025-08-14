@@ -173,11 +173,17 @@ function showMove(idx) {
     document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
     let white_turn = move_idx % 2;
     let user_playing_as_white = meta.user_playing_as_white;
-    let now_it_is_users_turn = user_playing_as_white && white_turn
-    // console.log("white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_white_turn ", now_it_is_users_turn)
+    let now_it_is_users_turn = (user_playing_as_white && white_turn) || (!user_playing_as_white && !white_turn)
+    console.log("idx ", idx, " white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_user_turn ", now_it_is_users_turn)
     if (idx == 0) {
-        renderClockTime(entries[move_idx].clock_time, true)
-        renderClockTime(meta.time_control, false)
+        if (user_playing_as_white) {
+            renderClockTime(entries[move_idx].clock_time, true)
+            renderClockTime(meta.time_control, false)
+        } else {
+            renderClockTime(entries[move_idx].clock_time, false)
+            renderClockTime(meta.time_control, true)
+        }
+
     } else {
         renderClockTime(entries[move_idx].clock_time, !now_it_is_users_turn)
     }
