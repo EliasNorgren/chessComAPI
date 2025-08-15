@@ -414,9 +414,10 @@ class Parser():
         time_control = game['time_control']
         if '+' in time_control:
             time_control = time_control.split('+')[0]
-        
+        time_control = int(time_control)
         analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
         white_accuracy, black_accuracy, classification_frequency = self.average_accuracy(analysis)
+        user_time, user_total_score, opponent_time, opponent_total_score = self.compute_total_times(analysis, time_control, user_playing_as_white)
         response = {
             "analysis": analysis,
             "opponent_user": game['opponent_user'],
@@ -429,12 +430,43 @@ class Parser():
             "white_accuracy": white_accuracy,
             "black_accuracy": black_accuracy,
             "classification_frequency": classification_frequency,
-            "time_control": int(time_control),
+            "time_control": time_control,
             "user_result": game["user_result"],
-            "opponent_result": game["opponent_result"]
+            "opponent_result": game["opponent_result"],
+            "user_time": user_time,
+            "opponent_time": opponent_time,
+            "user_total_score": user_total_score,
+            "opponent_total_score": opponent_total_score,
+            "user_score_per_min": round(user_total_score / (user_time / 60), 2),
+            "opponent_score_per_min": round(opponent_total_score / (opponent_time / 60), 2)
         }
         database.update_analysis(id, response)
         return response
+
+    def compute_total_times(self, analysis, time_control, user_playing_as_white) :
+        white_time = 0
+        black_time = 0
+        black_total_score = 0
+        white_total_score = 0
+        white_turn = True
+        for move in analysis :
+            move_time = move["clock_time"]
+            move_score = move["score"]
+            if white_turn :
+                white_time = time_control - move_time
+                white_total_score += move_score 
+            else :
+                black_time = time_control - move_time
+                black_total_score += move_score
+            white_turn = not white_turn
+        white_time = round(white_time, 2)
+        black_time = round(black_time, 2)
+        white_total_score = round(white_total_score, 2)
+        black_total_score = round(black_total_score, 2)
+        if user_playing_as_white :
+            return white_time, white_total_score, black_time, black_total_score
+        else :
+            return black_time, black_total_score, white_time, white_total_score
 
 
     def average_accuracy(self, analysis) -> (float, float, dict):  # type: ignore

@@ -160,7 +160,8 @@ function showMove(idx) {
     <span><strong>Evaluation:</strong> ${evalText}</span><br>
     <span><strong>Board:</strong> ${entry.board}</span><br>
     <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span><br>
-    <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span>
+    <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span><br>
+    <span><strong>Score per min:</strong> User: ${meta.user_score_per_min} - Opponent: ${meta.opponent_score_per_min}</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
     url_id_split = meta.url.split("/");
@@ -174,7 +175,7 @@ function showMove(idx) {
     let white_turn = move_idx % 2;
     let user_playing_as_white = meta.user_playing_as_white;
     let now_it_is_users_turn = (user_playing_as_white && white_turn) || (!user_playing_as_white && !white_turn)
-    console.log("idx ", idx, " white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_user_turn ", now_it_is_users_turn)
+    // console.log("idx ", idx, " white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_user_turn ", now_it_is_users_turn)
     if (idx == 0) {
         if (user_playing_as_white) {
             renderClockTime(entries[move_idx].clock_time, true)
