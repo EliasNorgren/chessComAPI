@@ -172,11 +172,14 @@
             border-radius: 4px;
         }
 
-        .upper_time {
+        /* .upper_time {
             background: beige;
             padding: 1em;
             border-radius: 1em;
             color: black;
+        } */
+        .clock-time {
+            margin-left: 2em;
         }
     </style>
 </head>
@@ -200,9 +203,13 @@
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
         </div>
         <div class="svg-board" id="svg-board"></div>
-        <div id="clock-time">
-            <div id="upper_time"></div>
-            <div id="lower_time"></div>
+        <div id="clock-time" class="clock-time">
+            <b>
+                <div id="upper_time"></div>
+            </b>
+            <b>
+                <div id="lower_time"></div>
+            </b>
         </div>
     </div>
     <div class="nav-btns">

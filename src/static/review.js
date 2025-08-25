@@ -178,20 +178,20 @@ function showMove(idx) {
     // console.log("idx ", idx, " white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_user_turn ", now_it_is_users_turn)
     if (idx == 0) {
         if (user_playing_as_white) {
-            renderClockTime(entries[move_idx].clock_time, true)
-            renderClockTime(meta.time_control, false)
+            renderClockTime(entries[move_idx].clock_time, true, user_playing_as_white)
+            renderClockTime(meta.time_control, false, user_playing_as_white)
         } else {
-            renderClockTime(entries[move_idx].clock_time, false)
-            renderClockTime(meta.time_control, true)
+            renderClockTime(entries[move_idx].clock_time, false, user_playing_as_white)
+            renderClockTime(meta.time_control, true, user_playing_as_white)
         }
 
     } else {
-        renderClockTime(entries[move_idx].clock_time, !now_it_is_users_turn)
+        renderClockTime(entries[move_idx].clock_time, !now_it_is_users_turn, user_playing_as_white)
     }
     renderEvalBar(evalCp, user_playing_as_white);
 }
 
-function renderClockTime(clock_time, render_lower_time_control) {
+function renderClockTime(clock_time, render_lower_time_control, user_playing_as_white) {
     let clock_time_str = clock_time.toString()
     let decimal = ""
     if (clock_time_str.includes('.')) {
@@ -199,17 +199,42 @@ function renderClockTime(clock_time, render_lower_time_control) {
     }
     let clockTimeElementID = render_lower_time_control ? "lower_time" : "upper_time"
     let clockTimeElement = document.getElementById(clockTimeElementID);
+    setClockTimeStyle(clockTimeElement,
+        (render_lower_time_control && !user_playing_as_white) || (!render_lower_time_control && user_playing_as_white))
     clock_time = Math.floor(clock_time)
     if (clock_time !== null) {
         let minutes = Math.floor(clock_time / 60);
         let seconds = clock_time - minutes * 60;
         // console.log("clock_time ", clock_time, " minutes ", minutes, " seconds ", seconds, " decimal ", decimal)
-        clockTimeElement.innerText = `Clock Time: ${minutes}:${seconds.toString().padStart(2, '0')}${decimal}`;
+        clockTimeElement.innerText = `${minutes}:${seconds.toString().padStart(2, '0')}${decimal}`;
     } else {
         clockTimeElement.innerText = "Clock Time: Not available";
     }
 }
 
+function setClockTimeStyle(element, time_control_is_black) {
+    if (time_control_is_black) {
+        element.style.color = "#ffffff";
+        element.style.backgroundColor = "#262522";
+        element.style.borderRadius = "8px";
+        element.style.padding = "0.2em 0.5em";
+        element.style.fontWeight = "bold";
+        element.style.fontSize = "1.2em";
+        element.style.minWidth = "4.5em";
+        element.style.textAlign = "center";
+    } else {
+        element.style.color = "#000000";
+        element.style.backgroundColor = "#ffffff";
+        element.style.borderRadius = "8px";
+        element.style.padding = "0.2em 0.5em";
+        element.style.fontWeight = "bold";
+        element.style.fontSize = "1.2em";
+        element.style.minWidth = "4.5em";
+        element.style.textAlign = "center";
+    }
+    element.style.marginTop = "5em";
+    element.style.marginBottom = "5em";
+}
 
 function renderEvalBar(evalCp, user_playing_as_white) {
     // Clamp eval to [-10, 10] for display (1000 centipawns)
