@@ -10,7 +10,6 @@ app.secret_key = "your_secret_key"  # Needed for session
 
 entryCache = EntryCache()
 
-# Replace this with your real data loading logic
 def calculate_entries(game_id, user, uuid, head_minus):
     print(f"Fetching review data for game ID: {game_id}, user: {user}")
     global entryCache

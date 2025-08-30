@@ -3,6 +3,7 @@ import sqlite3
 from filter_info import FilterInfo
 import datetime
 import json
+import os
 
 class DataBase():
     def __init__(self) -> None:
@@ -247,4 +248,8 @@ class DataBase():
             "opponent_result": db_entry[31],
             "opponent_user": db_entry[32]
         }
+        
+    def get_db_size(self) -> str :
+        file_size = os.path.getsize(self.database_file_path)
+        return f"{file_size / (1024 * 1024):.2f}"
     

@@ -35,6 +35,8 @@ def main():
     subparsers.add_parser("get_stats_per_day")
     subparsers.add_parser("get_win_percentage_per_opening")
     subparsers.add_parser("get_wins_by_day_of_week")
+    subparsers.add_parser("get_blunders")
+    subparsers.add_parser("analyze_games_for_user")
 
     eco_parser = subparsers.add_parser("get_games_by_eco")
     eco_parser.add_argument("--eco", type=str, required=True, help="ECO code")
@@ -99,6 +101,10 @@ def main():
         result = parser_obj.get_wins_by_day_of_week(filter_info)
     elif args.command == "analyze_games":
         result = parser_obj.analyze_games(filter_info, reanalyze_analyzed_games=args.reanalyze_analyzed_games)
+    elif args.command == "get_blunders" :
+        result = parser_obj.get_blunders(filter_info)
+    elif args.command == "analyze_games_for_user" :
+        result = parser_obj.analyze_games_for_user(filter_info)
     else:
         parser.error("Unknown command")
 

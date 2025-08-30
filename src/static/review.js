@@ -205,7 +205,7 @@ function renderClockTime(clock_time, render_lower_time_control, user_playing_as_
     if (clock_time !== null) {
         let minutes = Math.floor(clock_time / 60);
         let seconds = clock_time - minutes * 60;
-        // console.log("clock_time ", clock_time, " minutes ", minutes, " seconds ", seconds, " decimal ", decimal)
+        console.log("clock_time ", clock_time, " minutes ", minutes, " seconds ", seconds, " decimal ", decimal, "render_lower_time_control ", render_lower_time_control, " user_playing_as_white ", user_playing_as_white)
         clockTimeElement.innerText = `${minutes}:${seconds.toString().padStart(2, '0')}${decimal}`;
     } else {
         clockTimeElement.innerText = "Clock Time: Not available";

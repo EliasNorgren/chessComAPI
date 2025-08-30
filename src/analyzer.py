@@ -36,6 +36,7 @@ class Analyzer:
         }
 
         self.engine = Stockfish(path=stockfish_engine_path, parameters=settings)
+        # self.engine.resume_full_strength()
         self.engine_depth = 17
 
     def analyze_game(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
@@ -49,11 +50,13 @@ class Analyzer:
             # print(f"Analyzing move {current_move + 1}/{no_moves}: {move} (Clock: {clock_time})")
             progress = f"{current_move / no_moves * 100:.2f}%"
             print(progress)
-            entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({progress})")
+            if entryCache and uuid :
+                entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({progress})")
             current_move += 1
             # Write svg to file
             uci_move = chess.Move.from_uci(move)
             san_move = chess_board.san(uci_move)
+            board_fen_before_move = chess_board.fen()
             chess_board.push(uci_move)
             best_move = self.engine.get_top_moves(1)
             self.engine.set_depth(self.engine_depth)
@@ -69,8 +72,8 @@ class Analyzer:
                                                       played_move_got_mate=eval['type'] == 'mate',
                                                       player_is_white=white_turn)
             arrows = []
+            best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
             if move_classification != "Best Move":
-                best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
                 arrows = [chess.svg.Arrow(best_move_uci.from_square, best_move_uci.to_square, color="#008612AC")]
             fill = dict.fromkeys([uci_move.from_square, uci_move.to_square], self.classification_colors.get(move_classification, "#48ff00"))
             colors = {
@@ -82,12 +85,16 @@ class Analyzer:
             
             entry = {
                 "move": san_move,
+                "uci_move": str(uci_move),
                 "evaluation": eval,
                 "classification": move_classification,
                 "svg": svg,
                 "board": chess_board.fen(),
+                "board_before_move": board_fen_before_move,
                 "score": self.classification_to_score(move_classification),
                 "clock_time": clock_time,
+                "best_move" : best_move,
+                "best_move_uci": str(best_move_uci)
             }
             result.append(entry)
         return result
@@ -141,3 +148,6 @@ class Analyzer:
             "Missed mate": 0.4
         }
         return classification_scores.get(classification, 0.0)
+    
+    def close_engine(self):
+        self.engine.send_quit_command()

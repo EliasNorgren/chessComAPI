@@ -30,6 +30,7 @@ from entryCache import EntryCache
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sqlite3
+import time
 import json
 
 class Parser():
@@ -398,8 +399,10 @@ class Parser():
             return
 
         game = game[0]  # Assuming the query returns a single game
+        return self.analyze_game(game, database, user, entryCache, uuid)
        
 
+    def analyze_game(self, game, database: DataBase, user : str, entryCache : EntryCache = None, uuid = None) :
         id = game['id']
         pgn = game['pgn']
         analysis = game['analysis']
@@ -441,6 +444,7 @@ class Parser():
             "opponent_score_per_min": round(opponent_total_score / (opponent_time / 60), 2)
         }
         database.update_analysis(id, response)
+        # analyzer.close_engine()
         return response
 
     def compute_total_times(self, analysis, time_control, user_playing_as_white) :
@@ -516,4 +520,64 @@ class Parser():
         black_acc = round((black_total_acc * 100) / black_no_moves, 2) if black_no_moves > 0 else 0.0
 
         return white_acc, black_acc, classification_frequency
+    
+    def get_blunders(self, filter_info: FilterInfo) -> list[dict]:
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        
 
+        games_with_blunders = database.query(f'''
+            SELECT analysis
+            FROM matches
+            WHERE id IN ({filtered_ids}) AND
+            analysis LIKE "%blunder%"     
+        ''')
+        result = []
+        for game in games_with_blunders :
+            meta_data = json.loads(game["analysis"])
+            user_playing_as_white = meta_data["user_playing_as_white"]
+            analysis = meta_data['analysis']
+            user_turn = user_playing_as_white
+            for move in analysis :
+                move : dict
+                if not user_turn :
+                    user_turn = not user_turn
+                    continue
+                classification = move["classification"]
+                if classification == "Missed mate" or classification == "Blunder" :
+                    result.append({
+                        "user_move": move["move"],
+                        "user_move_uci": move["uci_move"],
+                        "board_fen": move["board"],
+                        "board_before_move": move["board_before_move"],
+                        "best_move": move["best_move"][0],
+                        "best_move_uci": move["best_move_uci"],
+                    })
+                user_turn = not user_turn
+        return result
+    
+    def analyze_games_for_user(self, filter_info: FilterInfo) :
+        user = filter_info.user
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        games = database.query(f'''
+            SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
+            FROM matches
+            WHERE id IN ({filtered_ids}) AND
+            analysis == ""
+            ORDER BY archiveDate DESC
+        ''')
+        no_games = len(games)
+        done = 0
+        time_taken = 0
+        for game in games :
+            print(f"Analyzing game from {game["archiveDate"]}")
+            start_time = time.time()
+            self.analyze_game(game, database, user)
+            time_taken += time.time() - start_time
+            done += 1
+            avg_time = round(time_taken / done, 2)
+            time_remaining = round(((no_games - done) * avg_time) / 60, 2)
+            print(f"Progress: {done} / {no_games} - Average time per game {avg_time} seconds.")
+            print(f"Estimated time remaining: {time_remaining} minutes")
+            print(f"DB size: {database.get_db_size()} MB")
