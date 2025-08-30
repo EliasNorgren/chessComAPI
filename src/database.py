@@ -76,7 +76,16 @@ class DataBase():
                 AND id in({ids})
             '''
             params = (filter_info.rated,)
-            ids = self.do_filter_query(query, params)       
+            ids = self.do_filter_query(query, params)    
+
+        if filter_info.time_class != None :
+            query = f'''
+                SELECT id FROM matches
+                WHERE time_class = ? 
+                AND id in({ids})
+            '''
+            params = (filter_info.time_class,)
+            ids = self.do_filter_query(query, params) 
 
         return ids
 

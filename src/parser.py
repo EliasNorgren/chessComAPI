@@ -339,35 +339,35 @@ class Parser():
 
         return stats_per_day
 
-    def analyze_games(self, filter_info : FilterInfo, reanalyze_analyzed_games : bool):
-        database = DataBase()
-        filtered_ids = database.get_filtered_ids(filter_info)
-        games = database.query(f'''
-            SELECT pgn, analysis, id, user_playing_as_white, url
-            FROM matches
-            WHERE id IN ({filtered_ids})        
-        ''')
+    # def analyze_games(self, filter_info : FilterInfo, reanalyze_analyzed_games : bool):
+    #     database = DataBase()
+    #     filtered_ids = database.get_filtered_ids(filter_info)
+    #     games = database.query(f'''
+    #         SELECT pgn, analysis, id, user_playing_as_white, url
+    #         FROM matches
+    #         WHERE id IN ({filtered_ids})        
+    #     ''')
 
-        analyzer = Analyzer()
-        no_games = len(games)
-        no_analyzed_games = 0
-        print(f"Analyzing {no_games} games")
-        for game in games:
-            id = game['id']
-            pgn = game['pgn']
-            analysis = game['analysis']
-            user_playing_as_white = game['user_playing_as_white']
-            if not (analysis is None or reanalyze_analyzed_games):
-                print(f"Game with id {id} already analyzed, skipping")
+    #     analyzer = Analyzer()
+    #     no_games = len(games)
+    #     no_analyzed_games = 0
+    #     print(f"Analyzing {no_games} games")
+    #     for game in games:
+    #         id = game['id']
+    #         pgn = game['pgn']
+    #         analysis = game['analysis']
+    #         user_playing_as_white = game['user_playing_as_white']
+    #         if not (analysis is None or reanalyze_analyzed_games):
+    #             print(f"Game with id {id} already analyzed, skipping")
 
-                continue
-            url = game['url']
-            print(f"Analyzing game {url}")
-            moves = pgn_to_move_list(pgn)
-            analysis = analyzer.analyze_game(moves, user_playing_as_white)
-            database.update_analysis(id, analysis)
-            no_analyzed_games += 1
-            print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
+    #             continue
+    #         url = game['url']
+    #         print(f"Analyzing game {url}")
+    #         moves = pgn_to_move_list(pgn)
+    #         analysis = analyzer.analyze_game(moves, user_playing_as_white)
+    #         database.update_analysis(id, analysis)
+    #         no_analyzed_games += 1
+    #         print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
 
     def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid):
         database = DataBase()

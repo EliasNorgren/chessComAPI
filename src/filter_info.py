@@ -2,22 +2,6 @@ from datetime import datetime
 import json
 
 class FilterInfo():
-
-    def __init__(self, user : str, user_range : 'RatingRange' = None, 
-                 opponent_range : 'RatingRange' = None,
-                 date_range : 'DateRange' = None,
-                 time_control_range : 'TimeControl' = None,
-                 rated : bool = None,
-                 playing_as_white : bool = None
-                 ) -> None:
-        self.user = user.lower()
-        self.user_rating_range = user_range
-        self.opponent_rating_range = opponent_range
-        self.date_range = date_range
-        self.time_control_range = time_control_range
-        self.rated = rated
-        self.playing_as_white = playing_as_white
-    
     class RatingRange():
         def __init__(self, start : int, end : int) -> None:
             self.start = start
@@ -34,6 +18,29 @@ class FilterInfo():
             self.lower = lower
             self.upper = upper
             
+    class TimeClass():
+        BULLET = "bullet"
+        BLITZ = "blitz"
+        RAPID = "rapid"
+        DAILY = "classical"
+
+    def __init__(self, user : str, user_range : RatingRange = None, 
+                 opponent_range : RatingRange = None,
+                 date_range : DateRange = None,
+                 time_control_range : 'TimeControl' = None,
+                 rated : bool = None,
+                 playing_as_white : bool = None,
+                 time_class : TimeClass = None
+                 ) -> None:
+        self.user = user.lower()
+        self.user_rating_range = user_range
+        self.opponent_rating_range = opponent_range
+        self.date_range = date_range
+        self.time_control_range = time_control_range
+        self.rated = rated
+        self.playing_as_white = playing_as_white
+        self.time_class = time_class
+
     def __str__(self):
         res = ""
         res += "user: " + self.user + "\n"
@@ -55,4 +62,6 @@ class FilterInfo():
             res += "time_control_range: None\n"
         res += "rated: " + str(self.rated) + "\n"
         res += "playing_as_white: " + str(self.playing_as_white) + "\n"
+        if self.time_class is not None :
+            res += "time_class: " + str(self.time_class) + "\n"
         return res

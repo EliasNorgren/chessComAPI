@@ -25,7 +25,7 @@ def main():
     parser.add_argument("--start_date", type=str, help="Start date for filtering games (YYYY-MM-DD)")
     parser.add_argument("--end_date", type=str, help="End date for filtering games (YYYY-MM-DD)")
     parser.add_argument("--update_database", action="store_true", help="Update the database with new games for the user")
-
+    parser.add_argument("--time_class", type=str, choices=[FilterInfo.TimeClass.BULLET, FilterInfo.TimeClass.BLITZ, FilterInfo.TimeClass.RAPID, FilterInfo.TimeClass.DAILY], help="Filter by time class (bullet, blitz, rapid, classical)")
     # Subparsers for each get method
     subparsers = parser.add_subparsers(dest="command", required=True, help="Parser method to call")
 
@@ -47,8 +47,8 @@ def main():
     get_total_fens_substring_parser = subparsers.add_parser("get_total_fens_substring")
     get_total_fens_substring_parser.add_argument("--substring", type=str, required=True, help="Get games where this FEN occured")
 
-    analyze_games_parser = subparsers.add_parser("analyze_games")
-    analyze_games_parser.add_argument("--reanalyze_analyzed_games", action="store_true", help="Reanalyze already analyzed games")
+    # analyze_games_parser = subparsers.add_parser("analyze_games")
+    # analyze_games_parser.add_argument("--reanalyze_analyzed_games", action="store_true", help="Reanalyze already analyzed games")
 
     args = parser.parse_args()
     print(f"Parsed arguments: {args}")
@@ -74,7 +74,8 @@ def main():
         user=args.user,
         rated=args.rated,
         playing_as_white=args.playing_as_white,
-        date_range=date_range
+        date_range=date_range,
+        time_class=args.time_class if args.time_class else None
     )
     parser_obj = Parser()
 
@@ -99,8 +100,8 @@ def main():
         result = parser_obj.get_win_percentage_per_opening(filter_info)
     elif args.command == "get_wins_by_day_of_week":
         result = parser_obj.get_wins_by_day_of_week(filter_info)
-    elif args.command == "analyze_games":
-        result = parser_obj.analyze_games(filter_info, reanalyze_analyzed_games=args.reanalyze_analyzed_games)
+    # elif args.command == "analyze_games":
+        # result = parser_obj.analyze_games(filter_info, reanalyze_analyzed_games=args.reanalyze_analyzed_games)
     elif args.command == "get_blunders" :
         result = parser_obj.get_blunders(filter_info)
     elif args.command == "analyze_games_for_user" :
