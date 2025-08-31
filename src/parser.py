@@ -440,8 +440,8 @@ class Parser():
             "opponent_time": opponent_time,
             "user_total_score": user_total_score,
             "opponent_total_score": opponent_total_score,
-            "user_score_per_min": round(user_total_score / (user_time / 60), 2),
-            "opponent_score_per_min": round(opponent_total_score / (opponent_time / 60), 2)
+            "user_score_per_min": 0 if user_time <= 0 else round(user_total_score / (user_time / 60), 2),
+            "opponent_score_per_min": 0 if opponent_time <= 0 else round(opponent_total_score / (opponent_time / 60), 2)
         }
         database.update_analysis(id, response)
         # analyzer.close_engine()
