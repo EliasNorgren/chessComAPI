@@ -181,6 +181,12 @@
         .clock-time {
             margin-left: 2em;
         }
+
+        .error-message {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 2em;
+        }
     </style>
 </head>
 
@@ -197,6 +203,7 @@
                 font-family="Arial">0%</text>
         </svg>
     </div>
+    <div id="error-message" class="error-message" style="color: red; display: none;">Error loading review data</div>
     <div class="board-flex">
         <div id="move-classifications" class="move-classifications"></div>
         <div class="eval-bar" id="eval-bar">

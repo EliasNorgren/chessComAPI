@@ -19,6 +19,7 @@ async function loadReviewData() {
     document.getElementById('svg-board').style.display = 'none';
     document.getElementById('eval-bar').style.display = 'none';
     document.getElementById('move-classifications').style.display = 'none';
+    document.getElementById('error-message').style.display = 'none';
 
     let url = '/review_data?' + new URLSearchParams(window.location.search).toString();
     console.log("Fetching review data from:", url);
@@ -33,7 +34,13 @@ async function loadReviewData() {
             const statusResponse = await fetch(`/get_entry_status?uuid=${uuid}`);
             const statusData = await statusResponse.json();
             if (statusData.error) {
-                console.error("Error fetching status:", statusData.error);
+                responseStatus = statusResponse.status
+                console.error("Error fetching status:", statusData, responseStatus);
+                
+                // Handle 404 and other errors 
+                document.getElementById('loading-container').style.display = 'none';
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('error-message').textContent = `Error ${responseStatus}: ${statusData.error}`;
                 break; // Exit loop on error
             }
             if (typeof statusData == "string" && statusData.includes("loading")) {
