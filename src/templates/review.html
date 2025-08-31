@@ -225,6 +225,12 @@
         <button id="next" title="Next Move"><i class="fa-solid fa-angle-right"></i></button>
         <button id="lastMove" title="Last Move"><i class="fa-solid fa-angles-right"></i></button>
     </div>
+    <script>
+        const captureSoundUrl = "{{ url_for('static', filename='capture.mp3') }}";
+        const moveSelfSoundUrl = "{{ url_for('static', filename='move-self.mp3') }}";
+        const checkSoundUrl = "{{ url_for('static', filename='move-check.mp3') }}";
+        const promoteSoundUrl = "{{ url_for('static', filename='promote.mp3') }}";
+    </script>
     <script src="{{ url_for('static', filename='review.js') }}"></script>
 </body>
 

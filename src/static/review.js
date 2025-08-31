@@ -6,6 +6,11 @@ const circle = document.getElementById('progress-ring');
 const radius = circle.r.baseVal.value;
 const circumference = 2 * Math.PI * radius;
 
+const captureAudio = new Audio(captureSoundUrl);
+const moveSelfAudio = new Audio(moveSelfSoundUrl);
+const promoteSound = new Audio(promoteSoundUrl);
+const checkSound = new Audio(checkSoundUrl);
+
 circle.style.strokeDasharray = `${circumference} ${circumference}`;
 circle.style.strokeDashoffset = circumference;
 
@@ -142,6 +147,16 @@ function sleep(ms) {
 function showMove(idx) {
     move_idx = idx;
     let entry = entries[move_idx];
+    console.log(entry.move)
+    if (entry.move.includes('+') || entry.move.includes('#')) {
+        checkSound.play();
+    } else if (entry.move.includes('=')) {
+        promoteSound.play();
+    } else if (entry.move.includes('x')) {
+        captureAudio.play();
+    } else {
+        moveSelfAudio.play();
+    }
     let evaluation = entry.evaluation || {};
     let evalText = "";
     let evalCp = 0;
