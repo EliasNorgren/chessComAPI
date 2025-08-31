@@ -567,7 +567,11 @@ class Parser():
             analysis == ""
             ORDER BY archiveDate DESC
         ''')
+        len_before = len(games)
+        games = list(filter(lambda game : not (game["pgn"] == None or game["pgn"] == ""), games))
         no_games = len(games)
+        if len_before != no_games :
+            print(f"Removed {len_before - no_games} that missed the PGN column.")
         done = 0
         time_taken = 0
         for game in games :
