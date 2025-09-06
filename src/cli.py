@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
+from chessComAPI.src.analyzer import Analyzer
 from filter_info import FilterInfo
 from parser import Parser
 from controller import DataBaseUpdater
@@ -105,7 +106,8 @@ def main():
     elif args.command == "get_blunders" :
         result = parser_obj.get_blunders(filter_info)
     elif args.command == "analyze_games_for_user" :
-        result = parser_obj.analyze_games_for_user(filter_info)
+        analyzer = Analyzer()
+        result = parser_obj.analyze_games_for_user(filter_info, analyzer)
     else:
         parser.error("Unknown command")
 

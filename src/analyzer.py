@@ -6,6 +6,7 @@ from entryCache import EntryCache
 
 class Analyzer:
     def __init__(self):
+        print("Initializing Analyzer with Stockfish engine...")
         self.classification_colors = {
             "Best Move": "#749bbf",
             "Good Move": "#81b64c",
@@ -22,9 +23,9 @@ class Analyzer:
             "Debug Log File": "",
             "Contempt": 0,
             "Min Split Depth": 0,
-            "Threads": 4, # More threads will make the engine stronger, but should be kept at less than the number of logical processors on your computer.
+            "Threads": 3, # More threads will make the engine stronger, but should be kept at less than the number of logical processors on your computer.
             "Ponder": "false",
-            "Hash": 2048, # Default size is 16 MB. It's recommended that you increase this value, but keep it as some power of 2. E.g., if you're fine using 2 GB of RAM, set Hash to 2048 (11th power of 2).
+            "Hash": 1024, # Default size is 16 MB. It's recommended that you increase this value, but keep it as some power of 2. E.g., if you're fine using 2 GB of RAM, set Hash to 2048 (11th power of 2).
             "MultiPV": 1,
             "Skill Level": 20,
             "Move Overhead": 10,
@@ -34,7 +35,7 @@ class Analyzer:
             "UCI_LimitStrength": "false",
             "UCI_Elo": 1350,  # Default Elo rating for the engine.
         }
-
+        
         self.engine = Stockfish(path=stockfish_engine_path, parameters=settings)
         # self.engine.resume_full_strength()
         self.engine_depth = 17

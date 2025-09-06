@@ -1,3 +1,4 @@
+from analyzer import Analyzer
 from flask import Flask, render_template, jsonify, request
 from parser import Parser
 import uuid
@@ -7,14 +8,14 @@ from entryCache import EntryCache
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
-
-entryCache = EntryCache()
+analyzer : Analyzer = None
+entryCache : EntryCache = None
 
 def calculate_entries(game_id, user, uuid, head_minus):
     print(f"Fetching review data for game ID: {game_id}, user: {user}")
-    global entryCache
+    global entryCache, analyzer
     parser = Parser()
-    analyze_game = parser.analyze_games_by_url(game_id, user, entryCache, uuid)
+    analyze_game = parser.analyze_games_by_url(game_id, user, analyzer, entryCache, uuid)
     entryCache.set_entry(uuid, analyze_game)
 
 @app.route('/review_data')
@@ -55,5 +56,7 @@ def review_page():
     return render_template('review.html')
 
 if __name__ == '__main__':
+    analyzer = Analyzer()
+    entryCache = EntryCache()
     # Run on all interfaces, port 5000
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

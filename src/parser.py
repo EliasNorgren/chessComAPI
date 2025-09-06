@@ -369,7 +369,7 @@ class Parser():
     #         no_analyzed_games += 1
     #         print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
 
-    def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid):
+    def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid : str, analyzer : Analyzer) -> dict:
         database = DataBase()
         if url != None :
             game = database.query(f'''
@@ -399,10 +399,10 @@ class Parser():
             return
 
         game = game[0]  # Assuming the query returns a single game
-        return self.analyze_game(game, database, user, entryCache, uuid)
-       
+        return self.analyze_game(game, database, user, analyzer, entryCache, uuid)
 
-    def analyze_game(self, game, database: DataBase, user : str, entryCache : EntryCache = None, uuid = None) :
+    def analyze_game(self, game, database: DataBase, user : str, analyzer : Analyzer, 
+                     entryCache : EntryCache = None, uuid = None) -> dict:
         id = game['id']
         pgn = game['pgn']
         analysis = game['analysis']
@@ -410,7 +410,7 @@ class Parser():
         if analysis and analysis != "" :
             print(f"Game with id {id} already analyzed")
             return json.loads(analysis)  # Return the existing analysis if it exists
-        analyzer = Analyzer()
+        
         url = game['url']
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
@@ -556,7 +556,7 @@ class Parser():
                 user_turn = not user_turn
         return result
     
-    def analyze_games_for_user(self, filter_info: FilterInfo) :
+    def analyze_games_for_user(self, filter_info: FilterInfo, analyzer: Analyzer) :
         user = filter_info.user
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
@@ -577,7 +577,7 @@ class Parser():
         for game in games :
             print(f"Analyzing game from {game["archiveDate"]}")
             start_time = time.time()
-            self.analyze_game(game, database, user)
+            self.analyze_game(game, database, user, analyzer)
             time_taken += time.time() - start_time
             done += 1
             avg_time = round(time_taken / done, 2)

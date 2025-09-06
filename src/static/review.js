@@ -86,6 +86,9 @@ async function loadReviewData() {
 
     if (attempts >= 60) {
         console.warn("Reached max attempts, stopping load.");
+        document.getElementById('loading-container').style.display = 'none';
+        document.getElementById('error-message').style.display = 'block';
+        document.getElementById('error-message').textContent = `Error : Maximum attempts reached while loading data. Please try again later.`;
     }
 }
 
