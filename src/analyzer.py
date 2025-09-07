@@ -1,4 +1,6 @@
-from stockfish import Stockfish
+# from stockfish import Stockfish
+# from stockfish.models import Stockfish
+from stockfish_fork.stockfish.models import Stockfish
 import os
 import chess
 import chess.svg
@@ -36,8 +38,7 @@ class Analyzer:
             "UCI_Elo": 1350,  # Default Elo rating for the engine.
         }
         
-        self.engine = Stockfish(path=stockfish_engine_path, parameters=settings)
-        # self.engine.resume_full_strength()
+        self.engine : Stockfish = Stockfish(path=stockfish_engine_path, parameters=settings)
         self.engine_depth = 17
 
     def analyze_game(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
@@ -59,7 +60,7 @@ class Analyzer:
             san_move = chess_board.san(uci_move)
             board_fen_before_move = chess_board.fen()
             chess_board.push(uci_move)
-            best_move = self.engine.get_top_moves(1)
+            best_move = self.engine.get_top_moves(1, include_principal_variation=True)
             self.engine.set_depth(self.engine_depth)
             self.engine.make_moves_from_current_position([move])
             self.engine.set_depth(self.engine_depth - 1)
@@ -95,7 +96,8 @@ class Analyzer:
                 "score": self.classification_to_score(move_classification),
                 "clock_time": clock_time,
                 "best_move" : best_move,
-                "best_move_uci": str(best_move_uci)
+                "best_move_uci": str(best_move_uci),
+                "line": best_move[0]['Line'] if 'Line' in best_move[0] else ""
             }
             result.append(entry)
         return result

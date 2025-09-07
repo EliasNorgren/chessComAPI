@@ -15,7 +15,7 @@ def calculate_entries(game_id, user, uuid, head_minus):
     print(f"Fetching review data for game ID: {game_id}, user: {user}")
     global entryCache, analyzer
     parser = Parser()
-    analyze_game = parser.analyze_games_by_url(game_id, user, analyzer, entryCache, uuid)
+    analyze_game = parser.analyze_games_by_url(game_id, user, entryCache, uuid, analyzer)
     entryCache.set_entry(uuid, analyze_game)
 
 @app.route('/review_data')

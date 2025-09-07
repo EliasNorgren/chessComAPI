@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
-from chessComAPI.src.analyzer import Analyzer
+from analyzer import Analyzer
 from filter_info import FilterInfo
 from parser import Parser
 from controller import DataBaseUpdater

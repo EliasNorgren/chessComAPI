@@ -41,7 +41,7 @@ async function loadReviewData() {
             if (statusData.error) {
                 responseStatus = statusResponse.status
                 console.error("Error fetching status:", statusData, responseStatus);
-                
+
                 // Handle 404 and other errors 
                 document.getElementById('loading-container').style.display = 'none';
                 document.getElementById('error-message').style.display = 'block';
@@ -147,18 +147,26 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function safePlay(audio) {
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.warn("Audio play failed:", error);
+        });
+    }
+}
+
 function showMove(idx) {
     move_idx = idx;
     let entry = entries[move_idx];
-    console.log(entry.move)
     if (entry.move.includes('+') || entry.move.includes('#')) {
-        checkSound.play();
+        safePlay(checkSound);
     } else if (entry.move.includes('=')) {
-        promoteSound.play();
+        safePlay(promoteSound);
     } else if (entry.move.includes('x')) {
-        captureAudio.play();
+        safePlay(captureAudio);
     } else {
-        moveSelfAudio.play();
+        safePlay(moveSelfAudio);
     }
     let evaluation = entry.evaluation || {};
     let evalText = "";
@@ -186,7 +194,8 @@ function showMove(idx) {
     <span><strong>Board:</strong> ${entry.board}</span><br>
     <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span><br>
     <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span><br>
-    <span><strong>Score per min:</strong> User: ${meta.user_score_per_min} - Opponent: ${meta.opponent_score_per_min}</span>
+    <span><strong>Score per min:</strong> User: ${meta.user_score_per_min} - Opponent: ${meta.opponent_score_per_min}</span><br>
+    <span><strong>Line:</strong> ${entry.line}</span>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
     url_id_split = meta.url.split("/");

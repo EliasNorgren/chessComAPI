@@ -1,0 +1,3 @@
+[submodule "src/stockfish_fork"]
+	path = src/stockfish_fork
+	url = git@github.com:EliasNorgren/stockfish.git
