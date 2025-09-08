@@ -13,6 +13,15 @@ python3 -m venv myenv
 source myenv/bin/activate
 pip install -r requirements.txt
 
+
+echo "Initializing submodules"
+git submodule update --init --recursive
+
+
+echo "Installing submodule requirements"
+pip install -r src/stockfish_fork/requirements.txt
+
+
 echo "Creating DB"
 
 if [ -f "SQL/chess_games.db" ]; then
