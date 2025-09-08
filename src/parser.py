@@ -369,7 +369,7 @@ class Parser():
     #         no_analyzed_games += 1
     #         print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
 
-    def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid : str, analyzer : Analyzer) -> dict:
+    def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid : str) -> dict:
         database = DataBase()
         if url != None :
             game = database.query(f'''
@@ -399,9 +399,9 @@ class Parser():
             return
 
         game = game[0]  # Assuming the query returns a single game
-        return self.analyze_game(game, database, user, analyzer, entryCache, uuid)
+        return self.analyze_game(game, database, user, entryCache, uuid)
 
-    def analyze_game(self, game, database: DataBase, user : str, analyzer : Analyzer, 
+    def analyze_game(self, game, database: DataBase, user : str, 
                      entryCache : EntryCache = None, uuid = None) -> dict:
         id = game['id']
         pgn = game['pgn']
@@ -410,7 +410,7 @@ class Parser():
         if analysis and analysis != "" :
             print(f"Game with id {id} already analyzed")
             return json.loads(analysis)  # Return the existing analysis if it exists
-        
+        analyzer = Analyzer()
         url = game['url']
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
@@ -444,7 +444,7 @@ class Parser():
             "opponent_score_per_min": 0 if opponent_time <= 0 else round(opponent_total_score / (opponent_time / 60), 2)
         }
         database.update_analysis(id, response)
-        # analyzer.close_engine()
+        analyzer.close_engine()
         return response
 
     def compute_total_times(self, analysis, time_control, user_playing_as_white) :
