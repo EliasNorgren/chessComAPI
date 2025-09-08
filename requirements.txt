@@ -5,3 +5,4 @@ matplotlib==3.10.5
 Requests==2.32.4
 seaborn==0.13.2
 stockfish==3.28.0
+PyYAML==6.0.2
