@@ -10,6 +10,7 @@ const captureAudio = new Audio(captureSoundUrl);
 const moveSelfAudio = new Audio(moveSelfSoundUrl);
 const promoteSound = new Audio(promoteSoundUrl);
 const checkSound = new Audio(checkSoundUrl);
+const castleSound = new Audio(castleSoundurl);
 
 circle.style.strokeDasharray = `${circumference} ${circumference}`;
 circle.style.strokeDashoffset = circumference;
@@ -165,7 +166,11 @@ function showMove(idx) {
         safePlay(promoteSound);
     } else if (entry.move.includes('x')) {
         safePlay(captureAudio);
-    } else {
+    }
+    else if (entry.move.includes('O-O')) {
+        safePlay(castleSound);
+    }
+    else {
         safePlay(moveSelfAudio);
     }
     let evaluation = entry.evaluation || {};
