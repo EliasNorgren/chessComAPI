@@ -200,7 +200,8 @@ function showMove(idx) {
     <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span><br>
     <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span><br>
     <span><strong>Score per min:</strong> User: ${meta.user_score_per_min} - Opponent: ${meta.opponent_score_per_min}</span><br>
-    <span><strong>Line:</strong> ${entry.line}</span>
+    <span><strong>Best Line:</strong> ${entry.best_line}</span><br>
+    <span><strong>Played Line:</strong> ${entry.played_line}</span><br>
     `;
     document.getElementById('svg-board').innerHTML = entry.svg;
     url_id_split = meta.url.split("/");

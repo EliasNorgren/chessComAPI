@@ -53,7 +53,7 @@ class Analyzer:
             self.engine.set_depth(self.engine_depth)
             self.engine.make_moves_from_current_position([move])
             self.engine.set_depth(self.engine_depth - 1)
-            eval = self.engine.get_evaluation()
+            eval = self.engine.get_evaluation(include_principal_variation=True)
             best_eval_cp = best_move[0]['Centipawn'] if best_move[0]['Centipawn'] is not None else best_move[0]['Mate']
             move_classification = self.classify_move(best_eval_cp=best_eval_cp,
                                                       played_eval_cp=eval['value'],
@@ -86,7 +86,8 @@ class Analyzer:
                 "clock_time": clock_time,
                 "best_move" : best_move,
                 "best_move_uci": str(best_move_uci),
-                "line": best_move[0]['Line'] if 'Line' in best_move[0] else ""
+                "best_line": best_move[0]['Line'] if 'Line' in best_move[0] else "",
+                "played_line": move + " - " + eval['line'] if 'line' in eval and eval['line'] else move
             }
             result.append(entry)
         return result
