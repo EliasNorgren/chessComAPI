@@ -6,6 +6,8 @@ import chess
 import chess.svg
 from entryCache import EntryCache
 import yaml
+import sys
+import shutil
 
 class Analyzer:
     def __init__(self):
@@ -37,13 +39,18 @@ class Analyzer:
         white_turn = True
         no_moves = len(move_list)
         current_move = 0
+        terminal_columns, terminal_rows = shutil.get_terminal_size()
+        print()
         for move, clock_time in move_list:
             # print(f"Analyzing move {current_move + 1}/{no_moves}: {move} (Clock: {clock_time})")
-            progress = f"{current_move / no_moves * 100:.2f}%"
-            print(progress)
-            if entryCache and uuid :
-                entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({progress})")
             current_move += 1
+            # print(f"Terminal size: columns={terminal_columns}, current move={current_move}, no moves={no_moves}")
+            percent = f"{(current_move / no_moves) * 100 :.2f}%"
+            bars = "█" * int((current_move / no_moves) * (terminal_columns - 9))
+            sys.stdout.write(f"\r{'\033[92m'}|{bars}| {percent}")
+            sys.stdout.flush()
+            if entryCache and uuid :
+                entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({percent})")
             # Write svg to file
             uci_move = chess.Move.from_uci(move)
             san_move = chess_board.san(uci_move)
@@ -90,6 +97,8 @@ class Analyzer:
                 "played_line": move + " - " + eval['line'] if 'line' in eval and eval['line'] else move
             }
             result.append(entry)
+        print()
+        print("\033[0m")
         return result
             
 

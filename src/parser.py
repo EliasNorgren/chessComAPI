@@ -583,5 +583,5 @@ class Parser():
             avg_time = round(time_taken / done, 2)
             time_remaining = round(((no_games - done) * avg_time) / 60, 2)
             print(f"Progress: {done} / {no_games} - Average time per game {avg_time} seconds.")
-            print(f"Estimated time remaining: {time_remaining} minutes")
+            print(f"Estimated time remaining: {time_remaining} minutes: {(datetime.now() + timedelta(minutes=time_remaining)).strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"DB size: {database.get_db_size()} MB")
