@@ -6,6 +6,10 @@
     <meta charset="UTF-8">
     <title>Chess Review</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.brown.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
+
     <style>
         body {
             background: #302e2b;
@@ -39,6 +43,13 @@
         .svg-board {
             max-width: 95vw;
             width: 50vw;
+            text-align: center;
+        }
+
+        .chessground_board {
+            max-width: 95vw;
+            width: 50vw;
+            height: 50vw;
             text-align: center;
         }
 
@@ -209,7 +220,8 @@
         <div class="eval-bar" id="eval-bar">
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
         </div>
-        <div class="svg-board" id="svg-board"></div>
+        <!-- <div class="svg-board" id="svg-board"></div> -->
+        <div class="chessground_board" id="chessground_board"></div>
         <div id="clock-time" class="clock-time">
             <b>
                 <div id="upper_time"></div>
@@ -231,8 +243,36 @@
         const checkSoundUrl = "{{ url_for('static', filename='move-check.mp3') }}";
         const promoteSoundUrl = "{{ url_for('static', filename='promote.mp3') }}";
         const castleSoundurl = "{{ url_for('static', filename='castle.mp3') }}";
+
+        const size = 45;
+
+        const goodMoveSvg = "{{ url_for('static', filename='moveSvgs/64x/good_64x.png') }}";
+        const goodMoveSvgHtml = `<svg width="${size}" height="${size}">
+                <image href="${goodMoveSvg}" width="${size}" height="${size}"/>
+                </svg>`;
+
+        const inaccuracySvg = "{{ url_for('static', filename='moveSvgs/64x/inaccuracy_64x.png') }}";
+        const inaccuracySvgHtml = `<svg width="${size}" height="${size}">
+                <image href="${inaccuracySvg}" width="${size}" height="${size}"/>
+                </svg>`;
+
+        const mistakeSvg = "{{ url_for('static', filename='moveSvgs/64x/mistake_64x.png') }}";
+        const mistakeSvgHtml = `<svg width="${size}" height="${size}">  
+                <image href="${mistakeSvg}" width="${size}" height="${size}"/>
+                </svg>`;
+
+        const blunderSvg = "{{ url_for('static', filename='moveSvgs/64x/blunder_64x.png') }}";
+        const blunderSvgHtml = `<svg width="${size}" height="${size}">
+                <image href="${blunderSvg}" width="${size}" height="${size}"/>
+                </svg>`;
+
+        const missedWinSvg = "{{ url_for('static', filename='moveSvgs/64x/missed_win_64x.png') }}";
+        const missedWinSvgHtml = `<svg width="${size}" height="${size}">
+                <image href="${missedWinSvg}" width="${size}" height="${size}"/>
+                </svg>`;
     </script>
     <script src="{{ url_for('static', filename='review.js') }}"></script>
+    <script src="{{ url_for('static', filename='chessground.umd.js') }}"></script>
 </body>
 
 </html>

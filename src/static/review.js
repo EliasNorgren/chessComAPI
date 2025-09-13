@@ -15,6 +15,8 @@ const castleSound = new Audio(castleSoundurl);
 circle.style.strokeDasharray = `${circumference} ${circumference}`;
 circle.style.strokeDashoffset = circumference;
 
+let chessground;
+
 function setProgress(percent) {
     const offset = circumference - (percent / 100) * circumference;
     circle.style.strokeDashoffset = offset;
@@ -22,7 +24,6 @@ function setProgress(percent) {
 }
 
 async function loadReviewData() {
-    document.getElementById('svg-board').style.display = 'none';
     document.getElementById('eval-bar').style.display = 'none';
     document.getElementById('move-classifications').style.display = 'none';
     document.getElementById('error-message').style.display = 'none';
@@ -64,7 +65,6 @@ async function loadReviewData() {
                 console.log("Final status data:", statusData);
                 setProgress(100);
                 document.getElementById('loading-container').style.display = 'none';
-                document.getElementById('svg-board').style.display = '';
                 document.getElementById('eval-bar').style.display = '';
                 document.getElementById('move-classifications').style.display = '';
                 entries = statusData.analysis;
@@ -74,8 +74,13 @@ async function loadReviewData() {
                 classification_frequency_user = meta.classification_frequency[user_color];
                 classification_frequency_opponent = meta.classification_frequency[opponent_color];
                 setClassificationFrequency(classification_frequency_user, classification_frequency_opponent);
-                // renderClockTime(meta.time_control, true)
-                // renderClockTime(meta.time_control, false)
+                chessground = Chessground(document.getElementById("chessground_board"), {
+                    orientation: user_color,
+                    movable: {
+                        free: false,
+                        showDests: true,
+                    }
+                });
                 showMove(0)
                 break
             }
@@ -173,6 +178,7 @@ function showMove(idx) {
     else {
         safePlay(moveSelfAudio);
     }
+    let user_playing_as_white = meta.user_playing_as_white;
     let evaluation = entry.evaluation || {};
     let evalText = "";
     let evalCp = 0;
@@ -203,7 +209,39 @@ function showMove(idx) {
     <span><strong>Best Line:</strong> ${entry.best_line}</span><br>
     <span><strong>Played Line:</strong> ${entry.played_line}</span><br>
     `;
-    document.getElementById('svg-board').innerHTML = entry.svg;
+    console.log(entry)
+    chessground.set({
+        fen: entry.board,
+        orientation: user_color,
+        movable: {
+            free: true,
+            showDests: true,
+        }
+    });
+
+    if (entry.classification != "Best Move") {
+
+        shapes = []
+
+        shapes.push(
+            {
+                orig: entry.best_move_uci.substring(0, 2),
+                dest: entry.best_move_uci.substring(2, 4),
+                brush: 'green',
+            }
+        )
+
+
+        shapes.push({
+            orig: entry.uci_move.substring(2, 4),  // just the square
+            customSvg: {
+                html: getSvg(entry.classification),
+            }
+        })
+
+        chessground.setShapes(shapes);
+    }
+    let url_id, url_id_split;
     url_id_split = meta.url.split("/");
     url_id = url_id_split[url_id_split.length - 1];
     document.getElementById('game-header').innerText =
@@ -213,7 +251,6 @@ function showMove(idx) {
     document.getElementById('next').disabled = move_idx === entries.length - 1;
     document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
     let white_turn = move_idx % 2;
-    let user_playing_as_white = meta.user_playing_as_white;
     let now_it_is_users_turn = (user_playing_as_white && white_turn) || (!user_playing_as_white && !white_turn)
     // console.log("idx ", idx, " white_turn ", white_turn, "user_playing_as_whtie ", user_playing_as_white, " now_user_turn ", now_it_is_users_turn)
     if (idx == 0) {
@@ -346,6 +383,21 @@ function getColor(classification) {
         throw new Error(`Unknown classification: ${classification}`);
     }
     return colors[classification];
+}
+
+function getSvg(classification) {
+    const svgs = {
+        "Good Move": goodMoveSvgHtml,
+        "Inaccuracy": inaccuracySvgHtml,
+        "Mistake": mistakeSvgHtml,
+        "Blunder": blunderSvgHtml,
+        "Missed mate": missedWinSvgHtml,
+    };
+    if (!svgs[classification]) {
+        console.warn(`No SVG defined for classification: ${classification}`);
+        throw new Error(`Unknown classification: ${classification}`);
+    }
+    return svgs[classification];
 }
 
 document.getElementById('firstMove').onclick = () => showMove(0);

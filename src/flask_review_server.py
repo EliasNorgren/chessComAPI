@@ -54,7 +54,11 @@ def get_entry_status():
 def review_page():
     return render_template('review.html')
 
+@app.route('/board_test')
+def board_test():
+    return render_template('board_test.html')
+
 if __name__ == '__main__':
     entryCache = EntryCache()
     # Run on all interfaces, port 5000
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
