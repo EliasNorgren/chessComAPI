@@ -42,7 +42,7 @@ class FilterInfo():
         self.time_class = time_class
 
     def __str__(self):
-        res = ""
+        res = "\n"
         res += "user: " + self.user + "\n"
         if self.user_rating_range is not None:
             res += "user_rating_range: " + str(self.user_rating_range.start) + " - " + str(self.user_rating_range.end) + "\n"

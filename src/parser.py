@@ -564,7 +564,7 @@ class Parser():
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
         games = database.query(f'''
-            SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
+            SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, initial_setup
             FROM matches
             WHERE id IN ({filtered_ids}) AND
             analysis == ""
@@ -580,6 +580,11 @@ class Parser():
         no_games = len(games)
         if len_before != no_games :
             print(f"Removed {len_before - no_games} games that were chess960.")
+        len_before = len(games)
+        games = list(filter(lambda game: self.has_all_32_pieces(game["initial_setup"]), games))
+        no_games = len(games)
+        if len_before != no_games :
+            print(f"Removed {len_before - no_games} games that did not have all 32 pieces in the initial position.")
 
         done = 0
         time_taken = 0
@@ -594,3 +599,19 @@ class Parser():
             print(f"Progress: {done} / {no_games} - Average time per game {avg_time} seconds.")
             print(f"Estimated time remaining: {time_remaining} minutes: {(datetime.now() + timedelta(minutes=time_remaining)).strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"DB size: {database.get_db_size()} MB")
+
+    def has_all_32_pieces(self, fen: str) -> bool:
+        """
+        Check if a FEN string has exactly 32 pieces on the board.
+
+        Args:
+            fen (str): The FEN string.
+
+        Returns:
+            bool: True if there are 32 pieces, False otherwise.
+        """
+        # First field of FEN describes the board
+        board = fen.split()[0]
+        # Count all letters (pieces) -> ignore digits and slashes
+        piece_count = sum(1 for c in board if c.isalpha())
+        return piece_count == 32

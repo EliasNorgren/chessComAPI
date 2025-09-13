@@ -28,7 +28,7 @@ class Analyzer:
             config = yaml.safe_load(config_file)
         settings = config.get("stockfish_settings", {})
         settings["UCI_Chess960"] = "true" if chess_960 else "false"
-        print(f"Loaded configuration settings: {settings}")
+        print(f"\nLoaded configuration settings: {settings}")
         self.engine : Stockfish = Stockfish(path=stockfish_engine_path, parameters=settings)
         self.engine_depth = 17
 
