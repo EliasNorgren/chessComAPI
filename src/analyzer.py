@@ -33,7 +33,6 @@ class Analyzer:
         self.engine_depth = 17
 
     def analyze_game(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
-        orientation = chess.WHITE if user_playing_as_white else chess.BLACK
         result = []
         chess_board = chess.Board()
         white_turn = True
@@ -72,16 +71,7 @@ class Analyzer:
                                                       best_eval_got_mate=best_move[0]['Mate'] != None,
                                                       played_move_got_mate=eval['type'] == 'mate',
                                                       player_is_white=white_turn)
-            arrows = []
             best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
-            if move_classification != "Best Move":
-                arrows = [chess.svg.Arrow(best_move_uci.from_square, best_move_uci.to_square, color="#008612AC")]
-            fill = dict.fromkeys([uci_move.from_square, uci_move.to_square], self.classification_colors.get(move_classification, "#48ff00"))
-            colors = {
-                "square light": "#ebecd0",
-                "square dark": "#739552",
-            }
-            svg = chess.svg.board(chess_board, size=400, orientation=orientation, fill=fill, arrows=arrows, colors=colors)
             white_turn = not white_turn
             
             entry = {
@@ -89,7 +79,6 @@ class Analyzer:
                 "uci_move": str(uci_move),
                 "evaluation": eval,
                 "classification": move_classification,
-                "svg": svg,
                 "board": chess_board.fen(),
                 "board_before_move": board_fen_before_move,
                 "score": self.classification_to_score(move_classification),

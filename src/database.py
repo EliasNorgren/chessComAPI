@@ -113,7 +113,7 @@ class DataBase():
         ids_str = ','.join(map(str, ids))
         return ids_str
 
-    def query(self, query_string: str):
+    def query(self, query_string: str) -> list[sqlite3.Row]:
         conn = sqlite3.connect(self.database_file_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
