@@ -4,12 +4,14 @@ from filter_info import FilterInfo
 import datetime
 import json
 import os
+import time
 
 class DataBase():
     def __init__(self) -> None:
         self.database_file_path = "SQL/chess_games.db"
 
     def get_filtered_ids(self, filter_info : FilterInfo) -> str:
+        start_time = time.time()
         print(filter_info)
         ids = self.get_all_ids(filter_info)
         if filter_info.date_range == None or (filter_info.date_range.start_date == None and filter_info.date_range.end_date == None):

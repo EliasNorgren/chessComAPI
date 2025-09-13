@@ -27,6 +27,8 @@ from PGN_to_fen_list import pgn_to_move_list
 from controller import DataBaseUpdater
 from entryCache import EntryCache
 
+import chess.pgn
+from io import StringIO
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sqlite3
@@ -410,7 +412,8 @@ class Parser():
         if analysis and analysis != "" :
             print(f"Game with id {id} already analyzed")
             return json.loads(analysis)  # Return the existing analysis if it exists
-        analyzer = Analyzer()
+        chess_960_mode = chess.pgn.read_game(StringIO(pgn)).headers.get("Variant", "") == "Chess960"
+        analyzer = Analyzer(chess_960_mode)
         url = game['url']
         print(f"Analyzing game {url}")
         moves = pgn_to_move_list(pgn)
@@ -571,7 +574,13 @@ class Parser():
         games = list(filter(lambda game : not (game["pgn"] == None or game["pgn"] == ""), games))
         no_games = len(games)
         if len_before != no_games :
-            print(f"Removed {len_before - no_games} that missed the PGN column.")
+            print(f"Removed {len_before - no_games} games that missed the PGN column.")
+        len_before = len(games)
+        games = list(filter(lambda game : not chess.pgn.read_game(StringIO(game["pgn"])).headers.get("Variant", "") == "Chess960", games))
+        no_games = len(games)
+        if len_before != no_games :
+            print(f"Removed {len_before - no_games} games that were chess960.")
+
         done = 0
         time_taken = 0
         for game in games :

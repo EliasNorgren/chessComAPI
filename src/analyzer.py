@@ -10,7 +10,7 @@ import sys
 import shutil
 
 class Analyzer:
-    def __init__(self):
+    def __init__(self, chess_960 : bool = False):
         print("Initializing Analyzer with Stockfish engine...")
         self.classification_colors = {
             "Best Move": "#749bbf",
@@ -27,8 +27,8 @@ class Analyzer:
         with open("cfg/stockfish_settings.yaml", "r") as config_file:
             config = yaml.safe_load(config_file)
         settings = config.get("stockfish_settings", {})
+        settings["UCI_Chess960"] = "true" if chess_960 else "false"
         print(f"Loaded configuration settings: {settings}")
-        
         self.engine : Stockfish = Stockfish(path=stockfish_engine_path, parameters=settings)
         self.engine_depth = 17
 
@@ -46,13 +46,16 @@ class Analyzer:
             current_move += 1
             # print(f"Terminal size: columns={terminal_columns}, current move={current_move}, no moves={no_moves}")
             percent = f"{(current_move / no_moves) * 100 :.2f}%"
-            bars = "█" * int((current_move / no_moves) * (terminal_columns - 9))
+            bars = "█" * int((current_move / no_moves) * (terminal_columns - 10))
             sys.stdout.write(f"\r{'\033[92m'}|{bars}| {percent}")
             sys.stdout.flush()
             if entryCache and uuid :
                 entryCache.set_entry(uuid, f"loading {current_move + 1}/{no_moves} ({percent})")
             # Write svg to file
             uci_move = chess.Move.from_uci(move)
+            if not chess_board.is_legal(uci_move):
+                print(f"\nIllegal move encountered: {move} on board {chess_board.fen()}. Stopping analysis.")
+                exit(1)
             san_move = chess_board.san(uci_move)
             board_fen_before_move = chess_board.fen()
             chess_board.push(uci_move)
