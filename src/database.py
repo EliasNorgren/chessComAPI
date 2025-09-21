@@ -5,6 +5,7 @@ import datetime
 import json
 import os
 import time
+from puzzle_entry import PuzzleEntry
 
 class DataBase():
     def __init__(self) -> None:
@@ -264,3 +265,75 @@ class DataBase():
         file_size = os.path.getsize(self.database_file_path)
         return f"{file_size / (1024 * 1024):.2f}"
     
+    def get_game_by_id(self, id: int) -> sqlite3.Row | None:
+        conn = sqlite3.connect(self.database_file_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM matches WHERE id = ? LIMIT 1", (id,)
+        )
+        entry = cursor.fetchone()
+        conn.close()
+        return entry
+    
+    def insert_puzzles(self, puzzles: list[PuzzleEntry]) :
+        success = True
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+
+        try:
+            # SQL INSERT statement
+            insert_statement = '''
+            INSERT INTO puzzles (
+                fen, best_move_uci, best_move_san, user_move_uci, user_move_san,
+                classification, centipawn_best_move, mate_in_best_move,
+                user_playing_as_white, game_id, solved, solution_line
+            ) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            '''
+            # Insert each puzzle
+            for puzzle in puzzles:
+                values = (
+                    puzzle.fen, puzzle.best_move_uci, puzzle.best_move_san,
+                    puzzle.user_move_uci, puzzle.user_move_san, puzzle.classification,
+                    puzzle.centipawn_best_move, puzzle.mate_in_best_move,
+                    puzzle.user_playing_as_white, puzzle.game_id, puzzle.solved,
+                    puzzle.solution_line
+                )
+                cursor.execute(insert_statement, values)
+            # Commit changes to the database
+            conn.commit()
+            print(f"Inserted {len(puzzles)} puzzles successfully.")
+
+        except sqlite3.Error as e:
+            success = False
+            print(f"Error inserting puzzles: {e}")
+        except sqlite3.IntegrityError as e:
+            success = False
+            print(f"Integrity error inserting puzzles: {e}")
+        finally:
+            # Close the connection
+            conn.close()
+        return success
+    
+    def set_matches_puzzles_calculated(self, game_id: int, calculated: bool) :
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        try:
+            # SQL UPDATE statement
+            update_statement = '''
+            UPDATE matches
+            SET puzzles_calculated = ?
+            WHERE id = ?
+            '''
+            
+            # Execute the UPDATE statement
+            cursor.execute(update_statement, (calculated, game_id))
+            # Commit changes to the database
+            conn.commit()
+            print(f"Set puzzles_calculated for game ID {game_id} to {calculated} successfully.")
+
+        except sqlite3.Error as e:
+            print(f"Error updating puzzles_calculated: {e}")
+        finally:
+            # Close the connection
+            conn.close()

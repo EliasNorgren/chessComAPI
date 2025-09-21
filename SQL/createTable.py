@@ -42,8 +42,31 @@ CREATE TABLE IF NOT EXISTS matches (
     opponent_user TEXT,
     ECO TEXT,
     ECOurl TEXT,
-    analysis TEXT
+    analysis TEXT,
+    puzzles_calculated BOOLEAN DEFAULT 0
 )
+''')
+
+cursor.execute('''
+
+CREATE TABLE IF NOT EXISTS puzzles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fen TEXT NOT NULL,
+    best_move_uci TEXT NOT NULL,
+    best_move_san TEXT,
+    user_move_uci TEXT NOT NULL,
+    user_move_san TEXT NOT NULL,
+    classification TEXT NOT NULL,
+    centipawn_best_move INTEGER,
+    mate_in_best_move INTEGER,
+    user_playing_as_white BOOLEAN NOT NULL,
+    game_id INTEGER NOT NULL,
+    solution_line TEXT,
+    solved BOOLEAN DEFAULT 0,
+
+    FOREIGN KEY(game_id) REFERENCES matches(id) ON DELETE CASCADE
+);
+
 ''')
 
 # Commit changes and close connection

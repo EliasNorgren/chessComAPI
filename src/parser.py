@@ -26,6 +26,7 @@ from analyzer import Analyzer
 from PGN_to_fen_list import pgn_to_move_list
 from controller import DataBaseUpdater
 from entryCache import EntryCache
+from puzzle_entry import PuzzleEntry
 
 import chess.pgn
 from io import StringIO
@@ -375,7 +376,7 @@ class Parser():
         database = DataBase()
         if url != None :
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
                 FROM matches
                 WHERE url LIKE '%{url}%' AND user = '{user}'
             ''')
@@ -383,14 +384,14 @@ class Parser():
                 print(f"No games found with url {url}, updating database for user {user}")
                 DataBaseUpdater().updateDB(user)
                 game = database.query(f'''
-                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
+                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
                     FROM matches
                     WHERE url LIKE "%{url}%" AND user = "{user}"
                 ''')
         else :
             DataBaseUpdater().updateDB(user)
             game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result
+                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
                 FROM matches
                 WHERE user == "{user}" 
                 ORDER BY archivedate DESC
@@ -410,7 +411,11 @@ class Parser():
         analysis = game['analysis']
         user_playing_as_white = game['user_playing_as_white']
         if analysis and analysis != "" :
-            print(f"Game with id {id} already analyzed")
+            if not game['puzzles_calculated'] :
+                print(f"Game with id {id} already analyzed, adding puzzles to db")
+                self.add_puzzles_to_db(json.loads(analysis), id, database)
+            else :
+                print(f"Game with id {id} already analyzed")
             return json.loads(analysis)  # Return the existing analysis if it exists
         chess_960_mode = chess.pgn.read_game(StringIO(pgn)).headers.get("Variant", "") == "Chess960"
         analyzer = Analyzer(chess_960_mode)
@@ -447,6 +452,7 @@ class Parser():
             "opponent_score_per_min": 0 if opponent_time <= 0 else round(opponent_total_score / (opponent_time / 60), 2)
         }
         database.update_analysis(id, response)
+        self.add_puzzles_to_db(response, id, database)
         analyzer.close_engine()
         return response
 
@@ -547,7 +553,7 @@ class Parser():
                     user_turn = not user_turn
                     continue
                 classification = move["classification"]
-                if classification == "Missed mate" or classification == "Blunder" :
+                if classification == "Missed mate"  :
                     result.append({
                         "user_move": move["move"],
                         "user_move_uci": move["uci_move"],
@@ -564,10 +570,10 @@ class Parser():
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
         games = database.query(f'''
-            SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, initial_setup
+            SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, initial_setup, puzzles_calculated
             FROM matches
             WHERE id IN ({filtered_ids}) AND
-            analysis == ""
+            (analysis == "" OR puzzles_calculated == 0)
             ORDER BY archiveDate DESC
         ''')
         len_before = len(games)
@@ -611,7 +617,53 @@ class Parser():
             bool: True if there are 32 pieces, False otherwise.
         """
         # First field of FEN describes the board
+        if fen is None or fen == "" :
+            return False
         board = fen.split()[0]
         # Count all letters (pieces) -> ignore digits and slashes
         piece_count = sum(1 for c in board if c.isalpha())
         return piece_count == 32
+    
+    def add_puzzles_to_db(self, game_analysis_entry : dict, game_id : int, database : DataBase):
+        puzzles = []
+        user_playing_as_white = game_analysis_entry['user_playing_as_white']
+        white_turn = True
+        last_move = None
+        for move in game_analysis_entry['analysis']:
+            
+            if (white_turn and not user_playing_as_white) or (not white_turn and user_playing_as_white) :
+                white_turn = not white_turn
+                continue
+            if not (move.get('classification') in ['Blunder', 'Missed mate']):
+                white_turn = not white_turn
+                continue
+
+            mate_in_best_move = None
+            if last_move and move['classification'] == "Missed mate":
+                mate_in_best_move = move['best_move'][0].get('Mate', None)
+ 
+            puzzle = PuzzleEntry(
+                fen=move['board_before_move'],
+                best_move_uci=move['best_move'][0]['Move'],
+                best_move_san=None,
+                user_move_san=move['move'],
+                user_move_uci=move['uci_move'],
+                classification=move['classification'],
+                centipawn_best_move=move['best_move'][0]['Centipawn'],
+                mate_in_best_move=mate_in_best_move,
+                user_playing_as_white=user_playing_as_white,
+                game_id=game_id,
+                solution_line=move['best_move'][0]['Line']
+            )
+            puzzles.append(puzzle)
+            last_move = move
+
+        if puzzles and database.insert_puzzles(puzzles):
+            database.set_matches_puzzles_calculated(game_id, True)
+            print(f"Inserted {len(puzzles)} puzzles for game id {game_id}")
+
+# database = DataBase()
+# game_row_analysis = json.loads(database.get_game_by_id(8716)['analysis'])
+# print(type(game_row_analysis))
+# parser = Parser()
+# parser.add_puzzles_to_db(game_row_analysis, 8716, database)
