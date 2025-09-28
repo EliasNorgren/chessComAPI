@@ -10,7 +10,8 @@ class PuzzleEntry:
                     mate_in_best_move: int,
                     user_playing_as_white: bool,
                     game_id: int,
-                    solution_line: str):
+                    solution_line: str,
+                    puzzle_id: int = -1):
 
         # Example dict
         # {'fen': 'rn1qkb1r/pp3ppp/3p1n2/2p1p2b/4P2P/2PP1P2/PP2N1P1/RNBQKB1R w KQkq - 0 7',
@@ -36,6 +37,7 @@ class PuzzleEntry:
         self.user_playing_as_white : bool = user_playing_as_white
         self.solved : bool = False  # To be set later based on user interaction
         self.solution_line : str = solution_line
+        self.puzzle_id : int = puzzle_id  # Database ID, -1 if not set
     
     def __str__(self):
         return f"\nPuzzleEntry(fen={self.fen}, best_move_uci={self.best_move_uci}, best_move_san={self.best_move_san}, user_move_uci={self.user_move_uci}, user_move_san={self.user_move_san}, classification={self.classification}, centipawn_best_move={self.centipawn_best_move}, mate_in_best_move={self.mate_in_best_move}, user_playing_as_white={self.user_playing_as_white}, game_id={self.game_id}, solved={self.solved}, solution_line={self.solution_line})\n"

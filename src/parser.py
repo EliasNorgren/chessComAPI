@@ -663,6 +663,13 @@ class Parser():
             database.set_matches_puzzles_calculated(game_id, True)
             print(f"Inserted {len(puzzles)} puzzles for game id {game_id}")
 
+    def get_unsolved_puzzle(self, user: str) -> dict :
+        database = DataBase()
+        puzzle : PuzzleEntry = database.get_unsolved_puzzle(user)
+        if puzzle is None :
+            return {}
+        return puzzle
+
 # database = DataBase()
 # game_row_analysis = json.loads(database.get_game_by_id(8716)['analysis'])
 # print(type(game_row_analysis))

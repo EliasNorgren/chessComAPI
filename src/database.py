@@ -337,3 +337,34 @@ class DataBase():
         finally:
             # Close the connection
             conn.close()
+
+    def get_unsolved_puzzle(self, user: str) -> PuzzleEntry | None :
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        query = '''
+            SELECT * FROM puzzles
+            WHERE solved = 0
+            ORDER BY id DESC
+            LIMIT 1
+        '''
+        cursor.execute(query)
+        result = cursor.fetchone()
+        conn.close()
+        if result:
+            puzzle = PuzzleEntry(
+                puzzle_id=result[0],
+                fen=result[1],
+                best_move_uci=result[2],
+                best_move_san=result[3],
+                user_move_uci=result[4],
+                user_move_san=result[5],
+                classification=result[6],
+                centipawn_best_move=result[7],
+                mate_in_best_move=result[8],
+                user_playing_as_white=bool(result[9]),
+                game_id=result[10],
+                solution_line=result[11],
+            )
+            puzzle.solved = bool(result[11])
+            return puzzle
+        return None

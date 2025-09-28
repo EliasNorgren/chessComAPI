@@ -58,6 +58,17 @@ def review_page():
 def board_test():
     return render_template('board_test.html')
 
+@app.route('/get_unsolved_puzzle')
+def get_unsolved_puzzle():
+    parser = Parser()
+    user = request.args.get('user', default='', type=str)
+    if user == '':
+        return jsonify({"error": "User parameter is required"}), 400
+    puzzle = parser.get_unsolved_puzzle(user)
+    if puzzle == {}:
+        return jsonify({"error": "No unsolved puzzle found for the given user"}), 404
+    return jsonify(puzzle.__dict__)
+
 if __name__ == '__main__':
     entryCache = EntryCache()
     # Run on all interfaces, port 5000
