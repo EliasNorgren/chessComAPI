@@ -657,6 +657,7 @@ class Parser():
             )
             puzzles.append(puzzle)
             last_move = move
+            white_turn = not white_turn
 
         if puzzles and database.insert_puzzles(puzzles):
             database.set_matches_puzzles_calculated(game_id, True)
