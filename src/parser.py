@@ -659,9 +659,13 @@ class Parser():
             last_move = move
             white_turn = not white_turn
 
-        if puzzles and database.insert_puzzles(puzzles):
+        if puzzles :
+            if database.insert_puzzles(puzzles) :
+                database.set_matches_puzzles_calculated(game_id, True)
+                print(f"Inserted {len(puzzles)} puzzles for game id {game_id}")
+        else :
             database.set_matches_puzzles_calculated(game_id, True)
-            print(f"Inserted {len(puzzles)} puzzles for game id {game_id}")
+            print(f"No puzzles found for game id {game_id}")
 
     def get_unsolved_puzzle(self, user: str) -> dict :
         database = DataBase()
