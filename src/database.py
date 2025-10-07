@@ -343,11 +343,13 @@ class DataBase():
         cursor = conn.cursor()
         query = '''
             SELECT * FROM puzzles
-            WHERE solved = 0
+            WHERE solved = 0 AND game_id IN (
+                SELECT id FROM matches WHERE user = ?
+            )
             ORDER BY id DESC
             LIMIT 1
         '''
-        cursor.execute(query)
+        cursor.execute(query, (user,))
         result = cursor.fetchone()
         conn.close()
         if result:

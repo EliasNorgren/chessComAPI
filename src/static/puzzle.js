@@ -25,7 +25,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         orientation: userColor,
         movable: {
             free: true,
-            color: userColor,
+            // Do NOT set events here, see below
+        }
+    });
+
+    // Attach the event handler after initialization
+    chessground.set({
+        fen: initialFen,
+        orientation: userColor,
+        movable: {
+            free: true,
             events: {
                 after: onUserMove
             }
@@ -36,7 +45,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     resetButton.textContent = "Reset Puzzle";
     resetButton.style.display = "none"; // Initially hidden
     resetButton.style.margin = "1em auto";
-    resetButton.style.display = "block";
     resetButton.style.textAlign = "center";
     resetButton.onclick = resetPuzzle;
     document.body.appendChild(resetButton);
@@ -50,8 +58,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             showSolutionMoves(solutionMoves.slice(1)); // Show the rest of the solution
         } else {
             showFeedback("Wrong move. Try again.", false);
-            // Reset board to initial FEN
-            chessground = Chessground(document.getElementById("chessground_board"), {
+            // Reset board to initial FEN without recreating Chessground
+            chessground.set({
                 fen: initialFen,
                 orientation: userColor,
                 movable: {
@@ -114,11 +122,15 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function resetPuzzle() {
-        chessground = Chessground(document.getElementById("chessground_board"), {
+        // Reset the board to the initial state without recreating Chessground
+        chessground.set({
             fen: initialFen,
             orientation: userColor,
             movable: {
                 free: true,
+                events: {
+                    after: onUserMove
+                }
             }
         });
         showFeedback("", false); // Clear feedback
