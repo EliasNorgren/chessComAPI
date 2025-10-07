@@ -368,3 +368,28 @@ class DataBase():
             puzzle.solved = bool(result[11])
             return puzzle
         return None
+    
+    def mark_puzzle_as_solved(self, puzzle_id: int) -> bool :
+        conn = sqlite3.connect(self.database_file_path)
+        cursor = conn.cursor()
+        try:
+            # SQL UPDATE statement
+            update_statement = '''
+            UPDATE puzzles
+            SET solved = 1
+            WHERE id = ?
+            '''
+            
+            # Execute the UPDATE statement
+            cursor.execute(update_statement, (puzzle_id,))
+            # Commit changes to the database
+            conn.commit()
+            print(f"Marked puzzle ID {puzzle_id} as solved successfully.")
+            return True
+
+        except sqlite3.Error as e:
+            print(f"Error marking puzzle as solved: {e}")
+            return False
+        finally:
+            # Close the connection
+            conn.close()

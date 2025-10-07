@@ -5,6 +5,7 @@ import uuid
 import threading
 import copy
 from entryCache import EntryCache
+from database import DataBase
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
@@ -58,7 +59,7 @@ def review_page():
 def board_test():
     return render_template('board_test.html')
 
-@app.route('/get_unsolved_puzzle')
+@app.route('/get_unsolved_puzzle_personal')
 def get_unsolved_puzzle():
     parser = Parser()
     user = request.args.get('user', default='', type=str)
@@ -68,6 +69,22 @@ def get_unsolved_puzzle():
     if puzzle == {}:
         return jsonify({"error": "No unsolved puzzle found for the given user"}), 404
     return jsonify(puzzle.__dict__)
+
+@app.route('/set_puzzle_solved', methods=['POST'])
+def set_puzzle_solved():
+    database = DataBase()
+    data = request.json
+    puzzle_id = data.get('puzzle_id', '')
+    if puzzle_id == '':
+        return jsonify({"error": "User and puzzle_id parameters are required"}), 400
+    success = database.mark_puzzle_as_solved(puzzle_id)
+    if not success:
+        return jsonify({"error": "Failed to mark puzzle as solved"}), 500
+    return jsonify({"status": "success"})
+
+@app.route('/puzzle')
+def puzzle_page():
+    return render_template('puzzle.html')
 
 if __name__ == '__main__':
     entryCache = EntryCache()
