@@ -14,27 +14,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     let puzzle = puzzleData;
-    let solutionMoves = puzzle.solution_line.split(' ');
+    // Filter out any empty moves (trailing spaces) and ensure we have a clean list
+    let solutionMoves = puzzle.solution_line.split(' ').filter(m => m && m.trim());
     let userColor = puzzle.user_playing_as_white ? 'white' : 'black';
 
     // Store the initial FEN for resets
     const initialFen = puzzle.fen;
 
+    // Initialize Chessground with the movable event attached so we don't have to
+    // re-attach it later. Also lock movement to the user's color.
     let chessground = Chessground(document.getElementById("chessground_board"), {
         fen: initialFen,
         orientation: userColor,
+        turnColor: userColor,
         movable: {
             free: true,
-            // Do NOT set events here, see below
-        }
-    });
-
-    // Attach the event handler after initialization
-    chessground.set({
-        fen: initialFen,
-        orientation: userColor,
-        movable: {
-            free: true,
+            color: userColor,
             events: {
                 after: onUserMove
             }
@@ -50,6 +45,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.body.appendChild(resetButton);
 
     function onUserMove(orig, dest, captured) {
+        // Guard: Chessground sometimes triggers events with undefined args when
+        // programmatically updating the board. Ignore those.
+        if (!orig || !dest || typeof orig !== 'string' || typeof dest !== 'string') {
+            return;
+        }
+
         console.log(`User moved from ${orig} to ${dest}`);
         let moveUci = orig + dest;
         let expectedMove = solutionMoves[0]; // Only check the first move
@@ -58,17 +59,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             showSolutionMoves(solutionMoves.slice(1)); // Show the rest of the solution
         } else {
             showFeedback("Wrong move. Try again.", false);
-            // Reset board to initial FEN without recreating Chessground
+            // Reset board to initial FEN without replacing the movable/events
+            // object. Replacing the movable object can remove handlers in some
+            // Chessground builds; only change the position so the "after"
+            // callback remains attached.
             chessground.set({
                 fen: initialFen,
                 orientation: userColor,
-                movable: {
-                    free: true,
-                    color: userColor,
-                    events: {
-                        after: onUserMove
-                    }
-                }
+                turnColor: userColor
             });
         }
     }
@@ -81,6 +79,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (index >= moves.length) {
                 resetButton.style.display = "block"; // Show reset button after solution is complete
                 await markPuzzleAsSolved(); // Mark the puzzle as solved
+                // Show the user's played move (if available)
+                try {
+                    const playedSan = puzzle.user_move_san || '';
+                    const playedUci = puzzle.user_move_uci || '';
+                    if (playedSan || playedUci) {
+                        const playedHtml = `<div><strong>Your move:</strong> ${playedSan} ${playedUci ? `(${playedUci})` : ''}</div>`;
+                        document.getElementById('puzzle-info').insertAdjacentHTML('beforeend', playedHtml);
+                    }
+                } catch (e) {
+                    console.warn('Failed to display played move:', e);
+                }
                 return;
             }
 
@@ -122,16 +131,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function resetPuzzle() {
-        // Reset the board to the initial state without recreating Chessground
+        // Reset the board to the initial state without recreating Chessground.
+        // Only update the FEN so we don't disturb the attached handlers.
         chessground.set({
             fen: initialFen,
             orientation: userColor,
-            movable: {
-                free: true,
-                events: {
-                    after: onUserMove
-                }
-            }
+            turnColor: userColor
         });
         showFeedback("", false); // Clear feedback
     }
