@@ -38,11 +38,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     let resetButton = document.createElement('button');
     resetButton.textContent = "Reset Puzzle";
+    resetButton.className = 'reset-btn';
     resetButton.style.display = "none"; // Initially hidden
-    resetButton.style.margin = "1em auto";
-    resetButton.style.textAlign = "center";
     resetButton.onclick = resetPuzzle;
-    document.body.appendChild(resetButton);
+    // Place the reset button inside the reset-container in the template
+    const resetContainer = document.getElementById('reset-container') || document.body;
+    resetContainer.appendChild(resetButton);
 
     function onUserMove(orig, dest, captured) {
         // Guard: Chessground sometimes triggers events with undefined args when

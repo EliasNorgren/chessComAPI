@@ -8,39 +8,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.brown.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/puzzle.css') }}">
     <script src="/static/puzzle.js"></script>
-    <style>
-        #chessground_board {
-            width: 400px;
-            height: 400px;
-            margin: 2em auto;
-        }
-
-        #feedback {
-            font-size: 1.2em;
-            margin-top: 1em;
-            text-align: center;
-        }
-
-        #puzzle-info {
-            margin: 1em auto;
-            text-align: center;
-        }
-
-        #error-message {
-            color: red;
-            text-align: center;
-        }
-    </style>
 </head>
 
 <body>
-    <h2 style="text-align:center;">Chess Puzzle</h2>
-    <div id="puzzle-info"></div>
-    <div id="chessground_board"></div>
-    <div id="feedback"></div>
-    <div id="error-message"></div>
-    <div id="reset-container" style="text-align: center; margin-top: 1em;"></div>
+    <div class="container">
+        <h2>Chess Puzzle</h2>
+        <div class="puzzle-grid">
+            <div class="chess-card">
+                <div id="chessground_board"></div>
+                <div id="feedback"></div>
+                <div id="reset-container"></div>
+            </div>
+            <div class="info-card">
+                <div id="puzzle-info"></div>
+                <div id="error-message"></div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
