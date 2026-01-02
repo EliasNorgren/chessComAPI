@@ -27,6 +27,8 @@ def main():
     parser.add_argument("--end_date", type=str, help="End date for filtering games (YYYY-MM-DD)")
     parser.add_argument("--update_database", action="store_true", help="Update the database with new games for the user")
     parser.add_argument("--time_class", type=str, choices=[FilterInfo.TimeClass.BULLET, FilterInfo.TimeClass.BLITZ, FilterInfo.TimeClass.RAPID, FilterInfo.TimeClass.DAILY], help="Filter by time class (bullet, blitz, rapid, classical)")
+    parser.add_argument("--fen_appeared", type=str, help="Filter for games where a specific FEN appeared")
+
     # Subparsers for each get method
     subparsers = parser.add_subparsers(dest="command", required=True, help="Parser method to call")
 
@@ -76,7 +78,8 @@ def main():
         rated=args.rated,
         playing_as_white=args.playing_as_white,
         date_range=date_range,
-        time_class=args.time_class if args.time_class else None
+        time_class=args.time_class if args.time_class else None,
+        fen_appeared=args.fen_appeared if args.fen_appeared else None
     )
     parser_obj = Parser()
 

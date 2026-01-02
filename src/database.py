@@ -18,7 +18,6 @@ class DataBase():
         if filter_info.date_range == None or (filter_info.date_range.start_date == None and filter_info.date_range.end_date == None):
             print('No date range provided, using all dates')
             filter_info.date_range = FilterInfo.DateRange(datetime.datetime.min, datetime.datetime.max)
-        
         if filter_info.date_range.start_date != None and filter_info.date_range.end_date != None:
             query = f'''
                 SELECT id FROM matches WHERE 
@@ -89,6 +88,16 @@ class DataBase():
             '''
             params = (filter_info.time_class,)
             ids = self.do_filter_query(query, params) 
+
+        if filter_info.fen_appeared != None :
+            query = f'''
+                SELECT id FROM matches
+                WHERE totalFens LIKE ? 
+                AND id in({ids})
+            '''
+            fen_pattern = f"%{filter_info.fen_appeared}%"
+            params = (fen_pattern,)
+            ids = self.do_filter_query(query, params)
 
         return ids
 

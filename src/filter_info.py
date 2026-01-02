@@ -30,7 +30,8 @@ class FilterInfo():
                  time_control_range : 'TimeControl' = None,
                  rated : bool = None,
                  playing_as_white : bool = None,
-                 time_class : TimeClass = None
+                 time_class : TimeClass = None,
+                 fen_appeared : str = None
                  ) -> None:
         self.user = user.lower()
         self.user_rating_range = user_range
@@ -40,6 +41,7 @@ class FilterInfo():
         self.rated = rated
         self.playing_as_white = playing_as_white
         self.time_class = time_class
+        self.fen_appeared = fen_appeared
 
     def __str__(self):
         res = "\n"
@@ -64,4 +66,6 @@ class FilterInfo():
         res += "playing_as_white: " + str(self.playing_as_white) + "\n"
         if self.time_class is not None :
             res += "time_class: " + str(self.time_class) + "\n"
+        if self.fen_appeared is not None:
+            res += "fen_appeared: " + str(self.fen_appeared) + "\n"
         return res
