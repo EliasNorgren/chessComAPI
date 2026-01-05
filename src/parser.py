@@ -91,6 +91,23 @@ class Parser():
         ''')
         return [f"{url_list[0]} {url_list[1]}" for url_list in res]
     
+    def get_total_fens_at_depth_2(self, filter_info : FilterInfo, sub_string : str):
+        board = chess.Board(sub_string)
+        res = []
+        for move in board.legal_moves :
+            board.push(move)
+            fen = board.fen().split(' ')[0]
+            print(f"Checking FEN: {fen}")
+            entry = self.get_total_fens_substring(filter_info, fen)
+            print(f"Found {len(entry['games'])} games with FEN {fen}")
+            if len(entry["games"]) > 0 :
+                entry["move"] = move.uci() 
+                res.append(entry)
+            board.pop()
+        res.sort(key=lambda x: len(x['games']), reverse=True)
+        return res
+
+
     def get_total_fens_substring(self, filter_info : FilterInfo, sub_string : str):
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
@@ -119,6 +136,9 @@ class Parser():
             stats[self.__winLossOrDrawWithString(game[-1])] += 1
         
         sum = stats['draw'] + stats['loss'] + stats['win']
+        if sum == 0 :
+            response['stats'] = stats
+            return response
         stats['win_percentage'] = round((stats['win'] / sum) * 100, 2) 
         stats['loss_percentage'] = round((stats['loss'] / sum) * 100, 2) 
         stats['draw_percentage'] = round((stats['draw'] / sum) * 100, 2) 

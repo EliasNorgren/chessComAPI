@@ -41,6 +41,9 @@ def main():
     subparsers.add_parser("get_blunders")
     subparsers.add_parser("analyze_games_for_user")
 
+    get_total_fens_at_depth_2_parser = subparsers.add_parser("get_total_fens_at_depth_2")
+    get_total_fens_at_depth_2_parser.add_argument("--substring", type=str, required=False, help="Substring to filter FENs at depth 2")
+
     eco_parser = subparsers.add_parser("get_games_by_eco")
     eco_parser.add_argument("--eco", type=str, required=True, help="ECO code")
 
@@ -111,6 +114,8 @@ def main():
     elif args.command == "analyze_games_for_user" :
         analyzer = Analyzer()
         result = parser_obj.analyze_games_for_user(filter_info, analyzer)
+    elif args.command == "get_total_fens_at_depth_2":
+        result = parser_obj.get_total_fens_at_depth_2(filter_info, args.substring if hasattr(args, 'substring') else None)
     else:
         parser.error("Unknown command")
 
