@@ -38,6 +38,8 @@
             padding: 1em;
             margin-left: 1em;
             margin-right: 1em;
+            width: fit-content;
+            margin-left: 41vw;
         }
 
         .svg-board {
@@ -48,8 +50,8 @@
 
         .chessground_board {
             max-width: 95vw;
-            width: 50vw;
-            height: 50vw;
+            width: 40vw;
+            height: 40vw;
             text-align: center;
         }
 
@@ -115,14 +117,15 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             width: 100%;
-            margin-top: 2em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
         }
 
         .eval-bar {
             width: 18px;
-            height: 50vw;
+            height: 40vw;
             background-color: #403d39;
             border-radius: 8px;
             margin-right: 1.2em;
@@ -215,22 +218,18 @@
         </svg>
     </div>
     <div id="error-message" class="error-message" style="color: red; display: none;">Error loading review data</div>
+    <div id="move-classifications" class="move-classifications"></div>
+    <div id="upper_time"></div>
+
     <div class="board-flex">
-        <div id="move-classifications" class="move-classifications"></div>
         <div class="eval-bar" id="eval-bar">
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
         </div>
         <!-- <div class="svg-board" id="svg-board"></div> -->
         <div class="chessground_board" id="chessground_board"></div>
-        <div id="clock-time" class="clock-time">
-            <b>
-                <div id="upper_time"></div>
-            </b>
-            <b>
-                <div id="lower_time"></div>
-            </b>
-        </div>
     </div>
+    <div id="lower_time"></div>
+
     <div class="nav-btns">
         <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>
         <button id="prev" title="Previous Move"><i class="fa-solid fa-angle-left"></i></button>

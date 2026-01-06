@@ -309,8 +309,10 @@ function setClockTimeStyle(element, time_control_is_black) {
         element.style.minWidth = "4.5em";
         element.style.textAlign = "center";
     }
-    element.style.marginTop = "5em";
-    element.style.marginBottom = "5em";
+    element.style.width = "fit-content";
+    element.style.marginLeft = "30vw";
+    //element.style.marginTop = "5em";
+    //element.style.marginBottom = "5em";
 }
 
 function renderEvalBar(evalCp, user_playing_as_white) {
@@ -329,7 +331,7 @@ function renderEvalBar(evalCp, user_playing_as_white) {
         evalBarStyle = document.getElementById('eval-bar').style;
 
         evalBarStyle.width = '18px';
-        evalBarStyle.height = '50vw';
+        evalBarStyle.height = '40vw';
         evalBarStyle.backgroundColor = '#403d39';
         evalBarStyle.borderRadius = '8px';
         evalBarStyle.marginRight = '1.2em';
@@ -349,7 +351,7 @@ function renderEvalBar(evalCp, user_playing_as_white) {
         evalBarStyle = document.getElementById('eval-bar').style;
 
         evalBarFillStyle.width = '18px';
-        evalBarFillStyle.height = '50vw';
+        evalBarFillStyle.height = '40vw';
         evalBarFillStyle.backgroundColor = '#ffffff';
         evalBarFillStyle.borderRadius = '8px';
         evalBarFillStyle.marginRight = '1.2em';
