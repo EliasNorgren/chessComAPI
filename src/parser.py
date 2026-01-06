@@ -105,6 +105,79 @@ class Parser():
                 res.append(entry)
             board.pop()
         res.sort(key=lambda x: len(x['games']), reverse=True)
+        # Create graphs: win/draw/loss ratio per suggested move
+        try:
+            if len(res) > 0:
+                labels = [entry.get('move', '') for entry in res]
+                win_vals = []
+                loss_vals = []
+                draw_vals = []
+                # raw counts for frequency annotation
+                win_counts = []
+                loss_counts = []
+                draw_counts = []
+                for entry in res:
+                    stats = entry.get('stats', {})
+                    w = stats.get('win', 0)
+                    l = stats.get('loss', 0)
+                    d = stats.get('draw', 0)
+                    total = w + l + d
+                    if total > 0:
+                        win_vals.append(round((w / total) * 100, 2))
+                        loss_vals.append(round((l / total) * 100, 2))
+                        draw_vals.append(round((d / total) * 100, 2))
+                        win_counts.append(w)
+                        loss_counts.append(l)
+                        draw_counts.append(d)
+                    else:
+                        win_vals.append(0)
+                        loss_vals.append(0)
+                        draw_vals.append(0)
+                        win_counts.append(0)
+                        loss_counts.append(0)
+                        draw_counts.append(0)
+
+                x = list(range(len(labels)))
+                bar_width = 0.25
+                figsize = (max(8, len(labels) * 0.6), 6)
+                plt.figure(figsize=figsize)
+                plt.bar([i - bar_width for i in x], win_vals, width=bar_width, label='Win %', color='green')
+                plt.bar(x, loss_vals, width=bar_width, label='Loss %', color='red')
+                plt.bar([i + bar_width for i in x], draw_vals, width=bar_width, label='Draw %', color='blue')
+                plt.xlabel('Move (UCI)')
+                plt.ylabel('Percentage (%)')
+                plt.title(f'Win/Draw/Loss % for moves from FEN {sub_string}')
+                plt.xticks(x, labels, rotation=45, ha='right')
+                plt.legend()
+                plt.tight_layout()
+                # annotate bars with raw frequency counts BEFORE saving so they appear in the file
+                try:
+                    left_x = [i - bar_width for i in x]
+                    mid_x = x
+                    right_x = [i + bar_width for i in x]
+                    max_pct = max(win_vals + loss_vals + draw_vals) if (win_vals + loss_vals + draw_vals) else 0
+                    y_offset = max(0.5, max_pct * 0.02)
+                    for idx, xi in enumerate(left_x):
+                        val = win_vals[idx] if idx < len(win_vals) else 0
+                        cnt = win_counts[idx] if idx < len(win_counts) else 0
+                        plt.text(xi, val + y_offset, str(cnt), ha='center', va='bottom', fontsize=8)
+                    for idx, xi in enumerate(mid_x):
+                        val = loss_vals[idx] if idx < len(loss_vals) else 0
+                        cnt = loss_counts[idx] if idx < len(loss_counts) else 0
+                        plt.text(xi, val + y_offset, str(cnt), ha='center', va='bottom', fontsize=8)
+                    for idx, xi in enumerate(right_x):
+                        val = draw_vals[idx] if idx < len(draw_vals) else 0
+                        cnt = draw_counts[idx] if idx < len(draw_counts) else 0
+                        plt.text(xi, val + y_offset, str(cnt), ha='center', va='bottom', fontsize=8)
+                except Exception:
+                    pass
+                out_fname = f"total_fens_depth2_winloss_{len(labels)}moves.pdf"
+                print(f"Saving move win/draw/loss chart to {out_fname}")
+                plt.savefig(out_fname)
+                plt.close()
+        except Exception as e:
+            print(f"Could not create plots for get_total_fens_at_depth_2: {e}")
+
         return res
 
 
