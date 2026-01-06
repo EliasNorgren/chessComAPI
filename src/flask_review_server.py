@@ -87,6 +87,15 @@ def puzzle_page():
     return render_template('puzzle.html')
 
 if __name__ == '__main__':
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(description='Start the review Flask server')
+    parser.add_argument('--debug', '-d', action='store_true', help='Run server in debug mode')
+    args = parser.parse_args()
+
     entryCache = EntryCache()
+    # Determine debug mode: CLI flag takes precedence, then FLASK_DEBUG env var
+    debug_mode = args.debug or os.environ.get('FLASK_DEBUG', '0') in ('1', 'true', 'True')
     # Run on all interfaces, port 5000
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
