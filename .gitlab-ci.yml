@@ -2,6 +2,8 @@ stages:
   - install
 
 install_everything:
+  variables:
+    STOCKFISH_ENGINE_PATH: "/usr/bin/stockfish-17-64"
   stage: install
   script:
     - ./install.sh
