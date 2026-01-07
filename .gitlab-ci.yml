@@ -1,8 +1,10 @@
 stages:
   - install
 
-
 install_everything:
   stage: install
   script:
     - ./install.sh
+    - echo "Installation complete"
+    - ./test/test_flask_server.sh
+    - echo "All tests passed"
