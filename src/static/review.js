@@ -203,7 +203,7 @@ function showMove(idx) {
     <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
     <span><strong>Evaluation:</strong> ${evalText}</span><br>
     <span><strong>Board:</strong> ${entry.board}</span><br>
-    <span><strong>Accuracy:</strong> White ${meta.white_accuracy} % - Black ${meta.black_accuracy} %</span><br>
+    <span><strong>Accuracy:</strong> User ${user_playing_as_white ? meta.white_accuracy : meta.black_accuracy} % - Opponent ${user_playing_as_white ? meta.black_accuracy : meta.white_accuracy} %</span><br>
     <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span><br>
     <span><strong>Score per min:</strong> User: ${meta.user_score_per_min} - Opponent: ${meta.opponent_score_per_min}</span><br>
     <span><strong>Best Line:</strong> ${entry.best_line}</span><br>
