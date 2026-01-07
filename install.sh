@@ -18,6 +18,7 @@ pip install -r requirements.txt
 
 
 echo "Initializing submodules"
+git submodule sync --recursive
 git submodule update --init --recursive
 
 
