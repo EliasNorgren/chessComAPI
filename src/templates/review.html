@@ -236,6 +236,10 @@
         <button id="next" title="Next Move"><i class="fa-solid fa-angle-right"></i></button>
         <button id="lastMove" title="Last Move"><i class="fa-solid fa-angles-right"></i></button>
     </div>
+    <div class="nav-btns" style="margin-top: 0.5em;">
+    <button id="playBestLine" title="Play Best Line">Play Best Line</button>
+    <button id="stopBestLine" title="Stop Best Line" disabled>Stop</button>
+    </div>
     <script>
         const captureSoundUrl = "{{ url_for('static', filename='capture.mp3') }}";
         const moveSelfSoundUrl = "{{ url_for('static', filename='move-self.mp3') }}";

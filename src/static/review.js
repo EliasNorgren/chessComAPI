@@ -16,6 +16,13 @@ circle.style.strokeDasharray = `${circumference} ${circumference}`;
 circle.style.strokeDashoffset = circumference;
 
 let chessground;
+let bestLineTimer = null;
+let bestLinePlaying = false;
+let bestLineOriginalFen = null;
+let bestLineMoves = [];
+let bestLineIndex = 0;
+let bestLineSavedShapes = null;
+let lastShapes = [];
 
 function setProgress(percent) {
     const offset = circumference - (percent / 100) * circumference;
@@ -240,7 +247,11 @@ function showMove(idx) {
         })
 
         chessground.setShapes(shapes);
-    }
+            lastShapes = shapes;
+        }
+        else {
+            lastShapes = [];
+        }
     let url_id, url_id_split;
     url_id_split = meta.url.split("/");
     url_id = url_id_split[url_id_split.length - 1];
@@ -402,7 +413,194 @@ function getSvg(classification) {
     return svgs[classification];
 }
 
+function togglePlayBestLine() {
+    if (bestLinePlaying) {
+        pausePlayingBestLine();
+    } else {
+        playBestLine();
+    }
+}
+
+function playBestLine() {
+    const entry = entries[move_idx];
+    if (!entry || !entry.best_line) return;
+
+    // Initialize moves only if not resuming
+    if (!bestLineMoves || bestLineMoves.length === 0) {
+        // Parse UCI moves robustly from the best_line string.
+        // Accept tokens like "e2e4", "e2-e4", or "1.e2e4" and extract UCI pairs.
+        bestLineMoves = [];
+        const tokens = entry.best_line.split(/\s+/);
+        for (let t of tokens) {
+            if (!t) continue;
+            // strip leading move numbers like "1." or "1..."
+            t = t.replace(/^\d+\.*\.*/, '');
+            // find a UCI pattern within the token
+            const m = t.match(/([a-h][1-8][a-h][1-8])/i);
+            if (m && m[1]) {
+                bestLineMoves.push(m[1].toLowerCase());
+            }
+        }
+        bestLineIndex = 0;
+        // Save original fen (the currently displayed board) to restore later if desired
+        bestLineOriginalFen = entry.board;
+        // Save existing shapes so we can restore them later
+        bestLineSavedShapes = lastShapes ? lastShapes.slice() : [];
+    }
+    if (bestLineMoves.length === 0) return;
+
+    // Only reset the board to the position before this move when starting fresh.
+    // Don't reset on resume so playback continues from the paused position.
+    if (bestLineIndex === 0) {
+        try {
+            let startFen = entry.board;
+            if (move_idx > 0 && entries[move_idx - 1] && entries[move_idx - 1].board) {
+                startFen = entries[move_idx - 1].board;
+            }
+            chessground.set({
+                fen: startFen,
+                orientation: user_color,
+                movable: {
+                    free: true,
+                    showDests: true,
+                }
+            });
+        } catch (e) {
+            console.warn('Failed to set starting FEN for best-line playback', e);
+        }
+    }
+
+    // Disable navigation while playing (also keep disabled while paused)
+    document.getElementById('prev').disabled = true;
+    document.getElementById('next').disabled = true;
+    document.getElementById('firstMove').disabled = true;
+    document.getElementById('lastMove').disabled = true;
+    document.getElementById('playBestLine').innerText = 'Pause';
+    bestLinePlaying = true;
+    // enable Stop button
+    try { document.getElementById('stopBestLine').disabled = false; } catch (e) { }
+
+    // Clear any arrows/shapes while playing the best line
+    try {
+        chessground.setShapes([]);
+    } catch (e) {
+        console.warn('Failed to clear shapes before playback', e);
+    }
+
+    function step() {
+        if (!bestLinePlaying) return;
+        if (bestLineIndex >= bestLineMoves.length) {
+            // finished: stop and restore saved shapes
+            stopPlayingBestLine(true);
+            return;
+        }
+        const move = bestLineMoves[bestLineIndex];
+        const orig = move.substring(0, 2);
+        const dest = move.substring(2, 4);
+        try {
+            chessground.move(orig, dest);
+        } catch (e) {
+            console.warn('Failed to play move', move, e);
+        }
+        bestLineIndex++;
+        bestLineTimer = setTimeout(step, 800);
+    }
+
+    step();
+}
+
+function pausePlayingBestLine() {
+    if (bestLineTimer) {
+        clearTimeout(bestLineTimer);
+        bestLineTimer = null;
+    }
+    bestLinePlaying = false;
+    // Keep navigation disabled while paused so board state isn't changed
+    document.getElementById('playBestLine').innerText = 'Resume';
+    try { document.getElementById('stopBestLine').disabled = false; } catch (e) { }
+}
+
+function stopPlayingBestLine(restore = true) {
+    if (bestLineTimer) {
+        clearTimeout(bestLineTimer);
+        bestLineTimer = null;
+    }
+    bestLinePlaying = false;
+    document.getElementById('playBestLine').innerText = 'Play Best Line';
+    // Re-enable navigation
+    document.getElementById('prev').disabled = move_idx === 0;
+    document.getElementById('firstMove').disabled = move_idx === 0;
+    document.getElementById('next').disabled = move_idx === entries.length - 1;
+    document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
+
+    // Restore saved shapes (don't revert the board position)
+    try {
+        if (restore && bestLineSavedShapes) {
+            chessground.setShapes(bestLineSavedShapes);
+        }
+    } catch (e) {
+        console.warn('Failed to restore shapes after stopping best-line playback', e);
+    }
+
+    // clear stored best-line state
+    bestLineMoves = [];
+    bestLineIndex = 0;
+    bestLineSavedShapes = null;
+    bestLineOriginalFen = null;
+    try { document.getElementById('stopBestLine').disabled = true; } catch (e) { }
+}
+
+function cancelPlayingBestLine() {
+    // Completely cancel playback and restore original board and shapes
+    if (bestLineTimer) {
+        clearTimeout(bestLineTimer);
+        bestLineTimer = null;
+    }
+    bestLinePlaying = false;
+
+    // Restore original fen if available
+    try {
+        if (bestLineOriginalFen) {
+            chessground.set({
+                fen: bestLineOriginalFen,
+                orientation: user_color,
+                movable: {
+                    free: true,
+                    showDests: true,
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Failed to restore original FEN on cancel', e);
+    }
+
+    // Restore saved shapes
+    try {
+        if (bestLineSavedShapes) chessground.setShapes(bestLineSavedShapes);
+    } catch (e) {
+        console.warn('Failed to restore shapes on cancel', e);
+    }
+
+    // Re-enable navigation
+    document.getElementById('prev').disabled = move_idx === 0;
+    document.getElementById('firstMove').disabled = move_idx === 0;
+    document.getElementById('next').disabled = move_idx === entries.length - 1;
+    document.getElementById('lastMove').disabled = move_idx === entries.length - 1;
+
+    // reset UI
+    document.getElementById('playBestLine').innerText = 'Play Best Line';
+    try { document.getElementById('stopBestLine').disabled = true; } catch (e) { }
+
+    // clear stored best-line state
+    bestLineMoves = [];
+    bestLineIndex = 0;
+    bestLineSavedShapes = null;
+    bestLineOriginalFen = null;
+}
+
 document.getElementById('firstMove').onclick = () => showMove(0);
+document.getElementById('playBestLine').onclick = () => togglePlayBestLine();
+document.getElementById('stopBestLine').onclick = () => cancelPlayingBestLine();
 document.getElementById('prev').onclick = () => showMove(move_idx - 1);
 document.getElementById('next').onclick = () => showMove(move_idx + 1);
 document.getElementById('lastMove').onclick = () => showMove(entries.length - 1);
@@ -411,4 +609,6 @@ document.addEventListener('keydown', function (event) {
     if (event.key === "ArrowRight" && move_idx < entries.length - 1) showMove(move_idx + 1);
     if (event.key === "ArrowDown") showMove(0);
     if (event.key === "ArrowUp") showMove(entries.length - 1);
+    if (event.key === 'p') togglePlayBestLine();
+    if (event.key === 's') cancelPlayingBestLine();
 });
