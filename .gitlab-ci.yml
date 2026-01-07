@@ -1,0 +1,8 @@
+stages:
+  - install
+
+
+install_everything:
+  stage: install
+  script:
+    - ./install.sh
