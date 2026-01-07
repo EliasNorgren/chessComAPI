@@ -1,19 +1,26 @@
 #!/bin/bash
 
+# Fail-fast options
+set -euo pipefail
+IFS=$'\n\t'
+
 # Check if STOCKFISH_ENGINE_PATH is set
-if [ -z "$STOCKFISH_ENGINE_PATH" ]; then
-    echo "Error env STOCKFISH_ENGINE_PATH not set, it needs to be set and point towards a stockfish binary executable."
+if [ -z "${STOCKFISH_ENGINE_PATH:-}" ]; then
+    echo "Error: env STOCKFISH_ENGINE_PATH not set; it must point to a stockfish binary." >&2
     exit 1
 fi
 
 # Check if the file exists
 if [ ! -f "$STOCKFISH_ENGINE_PATH" ]; then
-    echo "Error: File '$STOCKFISH_ENGINE_PATH' does not exist."
+    echo "Error: File '$STOCKFISH_ENGINE_PATH' does not exist." >&2
     exit 1
 fi
 echo "Stockfish engine found at: $STOCKFISH_ENGINE_PATH"
 
-
+if [ ! -f ./myenv/bin/activate ]; then
+    echo "Error: virtualenv activation script ./myenv/bin/activate not found. Run install.sh first." >&2
+    exit 1
+fi
 
 source ./myenv/bin/activate
 
@@ -30,8 +37,8 @@ while [[ "$#" -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo "Unknown argument: $1"
-            echo "Usage: $0 [-d|--debug]"
+            echo "Unknown argument: $1" >&2
+            echo "Usage: $0 [-d|--debug]" >&2
             exit 1
             ;;
     esac
