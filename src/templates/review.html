@@ -214,6 +214,36 @@
             margin-left: 1em;
         }
 
+        /* Styled Get Position Stats button (match nav buttons) */
+        #get-position-stats {
+            font-size: 2em;
+            padding: 0.4em 0.8em;
+            margin: 0.8em auto;
+            border-radius: 8px;
+            background: #23211e;
+            color: #c3c2c1;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.12s;
+            display: block;
+            text-align: center;
+            min-width: 2.5em;
+            max-width: 240px;
+        }
+
+        #get-position-stats:hover:not(:disabled) {
+            background: #393733;
+        }
+
+        #get-position-stats:active {
+            transform: translateY(0);
+        }
+
+        #get-position-stats:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
     </style>
 </head>
 
@@ -259,6 +289,12 @@
     <button id="playBestLine" title="Play Best Line">Play Best Line</button>
     <button id="stopBestLine" title="Stop Best Line" disabled>Stop</button>
     </div>
+
+    <button id="get-position-stats">Get position stats</button>
+    <div id="position-stats" style="max-width:90vw; margin:1em auto;">
+        <!-- Position stats visualization will be rendered here -->
+    </div>
+    
     <script>
         const captureSoundUrl = "{{ url_for('static', filename='capture.mp3') }}";
         const moveSelfSoundUrl = "{{ url_for('static', filename='move-self.mp3') }}";

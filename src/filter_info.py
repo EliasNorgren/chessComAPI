@@ -24,6 +24,19 @@ class FilterInfo():
         RAPID = "rapid"
         DAILY = "classical"
 
+        def __init__(self):
+            pass
+
+        def time_in_seconds(self, time_control : int) -> "TimeClass":
+            if time_control >= 60 and time_control < 180:
+                return FilterInfo.TimeClass.BULLET
+            elif time_control >= 180 and time_control < 600:
+                return FilterInfo.TimeClass.BLITZ
+            elif time_control >= 600 and time_control < 1800:
+                return FilterInfo.TimeClass.RAPID
+            else:
+                return FilterInfo.TimeClass.DAILY
+
     def __init__(self, user : str, user_range : RatingRange = None, 
                  opponent_range : RatingRange = None,
                  date_range : DateRange = None,

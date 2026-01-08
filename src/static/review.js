@@ -626,12 +626,80 @@ function cancelPlayingBestLine() {
     bestLineOriginalFen = null;
 }
 
+function getPositionStats() {
+    const entry = entries[move_idx];
+    if (!entry || !entry.board) return;
+    fen = entry.board.split(" ")[0] + " " + entry.board.split(" ")[1];
+    user = meta.user;
+    time_control = meta.time_control;
+    playing_as_white = meta.user_playing_as_white;
+    url = `/get_win_percentage_and_accuracy?fen=${encodeURIComponent(fen)}&user=${encodeURIComponent(user)}&time_control=${encodeURIComponent(time_control)}&playing_as_white=${encodeURIComponent(playing_as_white)}`;
+        fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                        renderPositionStats(data);
+                })
+                .catch(error => {
+                        console.error('Error fetching position stats:', error);
+                        alert('Error fetching position stats. See console for details.');
+                });
+}
+
+function renderPositionStats(data) {
+        const container = document.getElementById('position-stats');
+        if (!container) return;
+        // Defensive defaults
+        const stats = (data && data.stats) ? data.stats : {win:0, loss:0, draw:0, no_games:0, no_games_with_acc:0};
+        const accuracy = (data && typeof data.accuracy !== 'undefined') ? data.accuracy : null;
+        const noGames = stats.no_games || 0;
+        const winPct = stats.win || 0;
+        const lossPct = stats.loss || 0;
+        const drawPct = stats.draw || 0;
+        const winCount = Math.round(noGames * winPct / 100);
+        const lossCount = Math.round(noGames * lossPct / 100);
+        const drawCount = Math.round(noGames * drawPct / 100);
+
+        container.innerHTML = `
+        <div style="background:#262522;padding:1em;border-radius:12px;color:#c3c2c1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:1em;">
+                <div style="font-weight:bold;font-size:1.1em">Position Stats</div>
+                <div style="text-align:right;font-size:0.95em">Games: ${noGames} &nbsp; (with acc: ${stats.no_games_with_acc || 0})</div>
+            </div>
+            <div style="margin-top:0.6em; display:flex; align-items:center; gap:1em;">
+                <div style="font-size:1.6em; font-weight:700;">${accuracy !== null ? accuracy + '%' : 'N/A'}</div>
+                <div style="font-size:0.9em;color:#bdbdbd">Accuracy</div>
+            </div>
+
+            <div style="margin-top:0.9em">
+                <div style="height:26px; background:#1e1e1e; border-radius:8px; overflow:hidden; display:flex;">
+                    <div style="background:#81b64c; width:${winPct}%; min-width:0;" title="Win ${winPct}%"></div>
+                    <div style="background:#fa412d; width:${lossPct}%; min-width:0;" title="Loss ${lossPct}%"></div>
+                    <div style="background:#c3c2c1; width:${drawPct}%; min-width:0;" title="Draw ${drawPct}%"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:0.5em;font-size:0.9em;color:#d0d0d0">
+                    <div style="color:#81b64c">Win ${winPct}% (${winCount})</div>
+                    <div style="color:#fa412d">Loss ${lossPct}% (${lossCount})</div>
+                    <div style="color:#c3c2c1">Draw ${drawPct}% (${drawCount})</div>
+                </div>
+            </div>
+
+            <div style="margin-top:0.8em; text-align:right">
+                <button id="hide-position-stats" style="background:#393733;color:#fff;border:none;padding:0.4em 0.7em;border-radius:6px;cursor:pointer">Hide</button>
+            </div>
+        </div>
+        `;
+
+        const hideBtn = document.getElementById('hide-position-stats');
+        if (hideBtn) hideBtn.onclick = () => { container.innerHTML = ''; };
+}
+
 document.getElementById('firstMove').onclick = () => showMove(0);
 document.getElementById('playBestLine').onclick = () => togglePlayBestLine();
 document.getElementById('stopBestLine').onclick = () => cancelPlayingBestLine();
 document.getElementById('prev').onclick = () => showMove(move_idx - 1);
 document.getElementById('next').onclick = () => showMove(move_idx + 1);
 document.getElementById('lastMove').onclick = () => showMove(entries.length - 1);
+document.getElementById('get-position-stats').onclick = () => getPositionStats();
 document.addEventListener('keydown', function (event) {
     if (event.key === "ArrowLeft" && move_idx > 0) showMove(move_idx - 1);
     if (event.key === "ArrowRight" && move_idx < entries.length - 1) showMove(move_idx + 1);

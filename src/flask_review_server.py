@@ -6,6 +6,7 @@ import threading
 import copy
 from entryCache import EntryCache
 from database import DataBase
+from filter_info import FilterInfo
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
@@ -85,6 +86,32 @@ def set_puzzle_solved():
 @app.route('/puzzle')
 def puzzle_page():
     return render_template('puzzle.html')
+
+@app.route('/get_win_percentage_and_accuracy')
+def get_win_percentage_and_accuracy():
+    parser = Parser()
+    fen = request.args.get('fen', default='', type=str)
+    if fen == '':
+        return jsonify({"error": "FEN parameter is required"}), 400
+    user = request.args.get('user', default='', type=str)
+    if user == '':
+        return jsonify({"error": "User parameter is required"}), 400
+    time_control = request.args.get('time_control', default='', type=int)
+    if time_control == '':
+        return jsonify({"error": "time_control parameter is required"}), 400
+    playing_as_white_str = request.args.get('playing_as_white', default=None, type=str)
+    playing_as_white = None
+    if playing_as_white_str is not None:
+        playing_as_white = playing_as_white_str == "1"
+
+    filter_info = FilterInfo(user)
+    filter_info.playing_as_white = playing_as_white
+    filter_info.fen_appeared = fen
+    filter_info.time_class = FilterInfo.TimeClass().time_in_seconds(time_control)    
+
+    stats = parser.get_win_percentage_and_accuracy(filter_info)
+    print(f"Stats for user {user} and FEN {fen}: {stats}")
+    return jsonify(stats)
 
 if __name__ == '__main__':
     import argparse
