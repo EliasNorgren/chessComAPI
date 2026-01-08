@@ -40,6 +40,7 @@ async function loadReviewData() {
     document.getElementById('lower-board-value').style.display = 'none';
     document.getElementById('move-classifications').style.display = 'none';
     document.getElementById('error-message').style.display = 'none';
+    document.getElementById('chessground_board').style.display = 'none';
 
     let url = '/review_data?' + new URLSearchParams(window.location.search).toString();
     console.log("Fetching review data from:", url);
@@ -86,6 +87,8 @@ async function loadReviewData() {
                 document.getElementById('get-position-stats').style.display = '';
                 document.getElementById('lower-board-value').style.display = '';
                 document.getElementById('move-classifications').style.display = '';
+                document.getElementById('chessground_board').style.display = '';
+
                 entries = statusData.analysis;
                 meta = statusData;
                 user_color = meta.user_playing_as_white ? "white" : "black";
