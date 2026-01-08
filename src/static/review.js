@@ -32,6 +32,12 @@ function setProgress(percent) {
 
 async function loadReviewData() {
     document.getElementById('eval-bar').style.display = 'none';
+    document.getElementById('move-info').style.display = 'none';
+    document.getElementById('horizontal-layout').style.display = 'none';
+    document.getElementById('nav-btns').style.display = 'none';
+    document.getElementById('best-line-btns').style.display = 'none';
+    document.getElementById('get-position-stats').style.display = 'none';
+    document.getElementById('lower-board-value').style.display = 'none';
     document.getElementById('move-classifications').style.display = 'none';
     document.getElementById('error-message').style.display = 'none';
 
@@ -73,6 +79,12 @@ async function loadReviewData() {
                 setProgress(100);
                 document.getElementById('loading-container').style.display = 'none';
                 document.getElementById('eval-bar').style.display = '';
+                document.getElementById('move-info').style.display = '';
+                document.getElementById('horizontal-layout').style.display = '';
+                document.getElementById('nav-btns').style.display = '';
+                document.getElementById('best-line-btns').style.display = '';
+                document.getElementById('get-position-stats').style.display = '';
+                document.getElementById('lower-board-value').style.display = '';
                 document.getElementById('move-classifications').style.display = '';
                 entries = statusData.analysis;
                 meta = statusData;

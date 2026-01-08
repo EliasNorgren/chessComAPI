@@ -263,7 +263,7 @@
     <div id="error-message" class="error-message" style="color: red; display: none;">Error loading review data</div>
     <div id="move-classifications" class="move-classifications"></div>
     
-    <div class="horizontal-layout">
+    <div class="horizontal-layout" id="horizontal-layout">
         <div id="upper_time"></div>
     </div>
     <div class="board-flex">
@@ -279,13 +279,13 @@
         <div id="lower-board-value" class="board-value">0</div>
     </div>
 
-    <div class="nav-btns">
+    <div class="nav-btns" id="nav-btns">
         <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>
         <button id="prev" title="Previous Move"><i class="fa-solid fa-angle-left"></i></button>
         <button id="next" title="Next Move"><i class="fa-solid fa-angle-right"></i></button>
         <button id="lastMove" title="Last Move"><i class="fa-solid fa-angles-right"></i></button>
     </div>
-    <div class="nav-btns" style="margin-top: 0.5em;">
+    <div class="nav-btns" style="margin-top: 0.5em;" id="best-line-btns">
     <button id="playBestLine" title="Play Best Line">Play Best Line</button>
     <button id="stopBestLine" title="Stop Best Line" disabled>Stop</button>
     </div>
