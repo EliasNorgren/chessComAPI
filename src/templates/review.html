@@ -201,6 +201,19 @@
             font-size: 1.2em;
             margin-top: 2em;
         }
+
+        .horizontal-layout {
+            display: flex;
+            align-items: center;
+            margin: 0 auto;
+            margin-left: 32vw;
+        }
+
+        .board-value {
+            font-size: 1.5em;
+            margin-left: 1em;
+        }
+
     </style>
 </head>
 
@@ -219,8 +232,10 @@
     </div>
     <div id="error-message" class="error-message" style="color: red; display: none;">Error loading review data</div>
     <div id="move-classifications" class="move-classifications"></div>
-    <div id="upper_time"></div>
-
+    
+    <div class="horizontal-layout">
+        <div id="upper_time"></div>
+    </div>
     <div class="board-flex">
         <div class="eval-bar" id="eval-bar">
             <div class="eval-bar-fill" id="eval-bar-fill"></div>
@@ -228,7 +243,11 @@
         <!-- <div class="svg-board" id="svg-board"></div> -->
         <div class="chessground_board" id="chessground_board"></div>
     </div>
-    <div id="lower_time"></div>
+
+    <div class="horizontal-layout">
+        <div id="lower_time"></div>
+        <div id="lower-board-value" class="board-value">0</div>
+    </div>
 
     <div class="nav-btns">
         <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>

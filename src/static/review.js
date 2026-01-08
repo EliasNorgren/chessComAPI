@@ -277,6 +277,37 @@ function showMove(idx) {
         renderClockTime(entries[move_idx].clock_time, !now_it_is_users_turn, user_playing_as_white)
     }
     renderEvalBar(evalCp, user_playing_as_white);
+    renderBoardValue(user_playing_as_white, entry.board);
+}
+
+function renderBoardValue(user_playing_as_white, fen) {
+    white_sum = 0
+    black_sum = 0
+    const piece_values = {
+        'p': 1,
+        'n': 3,
+        'b': 3,
+        'r': 5,
+        'q': 9,
+        'k': 0
+    };
+    let board_part = fen.split(" ")[0];
+    let rows = board_part.split("/");
+
+    for (let row of rows) {
+        for (let char of row) {
+            if (char in piece_values) {
+                black_sum += piece_values[char];
+            } else if (char.toLowerCase() in piece_values) {
+                white_sum += piece_values[char.toLowerCase()];
+            }
+        }
+    }
+    if (user_playing_as_white) {
+        document.getElementById('lower-board-value').innerText = `${white_sum - black_sum}`;
+    } else {
+        document.getElementById('lower-board-value').innerText = `${black_sum - white_sum}`;
+    }
 }
 
 function renderClockTime(clock_time, render_lower_time_control, user_playing_as_white) {
@@ -321,9 +352,6 @@ function setClockTimeStyle(element, time_control_is_black) {
         element.style.textAlign = "center";
     }
     element.style.width = "fit-content";
-    element.style.marginLeft = "30vw";
-    //element.style.marginTop = "5em";
-    //element.style.marginBottom = "5em";
 }
 
 function renderEvalBar(evalCp, user_playing_as_white) {
