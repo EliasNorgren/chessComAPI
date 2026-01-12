@@ -262,11 +262,11 @@ function showMove(idx) {
         })
 
         chessground.setShapes(shapes);
-            lastShapes = shapes;
-        }
-        else {
-            lastShapes = [];
-        }
+        lastShapes = shapes;
+    }
+    else {
+        lastShapes = [];
+    }
     let url_id, url_id_split;
     url_id_split = meta.url.split("/");
     url_id = url_id_split[url_id_split.length - 1];
@@ -649,32 +649,32 @@ function getPositionStats() {
     time_control = meta.time_control;
     playing_as_white = meta.user_playing_as_white;
     url = `/get_win_percentage_and_accuracy?fen=${encodeURIComponent(fen)}&user=${encodeURIComponent(user)}&time_control=${encodeURIComponent(time_control)}&playing_as_white=${encodeURIComponent(playing_as_white)}`;
-        fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                        renderPositionStats(data);
-                })
-                .catch(error => {
-                        console.error('Error fetching position stats:', error);
-                        alert('Error fetching position stats. See console for details.');
-                });
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            renderPositionStats(data);
+        })
+        .catch(error => {
+            console.error('Error fetching position stats:', error);
+            alert('Error fetching position stats. See console for details.');
+        });
 }
 
 function renderPositionStats(data) {
-        const container = document.getElementById('position-stats');
-        if (!container) return;
-        // Defensive defaults
-        const stats = (data && data.stats) ? data.stats : {win:0, loss:0, draw:0, no_games:0, no_games_with_acc:0};
-        const accuracy = (data && typeof data.accuracy !== 'undefined') ? data.accuracy : null;
-        const noGames = stats.no_games || 0;
-        const winPct = stats.win || 0;
-        const lossPct = stats.loss || 0;
-        const drawPct = stats.draw || 0;
-        const winCount = Math.round(noGames * winPct / 100);
-        const lossCount = Math.round(noGames * lossPct / 100);
-        const drawCount = Math.round(noGames * drawPct / 100);
+    const container = document.getElementById('position-stats');
+    if (!container) return;
+    // Defensive defaults
+    const stats = (data && data.stats) ? data.stats : { win: 0, loss: 0, draw: 0, no_games: 0, no_games_with_acc: 0 };
+    const accuracy = (data && typeof data.accuracy !== 'undefined') ? data.accuracy : null;
+    const noGames = stats.no_games || 0;
+    const winPct = stats.win || 0;
+    const lossPct = stats.loss || 0;
+    const drawPct = stats.draw || 0;
+    const winCount = Math.round(noGames * winPct / 100);
+    const lossCount = Math.round(noGames * lossPct / 100);
+    const drawCount = Math.round(noGames * drawPct / 100);
 
-        container.innerHTML = `
+    container.innerHTML = `
         <div style="background:#262522;padding:1em;border-radius:12px;color:#c3c2c1;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1em;">
                 <div style="font-weight:bold;font-size:1.1em">Position Stats</div>
@@ -704,8 +704,8 @@ function renderPositionStats(data) {
         </div>
         `;
 
-        const hideBtn = document.getElementById('hide-position-stats');
-        if (hideBtn) hideBtn.onclick = () => { container.innerHTML = ''; };
+    const hideBtn = document.getElementById('hide-position-stats');
+    if (hideBtn) hideBtn.onclick = () => { container.innerHTML = ''; };
 }
 
 document.getElementById('firstMove').onclick = () => showMove(0);

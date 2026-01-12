@@ -123,6 +123,7 @@ class DataBase():
         ids_str = ','.join(map(str, ids))
         return ids_str
 
+    # Deprecated
     def query(self, query_string: str) -> list[sqlite3.Row]:
         conn = sqlite3.connect(self.database_file_path)
         conn.row_factory = sqlite3.Row
@@ -137,6 +138,31 @@ class DataBase():
             conn.close()  # Ensure the connection is closed
             return results  # Return the results
     
+    def query_games(self, query_string: str) -> list[Game] | None:
+        conn = sqlite3.connect(self.database_file_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        results = None
+        try:
+            cursor.execute(query_string)  # Execute the query
+            results = cursor.fetchall()   # Fetch all the results
+        except sqlite3.Error as e:
+            print(f"Error querying: {e}, {query_string}")
+        finally:
+            conn.close()  # Ensure the connection is closed
+        if results:
+            games = []
+            for row in results:
+                game = self.sqlite3_row_to_game(row, row['user'])
+                games.append(game)
+            return games
+        return None
+
+    def sqlite3_row_to_game(self, row: sqlite3.Row, user: str) -> Game:
+        game_json = self.convert_database_entry_to_json(row)
+        game = Game(game_json, user)
+        return game
+
     def get_latest_game(self, user : str) -> Game :
         # Connect to the database
         conn = sqlite3.connect(self.database_file_path)

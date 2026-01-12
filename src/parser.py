@@ -27,6 +27,7 @@ from PGN_to_fen_list import pgn_to_move_list
 from controller import DataBaseUpdater
 from entryCache import EntryCache
 from puzzle_entry import PuzzleEntry
+from game import Game
 
 import chess.pgn
 from io import StringIO
@@ -371,7 +372,7 @@ class Parser():
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
         
-        res = database.query(f'''
+        res = database.query_games(f'''
             SELECT *
             FROM matches
             WHERE id IN ({filtered_ids})
@@ -382,14 +383,16 @@ class Parser():
         number_of_games_with_acc = 0
         total_games = 0
         stats = {'loss' : 0, 'win' : 0, 'draw' : 0}
+        total_opponent_rating = 0
 
         for game in res :
             total_games += 1
-            stats[self.__winLossOrDraw(game)] += 1
-            acc = self.__get_accuracy(game)
+            stats[game.winLossOrDraw()] += 1
+            acc = game.get_accuracy()
             if  acc != None :
                 total_acuracy += acc
                 number_of_games_with_acc += 1
+            total_opponent_rating += game.opponent_rating
         if number_of_games_with_acc != 0 :
             acc = round((total_acuracy / number_of_games_with_acc), 2)
         else :
@@ -400,9 +403,11 @@ class Parser():
             return {'accuracy' : None, 'stats' : stats}
         stats['draw'] = round((stats['draw'] / total_games) * 100 , 2) 
         stats['loss'] = round((stats['loss'] / total_games) * 100 , 2) 
-        stats['win'] = round((stats['win'] / total_games) * 100 , 2) 
+        stats['win'] = round((stats['win'] / total_games) * 100 , 2)
+        stats['average_opponent_rating'] = round((total_opponent_rating / total_games), 2) 
         return {'accuracy' : acc, 'stats' : stats}
 
+   # Deprecated
     def __get_accuracy(self, game : dict) :
         if game['user_playing_as_white'] and game['accuracies_white'] != None :
             return game['accuracies_white']

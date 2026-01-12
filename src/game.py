@@ -111,9 +111,9 @@ class Game():
         
         if self.pgn != None :       
             gamePGN = chess.pgn.read_game(StringIO(game_json["pgn"]))
-            if "ECO" in gamePGN.headers :
+            if gamePGN and "ECO" in gamePGN.headers :
                 self.ECO = gamePGN.headers["ECO"]
-            if "ECOUrl" in gamePGN.headers :
+            if gamePGN and "ECOUrl" in gamePGN.headers :
                 self.ECOurl = gamePGN.headers["ECOUrl"]
 
     def __str__(self) -> str:
@@ -138,3 +138,21 @@ class Game():
             self.white_username == other.white_username and
             self.black_username == other.black_username
         )
+    
+    def winLossOrDraw (self) -> str :
+        if self.user_result in ['win']:  
+            return 'win'
+        elif self.user_result in ['resigned', 'checkmated', 'timeout', 'abandoned'] :
+            return 'loss'
+        elif self.user_result in ['stalemate', 'insufficient', 'repetition', '50move', 'agreed', 'timevsinsufficient'] :
+            return 'draw'
+        else :
+            print(f"Could not place result {self.user_result} into draw, loss or win")
+            exit(1)
+
+    def get_accuracy(self) :
+        if self.user_playing_as_white and self.accuracies_white != None :
+            return self.accuracies_white
+        elif self.accuracies_black != None :
+            return self.accuracies_black
+        return None
