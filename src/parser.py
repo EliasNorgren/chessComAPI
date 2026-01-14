@@ -384,10 +384,13 @@ class Parser():
         total_games = 0
         stats = {'loss' : 0, 'win' : 0, 'draw' : 0}
         total_opponent_rating = 0
+        opponent_rating_stats = {'win' : 0, 'loss' : 0, 'draw' : 0}
 
         for game in res :
             total_games += 1
-            stats[game.winLossOrDraw()] += 1
+            win_loss_draw = game.winLossOrDraw()
+            stats[win_loss_draw] += 1
+            opponent_rating_stats[win_loss_draw] += game.opponent_rating
             acc = game.get_accuracy()
             if  acc != None :
                 total_acuracy += acc
@@ -401,10 +404,15 @@ class Parser():
         stats["no_games_with_acc"] = number_of_games_with_acc
         if total_games == 0 :
             return {'accuracy' : None, 'stats' : stats}
+        
+        opponent_rating_stats['win'] = round((opponent_rating_stats['win'] / stats['win']) , 2) if stats['win'] != 0 else 0
+        opponent_rating_stats['loss'] = round((opponent_rating_stats['loss'] / stats['loss']) , 2) if stats['loss'] != 0 else 0
+        opponent_rating_stats['draw'] = round((opponent_rating_stats['draw'] / stats['draw']) , 2) if stats['draw'] != 0 else 0
         stats['draw'] = round((stats['draw'] / total_games) * 100 , 2) 
         stats['loss'] = round((stats['loss'] / total_games) * 100 , 2) 
         stats['win'] = round((stats['win'] / total_games) * 100 , 2)
-        stats['average_opponent_rating'] = round((total_opponent_rating / total_games), 2) 
+        stats['average_opponent_rating'] = round((total_opponent_rating / total_games), 2)
+        stats['average_opponent_rating_per_result'] = opponent_rating_stats
         return {'accuracy' : acc, 'stats' : stats}
 
    # Deprecated

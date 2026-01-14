@@ -675,6 +675,9 @@ function renderPositionStats(data) {
     const lossCount = Math.round(noGames * lossPct / 100);
     const drawCount = Math.round(noGames * drawPct / 100);
     const average_opponent_rating = data.stats.average_opponent_rating || 'N/A';
+    const average_win_opponent_rating = data.stats.average_opponent_rating_per_result.win || 'N/A';
+    const average_loss_opponent_rating = data.stats.average_opponent_rating_per_result.loss || 'N/A';
+    const average_draw_opponent_rating = data.stats.average_opponent_rating_per_result.draw || 'N/A';
     container.innerHTML = `
         <div style="background:#262522;padding:1em;border-radius:12px;color:#c3c2c1;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1em;">
@@ -686,6 +689,12 @@ function renderPositionStats(data) {
                 <div style="font-size:1.6em; font-weight:700;">${accuracy !== null ? accuracy + '%' : 'N/A'}</div>
                 <div style="font-size:0.9em;color:#bdbdbd">Avg Opponent Rating:</div>
                 <div style="font-size:1.6em; font-weight:700;">${average_opponent_rating}</div>
+                <div style="font-size:0.9em;color:#bdbdbd">Avg Win Opponent Rating:</div>
+                <div style="font-size:1.6em; font-weight:700; color:#81b64c"">${average_win_opponent_rating}</div>
+                <div style="font-size:0.9em;color:#bdbdbd">Avg Loss Opponent Rating:</div>
+                <div style="font-size:1.6em; font-weight:700; color:#fa412d">${average_loss_opponent_rating}</div>
+                <div style="font-size:0.9em;color:#bdbdbd">Avg Draw Opponent Rating:</div>
+                <div style="font-size:1.6em; font-weight:700;">${average_draw_opponent_rating}</div>
             </div>
 
             <div style="margin-top:0.9em">
