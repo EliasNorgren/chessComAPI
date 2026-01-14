@@ -652,6 +652,7 @@ function getPositionStats() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            console.log('Position stats data:', data);
             renderPositionStats(data);
         })
         .catch(error => {
@@ -673,7 +674,7 @@ function renderPositionStats(data) {
     const winCount = Math.round(noGames * winPct / 100);
     const lossCount = Math.round(noGames * lossPct / 100);
     const drawCount = Math.round(noGames * drawPct / 100);
-
+    const average_opponent_rating = data.stats.average_opponent_rating || 'N/A';
     container.innerHTML = `
         <div style="background:#262522;padding:1em;border-radius:12px;color:#c3c2c1;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:1em;">
@@ -681,8 +682,10 @@ function renderPositionStats(data) {
                 <div style="text-align:right;font-size:0.95em">Games: ${noGames} &nbsp; (with acc: ${stats.no_games_with_acc || 0})</div>
             </div>
             <div style="margin-top:0.6em; display:flex; align-items:center; gap:1em;">
+                <div style="font-size:0.9em;color:#bdbdbd">Accuracy:</div>
                 <div style="font-size:1.6em; font-weight:700;">${accuracy !== null ? accuracy + '%' : 'N/A'}</div>
-                <div style="font-size:0.9em;color:#bdbdbd">Accuracy</div>
+                <div style="font-size:0.9em;color:#bdbdbd">Avg Opponent Rating:</div>
+                <div style="font-size:1.6em; font-weight:700;">${average_opponent_rating}</div>
             </div>
 
             <div style="margin-top:0.9em">
