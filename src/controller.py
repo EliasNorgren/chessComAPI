@@ -21,8 +21,8 @@ class DataBaseUpdater :
     def updateDB(self, user : str):
         print(f"Updating user {user}")
         user = user.lower()
-        data_base = DataBase()
-        latest_game = data_base.get_latest_game(user)
+        database = DataBase()
+        latest_game = database.get_latest_game(user)
         api = API()
         monthly_archive = api.get_monthly_archive(user)
         inserted_games = 0
@@ -42,7 +42,7 @@ class DataBaseUpdater :
                     fens = extract_fens(game.pgn)
                     game.total_fens = fens
 
-                data_base.insert_game(game)
+                database.insert_game(game)
                 inserted_games += 1
                 
         print(f"{inserted_games} new games to {user}!")

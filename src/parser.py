@@ -495,6 +495,7 @@ class Parser():
                     WHERE url LIKE "%{url}%" AND user = "{user}"
                 ''')
         else :
+            print(f"No url provided, fetching latest game for user {user}")
             DataBaseUpdater().updateDB(user)
             game = database.query(f'''
                 SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
