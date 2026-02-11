@@ -104,9 +104,14 @@ class DataBase():
     def get_all_ids(self, filter_info : FilterInfo) :
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
-        query = f'''
-            SELECT id FROM matches WHERE user = "{filter_info.user}"
-        '''
+        if filter_info.user == None :
+            query = f'''
+                SELECT id FROM matches
+            '''
+        else :
+            query = f'''
+                SELECT id FROM matches WHERE user = "{filter_info.user}"
+            '''
         cursor.execute(query)
         results = cursor.fetchall()
         ids = [item[0] for item in results]
@@ -293,7 +298,11 @@ class DataBase():
             "opponent_rating": db_entry[29],
             "user_result": db_entry[30],
             "opponent_result": db_entry[31],
-            "opponent_user": db_entry[32]
+            "ECO": db_entry[32],
+            "ECOurl": db_entry[33],
+            "opponent_user": db_entry[34],
+            "analysis": db_entry[35],
+            "puzzles_calculated": db_entry[36]
         }
         
     def get_db_size(self) -> str :

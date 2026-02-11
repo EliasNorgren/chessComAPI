@@ -37,7 +37,9 @@ class FilterInfo():
             else:
                 return FilterInfo.TimeClass.DAILY
 
-    def __init__(self, user : str, user_range : RatingRange = None, 
+    def __init__(self,
+                 user : str,
+                 user_range : RatingRange = None, 
                  opponent_range : RatingRange = None,
                  date_range : DateRange = None,
                  time_control_range : 'TimeControl' = None,
@@ -46,7 +48,10 @@ class FilterInfo():
                  time_class : TimeClass = None,
                  fen_appeared : str = None
                  ) -> None:
-        self.user = user.lower()
+        if not user is None:
+            self.user = user.lower()
+        else :
+            self.user = None
         self.user_rating_range = user_range
         self.opponent_rating_range = opponent_range
         self.date_range = date_range
@@ -58,7 +63,8 @@ class FilterInfo():
 
     def __str__(self):
         res = "\n"
-        res += "user: " + self.user + "\n"
+        if self.user is not None:
+            res += "user: " + self.user + "\n"
         if self.user_rating_range is not None:
             res += "user_rating_range: " + str(self.user_rating_range.start) + " - " + str(self.user_rating_range.end) + "\n"
         else:

@@ -36,6 +36,8 @@ import seaborn as sns
 import sqlite3
 import time
 import json
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
 class Parser():
 
@@ -780,9 +782,61 @@ class Parser():
         if puzzle is None :
             return {}
         return puzzle
+    
+    def update_rating_accuracy_regression_parameters(self, filter_info : FilterInfo) :
+        database = DataBase()
+        filtered_ids = database.get_filtered_ids(filter_info)
+        games = database.query_games(f'''
+            SELECT * from matches
+            WHERE id IN ({filtered_ids}) AND
+            analysis IS NOT NULL AND
+            analysis != ""
+        ''')
+        x = []
+        y = []
+        for game in games :
+            analysis = game.analysis
+            user_playing_as_white = analysis['user_playing_as_white']
+            if user_playing_as_white :
+                opponent_accuracy = analysis['black_accuracy']
+            else :
+                opponent_accuracy = analysis['white_accuracy']
+            opponent_rating = game.opponent_rating
+            x.append(opponent_rating)
+            y.append(opponent_accuracy)
+            if opponent_accuracy < 20 :
+                print(f"Game {game.url} has opponent accuracy {opponent_accuracy} and opponent rating {opponent_rating}")
+        if len(x) == 0 :
+            print("No games with analysis found for the given filter, cannot update regression parameters.")
+            return
+       
+        # Perform linear regression
+        X = np.array(x).reshape(-1, 1)
+        y = np.array(y)
+        model = LinearRegression()
+        model.fit(X, y)
+        slope = model.coef_[0]
+        intercept = model.intercept_
+        print(f"Updated regression parameters: slope = {slope}, intercept = {intercept}")
+       
+        # Create a graph of opponent rating vs opponent accuracy and save it to a file
+        plt.figure(figsize=(10, 6))
+        plt.scatter(x, y, alpha=0.5)
+        plt.plot(X, model.predict(X), color='red')  # Regression line
+        plt.xlabel('Opponent Rating')
+        plt.ylabel('Opponent Accuracy')
+        plt.title('Opponent Rating vs Opponent Accuracy')
+        plt.savefig('rating_accuracy_regression.pdf')
+        plt.close()
+
+
+            
+
 
 # database = DataBase()
 # game_row_analysis = json.loads(database.get_game_by_id(8716)['analysis'])
 # print(type(game_row_analysis))
 # parser = Parser()
+# filter_info = FilterInfo(user=None)
+# parser.update_rating_accuracy_regression_parameters(filter_info)
 # parser.add_puzzles_to_db(game_row_analysis, 8716, database)

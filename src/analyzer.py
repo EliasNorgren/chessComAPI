@@ -8,6 +8,7 @@ from entryCache import EntryCache
 import yaml
 import sys
 import shutil
+import math
 
 class Analyzer:
     def __init__(self, chess_960 : bool = False):
@@ -64,7 +65,7 @@ class Analyzer:
             self.engine.set_depth(self.engine_depth - 1)
             eval = self.engine.get_evaluation(include_principal_variation=True)
             best_eval_cp = best_move[0]['Centipawn'] if best_move[0]['Centipawn'] is not None else best_move[0]['Mate']
-            move_classification = self.classify_move(best_eval_cp=best_eval_cp,
+            move_classification, move_score = self.classify_move(best_eval_cp=best_eval_cp,
                                                       played_eval_cp=eval['value'],
                                                       played_move=uci_move,
                                                       best_move=best_move[0]['Move'],
@@ -81,7 +82,7 @@ class Analyzer:
                 "classification": move_classification,
                 "board": chess_board.fen(),
                 "board_before_move": board_fen_before_move,
-                "score": self.classification_to_score(move_classification),
+                "score": round(move_score, 2),
                 "clock_time": clock_time,
                 "best_move" : best_move,
                 "best_move_uci": str(best_move_uci),
@@ -99,38 +100,39 @@ class Analyzer:
         # A mate exist and the player is the one winning
         if best_eval_got_mate and ((player_is_white and best_eval_cp > 0) or (not player_is_white and best_eval_cp < 0)):
             if best_eval_got_mate and str(played_move) != str(best_move) and not played_move_got_mate:
-                return "Missed mate"
+                return "Missed mate", 0.4
             elif best_eval_got_mate and str(played_move) == str(best_move):
                 # Fastest way to win
-                return "Best Move"
+                return "Best Move", 1.0
             else : #played_move_got_mate and str(played_move) == str(best_move) and best_eval_got_mate:
                 # Still mating, but not the fastest way
-                return "Good Move"
+                return "Good Move", 0.9
         # A mate exist and the player is the one losing
         elif (played_move_got_mate) and ((player_is_white and played_eval_cp < 0) or (not player_is_white and played_eval_cp > 0)):
             if str(played_move) == str(best_move):
-                return "Best Move"
+                return "Best Move", 1.0
             elif str(played_move) != str(best_move) and played_eval_cp == best_eval_cp:
                 # Best move was the same distance to mate, but not the best move
-                return "Good Move"
+                return "Good Move", 0.9
             elif str(played_move) != str(best_move) and not best_eval_got_mate:
                 # Player walked into a mate
-                return "Blunder"
+                return "Blunder", 0.0
             else :
-                return "Inaccuracy"
+                return "Inaccuracy", 0.7
 
         if str(played_move) == str(best_move):
-            return "Best Move"
+            return "Best Move", 1.0
 
         cp_loss = abs(best_eval_cp - played_eval_cp)
+        move_score = math.exp(-cp_loss / 100) 
         if cp_loss <= 50:
-            return "Good Move"
+            return "Good Move", move_score
         elif cp_loss <= 150:
-            return "Inaccuracy"
+            return "Inaccuracy", move_score
         elif cp_loss <= 300:
-            return "Mistake"
+            return "Mistake", move_score
         else:
-            return "Blunder"
+            return "Blunder", move_score
 
     def classification_to_score(self, classification):
         classification_scores = {
