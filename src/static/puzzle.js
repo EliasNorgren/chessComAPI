@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         console.log(`User moved from ${orig} to ${dest}`);
         let moveUci = orig + dest;
         let expectedMove = solutionMoves[0]; // Only check the first move
+        console.log(`Expected move: ${expectedMove}, User move: ${moveUci}`);
         if (moveUci === expectedMove) {
             showFeedback("Correct!", true);
             showSolutionMoves(solutionMoves.slice(1)); // Show the rest of the solution

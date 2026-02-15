@@ -439,3 +439,19 @@ class DataBase():
         finally:
             # Close the connection
             conn.close()
+
+    def update_regression_parameters(self, slope: float, intercept: float):
+        # Save to json if file exists, otherwise create file
+        params = {
+            "slope": slope,
+            "intercept": intercept
+        }
+        with open('SQL/regression_parameters.json', 'w') as f:
+            json.dump(params, f)
+
+    def get_regression_parameters(self) -> dict:
+        if not os.path.exists('SQL/regression_parameters.json'):
+            return None
+        with open('SQL/regression_parameters.json', 'r') as f:
+            params = json.load(f)
+        return params

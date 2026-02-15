@@ -792,9 +792,12 @@ class Parser():
             analysis IS NOT NULL AND
             analysis != ""
         ''')
-        x = []
-        y = []
+        accuracy_list = []
+        rating_list = []
         for game in games :
+            no_moves = len(game.analysis["analysis"])
+            if no_moves < 20 :
+                continue
             analysis = game.analysis
             user_playing_as_white = analysis['user_playing_as_white']
             if user_playing_as_white :
@@ -802,41 +805,42 @@ class Parser():
             else :
                 opponent_accuracy = analysis['white_accuracy']
             opponent_rating = game.opponent_rating
-            x.append(opponent_rating)
-            y.append(opponent_accuracy)
-            if opponent_accuracy < 20 :
+            accuracy_list.append(opponent_accuracy)
+            rating_list.append(opponent_rating)
+            if opponent_accuracy < 35 :
                 print(f"Game {game.url} has opponent accuracy {opponent_accuracy} and opponent rating {opponent_rating}")
-        if len(x) == 0 :
+        if len(accuracy_list) == 0 :
             print("No games with analysis found for the given filter, cannot update regression parameters.")
             return
        
-        # Perform linear regression
-        X = np.array(x).reshape(-1, 1)
-        y = np.array(y)
+        # Perform linear regression - accuracy explains rating
+        X = np.array(accuracy_list).reshape(-1, 1)
+        y = np.array(rating_list)
         model = LinearRegression()
         model.fit(X, y)
         slope = model.coef_[0]
         intercept = model.intercept_
+        r_squared = model.score(X, y)
+        print(f"N = {len(accuracy_list)}")
         print(f"Updated regression parameters: slope = {slope}, intercept = {intercept}")
+        print(f"R-squared: {r_squared:.4f}")
+        print(f"Formula: rating = {round(slope, 2)} * accuracy + {round(intercept, 2)}")
+        print(f"At 100% accuracy: rating = {round(slope * 100 + intercept, 2)}")
+        print(f"Data range - Accuracy: {min(accuracy_list):.2f}% to {max(accuracy_list):.2f}%, Rating: {min(rating_list)} to {max(rating_list)}")
        
-        # Create a graph of opponent rating vs opponent accuracy and save it to a file
+        # Create a graph of opponent accuracy vs opponent rating and save it to a file
         plt.figure(figsize=(10, 6))
-        plt.scatter(x, y, alpha=0.5)
-        plt.plot(X, model.predict(X), color='red')  # Regression line
-        plt.xlabel('Opponent Rating')
-        plt.ylabel('Opponent Accuracy')
-        plt.title('Opponent Rating vs Opponent Accuracy')
+        plt.scatter(accuracy_list, rating_list, alpha=0.5)
+        plt.plot(X, model.predict(X), color='red', linewidth=2, label=f'y = {round(slope, 2)}x + {round(intercept, 2)}\nR² = {r_squared:.4f}')
+        plt.xlabel('Opponent Accuracy (%)')
+        plt.ylabel('Opponent Rating')
+        plt.title('Opponent Accuracy vs Opponent Rating')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
         plt.savefig('rating_accuracy_regression.pdf')
         plt.close()
 
 
-            
-
-
-# database = DataBase()
-# game_row_analysis = json.loads(database.get_game_by_id(8716)['analysis'])
-# print(type(game_row_analysis))
 # parser = Parser()
 # filter_info = FilterInfo(user=None)
 # parser.update_rating_accuracy_regression_parameters(filter_info)
-# parser.add_puzzles_to_db(game_row_analysis, 8716, database)

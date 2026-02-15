@@ -116,11 +116,9 @@ class Game():
             if gamePGN and "ECOUrl" in gamePGN.headers :
                 self.ECOurl = gamePGN.headers["ECOUrl"]
         
-        try:
-            self.analysis : dict = json.loads(game_json["analysis"]) if "analysis" in game_json else None
-        except json.JSONDecodeError:
-            print("Error: " + game_json["analysis"])
-            self.analysis = None
+        if "analysis" in game_json and game_json["analysis"] != None and game_json["analysis"] != "" :
+            self.analysis : dict = json.loads(game_json["analysis"])
+            
         self.puzzles_calculated : bool = game_json["puzzles_calculated"] if "puzzles_calculated" in game_json else None
 
     def __str__(self) -> str:

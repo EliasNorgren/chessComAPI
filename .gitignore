@@ -6,3 +6,4 @@
 *env/*
 */myenv/**
 src/stockfish-*
+SQL/regression_parameters.json
