@@ -23,6 +23,9 @@ let bestLineMoves = [];
 let bestLineIndex = 0;
 let bestLineSavedShapes = null;
 let lastShapes = [];
+let suppressMoveEvents = false;
+let currentBoardFen = null;
+let self_played_move_list = [];
 
 function setProgress(percent) {
     const offset = circumference - (percent / 100) * circumference;
@@ -101,6 +104,16 @@ async function loadReviewData() {
                     movable: {
                         free: false,
                         showDests: true,
+                    },
+                    events: {
+                        move: (orig, dest, captured) => {
+                            if (suppressMoveEvents) return;
+                            try {
+                                handlePieceMove(orig, dest, captured);
+                            } catch (e) {
+                                console.warn('handlePieceMove failed', e);
+                            }
+                        }
                     }
                 });
                 showMove(0)
@@ -185,6 +198,7 @@ function safePlay(audio) {
 }
 
 function showMove(idx) {
+    self_played_move_list = [];
     move_idx = idx;
     let entry = entries[move_idx];
     if (entry.move.includes('+') || entry.move.includes('#')) {
@@ -240,28 +254,11 @@ function showMove(idx) {
             showDests: true,
         }
     });
+    // Store the board FEN before any moves, so we can send pre-move FEN to backend
+    currentBoardFen = entry.board;
 
     if (entry.classification != "Best Move") {
-
-        shapes = []
-
-        shapes.push(
-            {
-                orig: entry.best_move_uci.substring(0, 2),
-                dest: entry.best_move_uci.substring(2, 4),
-                brush: 'green',
-            }
-        )
-
-
-        shapes.push({
-            orig: entry.uci_move.substring(2, 4),  // just the square
-            customSvg: {
-                html: getSvg(entry.classification),
-            }
-        })
-
-        chessground.setShapes(shapes);
+        setShapesForMove(entry.best_move_uci, entry.uci_move, entry.classification);
         lastShapes = shapes;
     }
     else {
@@ -293,6 +290,26 @@ function showMove(idx) {
     }
     renderEvalBar(evalCp, user_playing_as_white);
     renderBoardValue(user_playing_as_white, entry.board);
+}
+
+function setShapesForMove(best_move_uci, played_uci, classification) {
+    shapes = []
+    shapes.push(
+        {
+            orig: best_move_uci.substring(0, 2),
+            dest: best_move_uci.substring(2, 4),
+            brush: 'green',
+        }
+    )
+    if (classification != "Best Move") {    
+        shapes.push({
+            orig: played_uci.substring(2, 4),  // just the square
+            customSvg: {
+                html: getSvg(classification),
+            }
+        })
+    }
+    chessground.setShapes(shapes);
 }
 
 function renderBoardValue(user_playing_as_white, fen) {
@@ -541,7 +558,13 @@ function playBestLine() {
         const orig = move.substring(0, 2);
         const dest = move.substring(2, 4);
         try {
-            chessground.move(orig, dest);
+            suppressMoveEvents = true;
+            try {
+                chessground.move(orig, dest);
+            } finally {
+                // ensure handler is re-enabled even if move throws
+                suppressMoveEvents = false;
+            }
         } catch (e) {
             console.warn('Failed to play move', move, e);
         }
@@ -718,6 +741,31 @@ function renderPositionStats(data) {
 
     const hideBtn = document.getElementById('hide-position-stats');
     if (hideBtn) hideBtn.onclick = () => { container.innerHTML = ''; };
+}
+
+function handlePieceMove(orig, dest, captured) {
+    const move = `${orig}${dest}`;
+    // Use the FEN from before the move was made
+    const fen = currentBoardFen;
+    self_played_move_list.push(move);
+    const payload = {
+        move_list: self_played_move_list,
+        fen: fen,
+        user: meta.user || null,
+    };
+    console.log('Sending move to backend for analysis:', payload);
+    fetch('/analyze_move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+        .then(r => r.json())
+        .then(data => {
+            console.log('Move analysis response:', data);
+            currentBoardFen = data.board;
+            setShapesForMove(data.best_move_uci, move, data.classification);
+        })
+        .catch(err => console.error('Error sending move to backend:', err));
 }
 
 document.getElementById('firstMove').onclick = () => showMove(0);

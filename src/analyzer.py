@@ -93,7 +93,35 @@ class Analyzer:
         print()
         print("\033[0m")
         return result
+    
+    def analyze_position(self, initial_fen: str, move_list: list) -> dict:
+        played_move = move_list[-1] if move_list else None
+        self.engine.set_fen_position(initial_fen)
+        self.engine.make_moves_from_current_position(move_list[:-1])  # Make all moves except the last one to get the correct position before the played move
+        fen_after_moves = self.engine.get_fen_position()
+        chess_board = chess.Board(fen_after_moves)
+        best_move = self.engine.get_top_moves(1, include_principal_variation=True)
+        eval = self.engine.get_evaluation(include_principal_variation=True)
+        best_eval_cp = best_move[0]['Centipawn'] if best_move[0]['Centipawn'] is not None else best_move[0]['Mate']
+        move_classification, move_score = self.classify_move(best_eval_cp=best_eval_cp,
+                                                  played_eval_cp=eval['value'],
+                                                  played_move=played_move,
+                                                  best_move=best_move[0]['Move'],
+                                                  best_eval_got_mate=best_move[0]['Mate'] != None,
+                                                  played_move_got_mate=eval['type'] == 'mate',
+                                                  player_is_white=chess_board.turn == chess.WHITE)
+        best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
             
+        entry = {
+            "evaluation": eval,
+            "classification": move_classification,
+            "board": chess_board.fen(),
+            "score": round(move_score, 2),
+            "best_move" : best_move,
+            "best_move_uci": str(best_move_uci),
+            "best_line": best_move[0]['Line'] if 'Line' in best_move[0] else "",
+        }
+        return entry         
 
     def classify_move(self, best_eval_cp, played_eval_cp, played_move, best_move, best_eval_got_mate, played_move_got_mate, player_is_white):
         # print(f"Classifying move: {played_move}, Best move: {best_move}, Best eval: {best_eval_cp}, Played eval: {played_eval_cp}, Player is white: {player_is_white}, Best eval got mate: {best_eval_got_mate}, Played move got mate: {played_move_got_mate}")

@@ -113,6 +113,21 @@ def get_win_percentage_and_accuracy():
     print(f"Stats for user {user} and FEN {fen}: {stats}")
     return jsonify(stats)
 
+@app.route('/analyze_move', methods=['POST'])
+def analyze_move():
+    data = request.json
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    analyzer = Analyzer()
+    fen = data.get('fen', '')
+    move_list = data.get('move_list', [])
+    if fen == '' or not move_list:
+        return jsonify({"error": "FEN and move_list parameters are required"}), 400
+    result = analyzer.analyze_position(fen, move_list)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify(result)
+
 if __name__ == '__main__':
     import argparse
     import os
