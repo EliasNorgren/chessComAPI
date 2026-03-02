@@ -107,7 +107,14 @@ async function loadReviewData() {
                     },
                     events: {
                         move: (orig, dest, captured) => {
+                            const moveUci = `${orig}${dest}`;
+                            console.log('Move event received. Suppress:', suppressMoveEvents, 'Self-play queue:', self_played_move_list, 'Move:', orig, dest, 'Captured:', captured);
                             if (suppressMoveEvents) return;
+                            // If this move matches an expected self-played move, consume it and ignore handling.
+                            if (self_played_move_list.length && self_played_move_list[0] === moveUci) {
+                                self_played_move_list.shift();
+                                return;
+                            }
                             try {
                                 handlePieceMove(orig, dest, captured);
                             } catch (e) {
@@ -558,15 +565,15 @@ function playBestLine() {
         const orig = move.substring(0, 2);
         const dest = move.substring(2, 4);
         try {
-            suppressMoveEvents = true;
-            try {
-                chessground.move(orig, dest);
-            } finally {
-                // ensure handler is re-enabled even if move throws
-                suppressMoveEvents = false;
-            }
+            // Mark this move as self-played so the move handler can ignore it.
+            self_played_move_list.push(`${orig}${dest}`);
+            chessground.move(orig, dest);
         } catch (e) {
             console.warn('Failed to play move', move, e);
+            // If move failed, ensure we don't leave an unmatched queued move
+            if (self_played_move_list.length && self_played_move_list[self_played_move_list.length - 1] === `${orig}${dest}`) {
+                self_played_move_list.pop();
+            }
         }
         bestLineIndex++;
         bestLineTimer = setTimeout(step, 800);
@@ -613,6 +620,8 @@ function stopPlayingBestLine(restore = true) {
     bestLineIndex = 0;
     bestLineSavedShapes = null;
     bestLineOriginalFen = null;
+    // clear any queued self-played moves
+    self_played_move_list = [];
     try { document.getElementById('stopBestLine').disabled = true; } catch (e) { }
 }
 
@@ -662,6 +671,8 @@ function cancelPlayingBestLine() {
     bestLineIndex = 0;
     bestLineSavedShapes = null;
     bestLineOriginalFen = null;
+    // clear any queued self-played moves
+    self_played_move_list = [];
 }
 
 function getPositionStats() {
@@ -744,6 +755,8 @@ function renderPositionStats(data) {
 }
 
 function handlePieceMove(orig, dest, captured) {
+    console.log('Suppress move events:', suppressMoveEvents, 'Received move:', orig, dest, 'Captured piece:', captured);
+    if (suppressMoveEvents) return;
     const move = `${orig}${dest}`;
     // Use the FEN from before the move was made
     const fen = currentBoardFen;
