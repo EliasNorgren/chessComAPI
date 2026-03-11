@@ -153,5 +153,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         <strong>Puzzle ID:</strong> ${puzzle.puzzle_id}<br>
         <strong>Game ID:</strong> ${puzzle.game_id}<br>
         <strong>Classification:</strong> ${puzzle.classification}<br>
+        <strong>User move: </strong> ${puzzle.user_move_san || 'N/A'} ${puzzle.user_move_uci ? `(${puzzle.user_move_uci})` : ''}<br>
     `;
 });
