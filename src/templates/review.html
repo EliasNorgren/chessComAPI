@@ -11,124 +11,108 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
 
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
-            background: #302e2b;
-            color: #c3c2c1;
+            background: #1e1c19;
+            color: #d4d2d0;
             font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
         }
 
-        .move-info {
-            font-size: 1.2em;
-            margin: 1em auto 0.5em auto;
-            background: #262522;
-            border-radius: 16px;
-            padding: 1em;
-            max-width: 90vw;
-            width: 90vw;
-            box-sizing: border-box;
-        }
-
-
-        .move-classifications {
-            font-size: 1.2em;
-            background: #262522;
-            border-radius: 16px;
-            padding: 1em;
-            margin-left: 1em;
-            margin-right: 1em;
-            width: fit-content;
-            margin-left: 41vw;
-        }
-
-        .svg-board {
-            max-width: 95vw;
-            width: 50vw;
+        /* ── Game header ───────────────────────────────────── */
+        #game-header {
+            padding: 1em 1.5em 0.8em;
             text-align: center;
+        }
+
+        .header-players {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2em;
+            flex-wrap: wrap;
+        }
+
+        .header-player {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            font-size: 1.05em;
+        }
+
+        .player-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1.5px solid #555;
+        }
+
+        .player-dot.white-dot { background: #f0ede8; border-color: #999; }
+        .player-dot.black-dot { background: #2a2825; border-color: #888; }
+
+        .player-name { font-weight: 700; color: #e8e6e3; }
+        .player-rating { color: #888; font-size: 0.9em; }
+
+        .result-chip {
+            font-size: 0.75em;
+            font-weight: 700;
+            padding: 0.2em 0.6em;
+            border-radius: 20px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+        .result-chip.win  { background: rgba(129,182,76,0.18);  color: #81b64c; }
+        .result-chip.loss { background: rgba(250,65,45,0.18);   color: #fa412d; }
+        .result-chip.draw { background: rgba(195,194,193,0.15); color: #a0a0a0; }
+
+        .vs-divider { color: #555; font-size: 0.9em; font-weight: 600; }
+
+        .header-meta {
+            margin-top: 0.35em;
+            font-size: 0.82em;
+            color: #666;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Two-column layout ─────────────────────────────── */
+        .review-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 1.2em;
+            padding: 0 1.2em 2em;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        /* ── Board column ──────────────────────────────────── */
+        .board-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
         }
 
         .chessground_board {
-            max-width: 95vw;
-            width: 40vw;
-            height: 40vw;
-            text-align: center;
-        }
-
-        .svg-board svg {
-            width: 100% !important;
-            height: auto !important;
-            max-width: 100% !important;
-        }
-
-        .nav-btns {
-            text-align: center;
-            margin-top: 1.5em;
-        }
-
-        .nav-btns button {
-            font-size: 2em;
-            padding: 0.4em 0.8em;
-            margin: 0 0.4em;
-            border-radius: 8px;
-            background: #23211e;
-            color: #c3c2c1;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-            min-width: 2.5em;
-        }
-
-        .nav-btns button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .nav-btns button:hover:not(:disabled) {
-            background: #393733;
-        }
-
-        @media (max-width: 600px) {
-            .move-info {
-                font-size: 1em;
-                padding: 0.7em;
-                max-width: 98vw;
-            }
-
-            .svg-board {
-                width: 98vw;
-                margin: 1em auto;
-            }
-
-            .nav-btns button {
-                font-size: 1.3em;
-                padding: 0.3em 0.5em;
-                min-width: 2em;
-            }
-        }
-
-        h2#game-header {
-            text-align: center;
-            margin-top: 1.2em;
-            margin-bottom: 0.7em;
+            width: clamp(280px, 40vw, 580px);
+            height: clamp(280px, 40vw, 580px);
         }
 
         .board-flex {
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
+            margin: 0.4em 0;
         }
 
         .eval-bar {
-            width: 18px;
-            height: 40vw;
-            background-color: #403d39;
-            border-radius: 8px;
-            margin-right: 1.2em;
+            width: 14px;
+            height: clamp(280px, 40vw, 580px);
+            background-color: #2a2825;
+            border-radius: 6px;
+            margin-right: 1em;
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
@@ -136,123 +120,331 @@
 
         .eval-bar-fill {
             position: absolute;
-            /* left: 0; */
             width: 100%;
-            background: #ffffff;
-            transition: height 0.3s;
-            border-radius: 8px;
+            background: #f0ede8;
+            transition: height 0.35s ease;
+            border-radius: 6px;
             z-index: 2;
         }
 
-        #progress-ring {
-            transition: stroke-dashoffset 0.35s ease;
+        .clock-row {
+            display: flex;
+            align-items: center;
+            width: clamp(280px, 40vw, 580px);
+            margin: 0.25em 0;
         }
 
-        .classification-table {
-            border-collapse: collapse;
-            width: 100%;
-            max-width: 400px;
-            margin: 10px auto;
-            font-family: Arial, sans-serif;
-            background: #1e1e1e;
-            color: white;
+        .board-value {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-left: 0.8em;
+            color: #888;
+        }
+
+        /* ── Nav buttons ───────────────────────────────────── */
+        .nav-btns {
+            display: flex;
+            justify-content: center;
+            gap: 0.4em;
+            margin-top: 0.9em;
+            width: clamp(280px, 40vw, 580px);
+        }
+
+        .nav-btns button {
+            flex: 1;
+            font-size: 1.4em;
+            padding: 0.45em 0;
             border-radius: 8px;
+            background: #262420;
+            color: #c3c2c1;
+            border: 1px solid #383532;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .nav-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-btns button:hover:not(:disabled) { background: #33312e; }
+
+        /* ── Eval graph ────────────────────────────────────── */
+        #eval-graph-container {
+            width: clamp(280px, 40vw, 580px);
+            margin-top: 0.8em;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #2e2c29;
+        }
+
+        #eval-graph { width: 100%; display: block; }
+
+        /* ── Info column ───────────────────────────────────── */
+        .info-column {
+            flex: 1;
+            min-width: 0;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9em;
+        }
+
+        /* ── Move info card ────────────────────────────────── */
+        .move-info {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
             overflow: hidden;
         }
 
-        .classification-table th,
-        .classification-table td {
-            padding: 8px 12px;
-            text-align: center;
-            border-bottom: 1px solid #333;
+        .move-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8em 1em 0.7em;
+            border-bottom: 1px solid #2e2c29;
+        }
+
+        .move-title {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35em;
+        }
+
+        .move-number { color: #666; font-size: 1.1em; }
+
+        .move-san {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #e8e6e3;
+            letter-spacing: -0.01em;
+        }
+
+        .classification-badge {
+            font-size: 0.78em;
+            font-weight: 700;
+            padding: 0.3em 0.75em;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: color-mix(in srgb, var(--cls-color) 15%, transparent);
+            color: var(--cls-color);
+            border: 1px solid color-mix(in srgb, var(--cls-color) 30%, transparent);
+        }
+
+        .eval-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            padding: 0.65em 1em;
+            border-bottom: 1px solid #2e2c29;
+        }
+
+        .eval-label { color: #666; font-size: 0.85em; min-width: 4.5em; }
+
+        .eval-value {
+            font-size: 1.45em;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .eval-value.positive { color: #e8e6e3; }
+        .eval-value.negative { color: #9e9c9a; }
+        .eval-value.mate     { color: #6cf; }
+
+        /* ── Lines ─────────────────────────────────────────── */
+        .lines-section {
+            padding: 0.6em 1em;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35em;
+            border-bottom: 1px solid #2e2c29;
+        }
+
+        .line-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6em;
+            font-size: 0.88em;
+        }
+
+        .line-label {
+            font-size: 0.8em;
+            font-weight: 700;
+            min-width: 3.5em;
+            padding-top: 0.1em;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .line-label.best-label   { color: #81b64c; }
+        .line-label.played-label { color: #8ab4d4; }
+
+        .line-moves {
+            color: #b0aea8;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        /* ── Game stats ────────────────────────────────────── */
+        .stats-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .stat-item {
+            padding: 0.55em 1em;
+            border-bottom: 1px solid #2e2c29;
+            border-right: 1px solid #2e2c29;
+        }
+
+        .stat-item:nth-child(even) { border-right: none; }
+        .stat-item:nth-last-child(-n+2) { border-bottom: none; }
+
+        .stat-label {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: #666;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 0.2em;
+        }
+
+        .stat-value {
+            font-size: 0.92em;
+            color: #c8c6c3;
+            font-weight: 500;
+        }
+
+        /* ── Classification table ──────────────────────────── */
+        .move-classifications {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            padding: 0.8em 1em;
+        }
+
+        .section-title {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.7em;
+        }
+
+        .classification-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
         }
 
         .classification-table th {
-            background-color: #333;
-            font-weight: bold;
+            padding: 0 0.5em 0.5em;
+            text-align: center;
+            color: #555;
+            font-size: 0.8em;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #2e2c29;
         }
 
-        .classification-table tr:last-child td {
-            border-bottom: none;
+        .classification-table th:first-child { text-align: left; }
+
+        .classification-table td {
+            padding: 0.4em 0.5em;
+            text-align: center;
+            border-bottom: 1px solid #222;
         }
 
-        .white-count {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+        .classification-table td:first-child { text-align: left; }
+        .classification-table tr:last-child td { border-bottom: none; }
+
+        .cls-name {
+            font-weight: 600;
+            font-size: 0.92em;
         }
 
-        .black-count {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
+        .count-cell {
+            position: relative;
+            min-width: 3em;
         }
 
-        /* .upper_time {
-            background: beige;
-            padding: 1em;
-            border-radius: 1em;
-            color: black;
-        } */
-        .clock-time {
-            margin-left: 2em;
+        .count-bar-bg {
+            position: absolute;
+            inset: 3px 2px;
+            border-radius: 3px;
+            opacity: 0.18;
         }
+
+        .count-text {
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+        }
+
+        /* ── Get position stats ────────────────────────────── */
+        #get-position-stats {
+            font-size: 0.9em;
+            padding: 0.55em 1.1em;
+            border-radius: 8px;
+            background: #262420;
+            color: #c3c2c1;
+            border: 1px solid #383532;
+            cursor: pointer;
+            transition: background 0.15s;
+            align-self: flex-start;
+            letter-spacing: 0.02em;
+        }
+
+        #get-position-stats:hover:not(:disabled) { background: #33312e; }
+        #get-position-stats:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Loading ───────────────────────────────────────── */
+        #progress-ring { transition: stroke-dashoffset 0.35s ease; }
 
         .error-message {
             text-align: center;
             font-size: 1.2em;
             margin-top: 2em;
+            color: #fa412d;
         }
 
-        .horizontal-layout {
-            display: flex;
-            align-items: center;
-            margin: 0 auto;
-            margin-left: 32vw;
-        }
+        /* ── Mobile ────────────────────────────────────────── */
+        @media (max-width: 900px) {
+            .review-layout {
+                flex-direction: column;
+                align-items: center;
+                padding: 0 0.5em 2em;
+            }
 
-        .board-value {
-            font-size: 1.5em;
-            margin-left: 1em;
-        }
+            .info-column {
+                max-width: 98vw;
+                width: 98vw;
+            }
 
-        /* Styled Get Position Stats button (match nav buttons) */
-        #get-position-stats {
-            font-size: 2em;
-            padding: 0.4em 0.8em;
-            margin: 0.8em auto;
-            border-radius: 8px;
-            background: #23211e;
-            color: #c3c2c1;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.12s;
-            display: block;
-            text-align: center;
-            min-width: 2.5em;
-            max-width: 240px;
-        }
+            .chessground_board,
+            .eval-bar,
+            .clock-row,
+            .nav-btns,
+            #eval-graph-container {
+                width: clamp(280px, 94vw, 580px) !important;
+            }
 
-        #get-position-stats:hover:not(:disabled) {
-            background: #393733;
+            .eval-bar { height: clamp(280px, 94vw, 580px) !important; }
+            .chessground_board { height: clamp(280px, 94vw, 580px) !important; }
         }
-
-        #get-position-stats:active {
-            transform: translateY(0);
-        }
-
-        #get-position-stats:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
     </style>
 </head>
 
 <body>
-    <h2 id="game-header"></h2>
-    <div class="move-info" id="move-info"></div>
+    <div id="game-header">
+        <!-- Populated by JS -->
+    </div>
+
     <div id="loading-container" style="text-align:center; margin: 2em;">
         <svg id="loading-circle" width="200" height="200" viewBox="0 0 240 240">
-            <circle cx="120" cy="120" r="108" stroke="#444" stroke-width="24" fill="none" />
+            <circle cx="120" cy="120" r="108" stroke="#2e2c29" stroke-width="24" fill="none" />
             <circle id="progress-ring" cx="120" cy="120" r="108" stroke="#6cf" stroke-width="24" fill="none"
                 stroke-linecap="round" stroke-dasharray="678.584" stroke-dashoffset="678.584"
                 transform="rotate(-90 120 120)" />
@@ -260,45 +452,50 @@
                 font-family="Arial">0%</text>
         </svg>
     </div>
-    <div id="error-message" class="error-message" style="color: red; display: none;">Error loading review data</div>
-    <div id="move-classifications" class="move-classifications"></div>
-    
-    <div class="horizontal-layout" id="horizontal-layout">
-        <div id="upper_time"></div>
-    </div>
-    <div class="board-flex">
-        <div class="eval-bar" id="eval-bar">
-            <div class="eval-bar-fill" id="eval-bar-fill"></div>
+    <div id="error-message" class="error-message" style="display: none;">Error loading review data</div>
+
+    <div class="review-layout" id="review-layout">
+
+        <!-- ── Board column ──────────────────────────────── -->
+        <div class="board-column" id="board-column">
+            <div class="clock-row" id="horizontal-layout">
+                <div id="upper_time"></div>
+            </div>
+            <div class="board-flex">
+                <div class="eval-bar" id="eval-bar">
+                    <div class="eval-bar-fill" id="eval-bar-fill"></div>
+                </div>
+                <div class="chessground_board" id="chessground_board"></div>
+            </div>
+            <div class="clock-row">
+                <div id="lower_time"></div>
+                <div id="lower-board-value" class="board-value"></div>
+            </div>
+            <div class="nav-btns" id="nav-btns">
+                <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>
+                <button id="prev" title="Previous Move"><i class="fa-solid fa-angle-left"></i></button>
+                <button id="next" title="Next Move"><i class="fa-solid fa-angle-right"></i></button>
+                <button id="lastMove" title="Last Move"><i class="fa-solid fa-angles-right"></i></button>
+            </div>
+            <div class="nav-btns" style="margin-top: 0.4em;" id="best-line-btns">
+                <button id="playBestLine">▶ Best line</button>
+                <button id="stopBestLine" disabled>&#x25A0; Stop</button>
+            </div>
+            <div id="eval-graph-container">
+                <canvas id="eval-graph"></canvas>
+            </div>
         </div>
-        <!-- <div class="svg-board" id="svg-board"></div> -->
-        <div class="chessground_board" id="chessground_board"></div>
+
+        <!-- ── Info column ───────────────────────────────── -->
+        <div class="info-column" id="info-column">
+            <div class="move-info" id="move-info"></div>
+            <div id="move-classifications" class="move-classifications"></div>
+            <button id="get-position-stats"><i class="fa-solid fa-chart-bar" style="margin-right:0.4em"></i>Position stats</button>
+            <div id="position-stats"></div>
+        </div>
+
     </div>
 
-    <div class="horizontal-layout">
-        <div id="lower_time"></div>
-        <div id="lower-board-value" class="board-value">0</div>
-    </div>
-
-    <div class="nav-btns" id="nav-btns">
-        <button id="firstMove" title="First Move"><i class="fa-solid fa-angles-left"></i></button>
-        <button id="prev" title="Previous Move"><i class="fa-solid fa-angle-left"></i></button>
-        <button id="next" title="Next Move"><i class="fa-solid fa-angle-right"></i></button>
-        <button id="lastMove" title="Last Move"><i class="fa-solid fa-angles-right"></i></button>
-    </div>
-
-    <div id="eval-graph-container" style="max-width:90vw; width:90vw; margin:0.8em auto; cursor:pointer; border-radius:8px; overflow:hidden;">
-        <canvas id="eval-graph" style="width:100%; display:block;"></canvas>
-    </div>
-    <div class="nav-btns" style="margin-top: 0.5em;" id="best-line-btns">
-    <button id="playBestLine" title="Play Best Line">Play Best Line</button>
-    <button id="stopBestLine" title="Stop Best Line" disabled>Stop</button>
-    </div>
-
-    <button id="get-position-stats">Get position stats</button>
-    <div id="position-stats" style="max-width:90vw; margin:1em auto;">
-        <!-- Position stats visualization will be rendered here -->
-    </div>
-    
     <script>
         const captureSoundUrl = "{{ url_for('static', filename='capture.mp3') }}";
         const moveSelfSoundUrl = "{{ url_for('static', filename='move-self.mp3') }}";
@@ -319,7 +516,7 @@
                 </svg>`;
 
         const mistakeSvg = "{{ url_for('static', filename='moveSvgs/64x/mistake_64x.png') }}";
-        const mistakeSvgHtml = `<svg width="${size}" height="${size}">  
+        const mistakeSvgHtml = `<svg width="${size}" height="${size}">
                 <image href="${mistakeSvg}" width="${size}" height="${size}"/>
                 </svg>`;
 

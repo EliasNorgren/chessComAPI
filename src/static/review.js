@@ -154,43 +154,45 @@ function setClassificationFrequency(classification_frequency_user, classificatio
         "Missed mate",
     ];
 
-    let classificationContainer = document.getElementById('move-classifications');
-    classificationContainer.innerHTML = ''; // Clear previous content
-
-    // Create table
-    let table = document.createElement('table');
-    table.classList.add('classification-table');
-
-    // Table header
-    let thead = document.createElement('thead');
-    thead.innerHTML = `
-        <tr>
-            <th>Move Type</th>
-            <th>User</th>
-            <th>Opponent</th>
-        </tr>
-    `;
-    table.appendChild(thead);
-
-    // Table body
-    let tbody = document.createElement('tbody');
-
-    for (let classification of classifications) {
-        let color = getColor(classification);
-        let count_user = classification_frequency_user[classification] || 0;
-        let count_opponent = classification_frequency_opponent[classification] || 0;
-
-        let row = document.createElement('tr');
-        row.innerHTML = `
-            <td style="color:${color}; font-weight:bold;">${classification}</td>
-            <td class="white-count">${count_user}</td>
-            <td class="black-count">${count_opponent}</td>
-        `;
-        tbody.appendChild(row);
+    // Find max count across both players for scaling bars
+    let maxCount = 1;
+    for (const cls of classifications) {
+        maxCount = Math.max(maxCount,
+            classification_frequency_user[cls] || 0,
+            classification_frequency_opponent[cls] || 0);
     }
 
-    table.appendChild(tbody);
-    classificationContainer.appendChild(table);
+    const container = document.getElementById('move-classifications');
+    const rows = classifications.map(cls => {
+        const color = getColor(cls);
+        const cu = classification_frequency_user[cls] || 0;
+        const co = classification_frequency_opponent[cls] || 0;
+        const barU = Math.round((cu / maxCount) * 100);
+        const barO = Math.round((co / maxCount) * 100);
+        return `
+            <tr>
+                <td><span class="cls-name" style="color:${color}">${cls}</span></td>
+                <td class="count-cell">
+                    <div class="count-bar-bg" style="background:${color}; width:${barU}%"></div>
+                    <span class="count-text">${cu}</span>
+                </td>
+                <td class="count-cell">
+                    <div class="count-bar-bg" style="background:${color}; width:${barO}%"></div>
+                    <span class="count-text">${co}</span>
+                </td>
+            </tr>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="section-title">Move breakdown</div>
+        <table class="classification-table">
+            <thead><tr>
+                <th>Type</th>
+                <th>You</th>
+                <th>Opp</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
 }
 
 function sleep(ms) {
@@ -225,34 +227,81 @@ function showMove(idx) {
     }
     let user_playing_as_white = meta.user_playing_as_white;
     let evaluation = entry.evaluation || {};
-    let evalText = "";
     let evalCp = 0;
+    let evalDisplay = '';
+    let evalClass = 'positive';
+
     if (evaluation.type === "mate") {
         if (evaluation.value > 0) {
-            evalCp = 1000; // Convert to centipawns
-            evalText = `White mate in ${evaluation.value}`;
+            evalCp = 1000;
+            evalDisplay = `+M${evaluation.value}`;
+            evalClass = 'mate';
         } else if (evaluation.value < 0) {
-            evalCp = -1000; // Convert to centipawns
-            evalText = `Black mate in ${Math.abs(evaluation.value)}`;
+            evalCp = -1000;
+            evalDisplay = `-M${Math.abs(evaluation.value)}`;
+            evalClass = 'mate';
         } else {
-            evalText = "Game over";
+            evalDisplay = 'Game over';
+            evalClass = 'negative';
         }
     } else if (evaluation.type === "cp") {
         evalCp = evaluation.value;
-        evalText = `${evaluation.value} centipawns`;
+        const pawns = evaluation.value / 100;
+        evalDisplay = (pawns >= 0 ? '+' : '') + pawns.toFixed(2);
+        evalClass = pawns >= 0 ? 'positive' : 'negative';
     } else {
-        evalText = "No evaluation available";
+        evalDisplay = '–';
     }
+
+    const clsColor = getColor(entry.classification);
+    const moveNum = Math.floor(move_idx / 2) + 1;
+    const isWhiteMove = move_idx % 2 === 0;
+    const moveNumStr = isWhiteMove ? `${moveNum}.` : `${moveNum}…`;
+
+    const userAcc  = user_playing_as_white ? meta.white_accuracy : meta.black_accuracy;
+    const oppAcc   = user_playing_as_white ? meta.black_accuracy : meta.white_accuracy;
+    const userResult = (meta.user_result || '').toLowerCase();
+
     document.getElementById('move-info').innerHTML = `
-    <span><strong>Move:</strong> ${entry.move}</span><br>
-    <span><strong>Classification:</strong> <span style="color:${getColor(entry.classification)}">${entry.classification}</span></span><br>
-    <span><strong>Evaluation:</strong> ${evalText}</span><br>
-    <span><strong>Board:</strong> ${entry.board}</span><br>
-    <span><strong>Accuracy:</strong> User ${user_playing_as_white ? meta.white_accuracy : meta.black_accuracy} % - Opponent ${user_playing_as_white ? meta.black_accuracy : meta.white_accuracy} %</span><br>
-    <span><strong>Result:</strong> User: ${meta.user_result} - Opponent: ${meta.opponent_result}</span><br>
-    <span><strong>Score per min:</strong> User: ${meta.user_score_per_min} - Opponent: ${meta.opponent_score_per_min}</span><br>
-    <span><strong>Best Line:</strong> ${entry.best_line}</span><br>
-    <span><strong>Played Line:</strong> ${entry.played_line}</span><br>
+        <div class="move-header">
+            <div class="move-title">
+                <span class="move-number">${moveNumStr}</span>
+                <span class="move-san">${entry.move}</span>
+            </div>
+            <span class="classification-badge" style="--cls-color:${clsColor}">${entry.classification}</span>
+        </div>
+        <div class="eval-row">
+            <span class="eval-label">Eval</span>
+            <span class="eval-value ${evalClass}">${evalDisplay}</span>
+        </div>
+        <div class="lines-section">
+            <div class="line-item">
+                <span class="line-label best-label">Best</span>
+                <span class="line-moves">${entry.best_line || '–'}</span>
+            </div>
+            <div class="line-item">
+                <span class="line-label played-label">Played</span>
+                <span class="line-moves">${entry.played_line || '–'}</span>
+            </div>
+        </div>
+        <div class="stats-section">
+            <div class="stat-item">
+                <div class="stat-label">Your accuracy</div>
+                <div class="stat-value">${userAcc != null ? userAcc + '%' : '–'}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Opp accuracy</div>
+                <div class="stat-value">${oppAcc != null ? oppAcc + '%' : '–'}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Your result</div>
+                <div class="stat-value" style="color:${resultColor(userResult)}">${capitalize(userResult) || '–'}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Score / min</div>
+                <div class="stat-value">${meta.user_score_per_min ?? '–'} · ${meta.opponent_score_per_min ?? '–'}</div>
+            </div>
+        </div>
     `;
     console.log(entry)
     chessground.set({
@@ -273,11 +322,31 @@ function showMove(idx) {
     else {
         lastShapes = [];
     }
-    let url_id, url_id_split;
-    url_id_split = meta.url.split("/");
-    url_id = url_id_split[url_id_split.length - 1];
-    document.getElementById('game-header').innerText =
-        `Game ID: ${url_id} | Move ${move_idx + 1} / ${entries.length} | ${meta.archiveDate || ""} | ${meta.user || ""} (${meta.user_rating || ""}) VS ${meta.opponent_user || ""} (${meta.opponent_rating || ""})`;
+    const url_id = (meta.url || '').split("/").pop();
+    const whitePlayer = meta.user_playing_as_white ? meta.user : meta.opponent_user;
+    const blackPlayer = meta.user_playing_as_white ? meta.opponent_user : meta.user;
+    const whiteRating = meta.user_playing_as_white ? meta.user_rating : meta.opponent_rating;
+    const blackRating = meta.user_playing_as_white ? meta.opponent_rating : meta.user_rating;
+    const whiteResult = meta.user_playing_as_white ? (meta.user_result || '').toLowerCase() : (meta.opponent_result || '').toLowerCase();
+    const blackResult = meta.user_playing_as_white ? (meta.opponent_result || '').toLowerCase() : (meta.user_result || '').toLowerCase();
+    document.getElementById('game-header').innerHTML = `
+        <div class="header-players">
+            <div class="header-player">
+                <div class="player-dot white-dot"></div>
+                <span class="player-name">${whitePlayer || '?'}</span>
+                <span class="player-rating">(${whiteRating || '?'})</span>
+                ${whiteResult ? `<span class="result-chip ${whiteResult}">${capitalize(whiteResult)}</span>` : ''}
+            </div>
+            <span class="vs-divider">vs</span>
+            <div class="header-player">
+                <div class="player-dot black-dot"></div>
+                <span class="player-name">${blackPlayer || '?'}</span>
+                <span class="player-rating">(${blackRating || '?'})</span>
+                ${blackResult ? `<span class="result-chip ${blackResult}">${capitalize(blackResult)}</span>` : ''}
+            </div>
+        </div>
+        <div class="header-meta">${meta.archiveDate || ''} &middot; Move ${move_idx + 1} / ${entries.length} &middot; #${url_id}</div>
+    `;
     document.getElementById('prev').disabled = move_idx === 0;
     document.getElementById('firstMove').disabled = move_idx === 0;
     document.getElementById('next').disabled = move_idx === entries.length - 1;
@@ -374,26 +443,23 @@ function renderClockTime(clock_time, render_lower_time_control, user_playing_as_
 }
 
 function setClockTimeStyle(element, time_control_is_black) {
-    if (time_control_is_black) {
-        element.style.color = "#ffffff";
-        element.style.backgroundColor = "#262522";
-        element.style.borderRadius = "8px";
-        element.style.padding = "0.2em 0.5em";
-        element.style.fontWeight = "bold";
-        element.style.fontSize = "1.2em";
-        element.style.minWidth = "4.5em";
-        element.style.textAlign = "center";
-    } else {
-        element.style.color = "#000000";
-        element.style.backgroundColor = "#ffffff";
-        element.style.borderRadius = "8px";
-        element.style.padding = "0.2em 0.5em";
-        element.style.fontWeight = "bold";
-        element.style.fontSize = "1.2em";
-        element.style.minWidth = "4.5em";
-        element.style.textAlign = "center";
-    }
+    element.style.borderRadius = "6px";
+    element.style.padding = "0.2em 0.6em";
+    element.style.fontWeight = "700";
+    element.style.fontSize = "1.1em";
+    element.style.minWidth = "4.5em";
+    element.style.textAlign = "center";
     element.style.width = "fit-content";
+    element.style.letterSpacing = "0.02em";
+    if (time_control_is_black) {
+        element.style.color = "#e8e6e3";
+        element.style.backgroundColor = "#1a1917";
+        element.style.border = "1px solid #2e2c29";
+    } else {
+        element.style.color = "#1a1917";
+        element.style.backgroundColor = "#e8e6e3";
+        element.style.border = "1px solid #b0aea8";
+    }
 }
 
 function renderEvalBar(evalCp, user_playing_as_white) {
@@ -407,47 +473,24 @@ function renderEvalBar(evalCp, user_playing_as_white) {
         percent = 50 + (evalClamped / 20); // 100 = black wins
     }
     percent = Math.max(0, Math.min(100, percent));
+    // Let CSS control dimensions; only update fill color direction based on player color
+    const evalBarFill = document.getElementById('eval-bar-fill');
+    const evalBar = document.getElementById('eval-bar');
     if (user_playing_as_white) {
-        evalBarFillStyle = document.getElementById('eval-bar-fill').style;
-        evalBarStyle = document.getElementById('eval-bar').style;
-
-        evalBarStyle.width = '18px';
-        evalBarStyle.height = '40vw';
-        evalBarStyle.backgroundColor = '#403d39';
-        evalBarStyle.borderRadius = '8px';
-        evalBarStyle.marginRight = '1.2em';
-        evalBarStyle.position = 'relative';
-        evalBarStyle.overflow = 'hidden';
-        evalBarStyle.flexShrink = '0';
-
-        evalBarFillStyle.position = 'absolute';
-        evalBarFillStyle.left = '0';
-        evalBarFillStyle.width = '100%';
-        evalBarFillStyle.background = '#ffffff';
-        evalBarFillStyle.transition = 'height 0.3s';
-        evalBarFillStyle.borderRadius = '8px';
-        evalBarFillStyle.zIndex = '2';
+        evalBar.style.backgroundColor = '#403d39';
+        evalBarFill.style.background = '#ffffff';
+        evalBarFill.style.position = 'absolute';
+        evalBarFill.style.left = '0';
+        evalBarFill.style.width = '100%';
+        evalBarFill.style.bottom = '0';
     } else {
-        evalBarFillStyle = document.getElementById('eval-bar-fill').style;
-        evalBarStyle = document.getElementById('eval-bar').style;
-
-        evalBarFillStyle.width = '18px';
-        evalBarFillStyle.height = '40vw';
-        evalBarFillStyle.backgroundColor = '#ffffff';
-        evalBarFillStyle.borderRadius = '8px';
-        evalBarFillStyle.marginRight = '1.2em';
-        evalBarFillStyle.position = 'relative';
-        evalBarFillStyle.overflow = 'hidden';
-        evalBarFillStyle.flexShrink = '0';
-
-        // evalBarStyle.position = 'absolute';
-        evalBarStyle.left = '0';
-        // evalBarStyle.width = '100%';
-        evalBarStyle.background = '#403d39';
-        evalBarStyle.transition = 'height 0.3s';
-        evalBarStyle.borderRadius = '8px';
-        evalBarStyle.zIndex = '2';
-    };
+        evalBar.style.backgroundColor = '#ffffff';
+        evalBarFill.style.background = '#403d39';
+        evalBarFill.style.position = 'absolute';
+        evalBarFill.style.left = '0';
+        evalBarFill.style.width = '100%';
+        evalBarFill.style.bottom = '0';
+    }
     document.getElementById('eval-bar-fill').style.height = percent + "%";
     document.getElementById('eval-bar-fill').style.bottom = 0;
 }
@@ -538,6 +581,17 @@ function renderEvalGraph(currentIdx) {
             ctx.fill();
         }
     }
+}
+
+function resultColor(result) {
+    if (result === 'win')  return '#81b64c';
+    if (result === 'loss') return '#fa412d';
+    return '#888';
+}
+
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function getColor(classification) {
@@ -804,42 +858,62 @@ function renderPositionStats(data) {
     const average_loss_opponent_rating = data.stats.average_opponent_rating_per_result.loss || 'N/A';
     const average_draw_opponent_rating = data.stats.average_opponent_rating_per_result.draw || 'N/A';
     container.innerHTML = `
-        <div style="background:#262522;padding:1em;border-radius:12px;color:#c3c2c1;">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:1em;">
-                <div style="font-weight:bold;font-size:1.1em">Position Stats</div>
-                <div style="text-align:right;font-size:0.95em">Games: ${noGames} &nbsp; (with acc: ${stats.no_games_with_acc || 0})</div>
-            </div>
-            <div style="margin-top:0.6em; display:flex; align-items:center; gap:1em;">
-                <div style="font-size:0.9em;color:#bdbdbd">Accuracy:</div>
-                <div style="font-size:1.6em; font-weight:700;">${accuracy !== null ? accuracy + '%' : 'N/A'}</div>
-                <div style="font-size:0.9em;color:#bdbdbd">Avg Opponent Rating:</div>
-                <div style="font-size:1.6em; font-weight:700;">${average_opponent_rating}</div>
-                <div style="font-size:0.9em;color:#bdbdbd">Avg Win Opponent Rating:</div>
-                <div style="font-size:1.6em; font-weight:700; color:#81b64c"">${average_win_opponent_rating}</div>
-                <div style="font-size:0.9em;color:#bdbdbd">Avg Loss Opponent Rating:</div>
-                <div style="font-size:1.6em; font-weight:700; color:#fa412d">${average_loss_opponent_rating}</div>
-                <div style="font-size:0.9em;color:#bdbdbd">Avg Draw Opponent Rating:</div>
-                <div style="font-size:1.6em; font-weight:700;">${average_draw_opponent_rating}</div>
+        <div style="background:#262420;border:1px solid #353230;border-radius:14px;overflow:hidden;color:#d4d2d0;">
+
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75em 1em;border-bottom:1px solid #2e2c29;">
+                <span style="font-size:0.75em;font-weight:700;color:#666;letter-spacing:0.08em;text-transform:uppercase;">Position stats</span>
+                <span style="font-size:0.8em;color:#888">${noGames} games &nbsp;·&nbsp; ${stats.no_games_with_acc || 0} with acc</span>
             </div>
 
-            <div style="margin-top:0.9em">
-                <div style="height:26px; background:#1e1e1e; border-radius:8px; overflow:hidden; display:flex;">
-                    <div style="background:#81b64c; width:${winPct}%; min-width:0;" title="Win ${winPct}%"></div>
-                    <div style="background:#fa412d; width:${lossPct}%; min-width:0;" title="Loss ${lossPct}%"></div>
-                    <div style="background:#c3c2c1; width:${drawPct}%; min-width:0;" title="Draw ${drawPct}%"></div>
+            <!-- Key stats grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #2e2c29;">
+                <div style="padding:0.6em 1em;border-right:1px solid #2e2c29;">
+                    <div style="font-size:0.72em;font-weight:600;color:#666;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Your accuracy</div>
+                    <div style="font-size:1.5em;font-weight:700;color:#e8e6e3;">${accuracy !== null ? accuracy + '%' : '–'}</div>
                 </div>
-                <div style="display:flex;justify-content:space-between;margin-top:0.5em;font-size:0.9em;color:#d0d0d0">
-                    <div style="color:#81b64c">Win ${winPct}% (${winCount})</div>
-                    <div style="color:#fa412d">Loss ${lossPct}% (${lossCount})</div>
-                    <div style="color:#c3c2c1">Draw ${drawPct}% (${drawCount})</div>
+                <div style="padding:0.6em 1em;">
+                    <div style="font-size:0.72em;font-weight:600;color:#666;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Avg opp rating</div>
+                    <div style="font-size:1.5em;font-weight:700;color:#e8e6e3;">${average_opponent_rating}</div>
                 </div>
             </div>
 
-            <div style="margin-top:0.8em; text-align:right">
-                <button id="hide-position-stats" style="background:#393733;color:#fff;border:none;padding:0.4em 0.7em;border-radius:6px;cursor:pointer">Hide</button>
+            <!-- Per-result ratings -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #2e2c29;">
+                <div style="padding:0.55em 1em;border-right:1px solid #2e2c29;">
+                    <div style="font-size:0.72em;font-weight:600;color:#555;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Win opp</div>
+                    <div style="font-size:1.1em;font-weight:700;color:#81b64c;">${average_win_opponent_rating}</div>
+                </div>
+                <div style="padding:0.55em 1em;border-right:1px solid #2e2c29;">
+                    <div style="font-size:0.72em;font-weight:600;color:#555;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Loss opp</div>
+                    <div style="font-size:1.1em;font-weight:700;color:#fa412d;">${average_loss_opponent_rating}</div>
+                </div>
+                <div style="padding:0.55em 1em;">
+                    <div style="font-size:0.72em;font-weight:600;color:#555;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Draw opp</div>
+                    <div style="font-size:1.1em;font-weight:700;color:#888;">${average_draw_opponent_rating}</div>
+                </div>
             </div>
-        </div>
-        `;
+
+            <!-- W/L/D bar -->
+            <div style="padding:0.75em 1em;">
+                <div style="height:10px;border-radius:5px;overflow:hidden;display:flex;background:#1a1917;">
+                    <div style="background:#81b64c;width:${winPct}%;transition:width 0.3s;" title="Win ${winPct}%"></div>
+                    <div style="background:#fa412d;width:${lossPct}%;transition:width 0.3s;" title="Loss ${lossPct}%"></div>
+                    <div style="background:#484542;width:${drawPct}%;transition:width 0.3s;" title="Draw ${drawPct}%"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:0.5em;font-size:0.82em;font-weight:600;">
+                    <span style="color:#81b64c;">W ${winPct}% <span style="font-weight:400;color:#555;">(${winCount})</span></span>
+                    <span style="color:#fa412d;">L ${lossPct}% <span style="font-weight:400;color:#555;">(${lossCount})</span></span>
+                    <span style="color:#888;">D ${drawPct}% <span style="font-weight:400;color:#555;">(${drawCount})</span></span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:0 1em 0.75em;text-align:right;">
+                <button id="hide-position-stats" style="font-size:0.8em;padding:0.35em 0.8em;border-radius:6px;background:#1a1917;color:#888;border:1px solid #2e2c29;cursor:pointer;transition:background 0.15s;"
+                    onmouseover="this.style.background='#33312e'" onmouseout="this.style.background='#1a1917'">Hide</button>
+            </div>
+        </div>`;
 
     const hideBtn = document.getElementById('hide-position-stats');
     if (hideBtn) hideBtn.onclick = () => { container.innerHTML = ''; };
