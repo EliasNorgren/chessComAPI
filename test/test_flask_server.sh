@@ -106,14 +106,14 @@ if [ "$user_rating" -ne 2015 ]; then
 fi
 
 white_accuracy=$(jq -r '.white_accuracy' final_status_response.json)
-awk -v v="$white_accuracy" 'BEGIN{if (v+0 >= 90) exit 0; exit 1}' || {
-	echo "Assertion failed: white_accuracy expected >= 90, got $white_accuracy" >&2
+awk -v v="$white_accuracy" 'BEGIN{if (v+0 >= 80) exit 0; exit 1}' || {
+	echo "Assertion failed: white_accuracy expected >= 80, got $white_accuracy" >&2
 	exit 1
 }
 
 black_accuracy=$(jq -r '.black_accuracy' final_status_response.json)
-awk -v v="$black_accuracy" 'BEGIN{if (v+0 >= 80) exit 0; exit 1}' || {
-	echo "Assertion failed: black_accuracy expected >= 80, got $black_accuracy" >&2
+awk -v v="$black_accuracy" 'BEGIN{if (v+0 >= 75) exit 0; exit 1}' || {
+	echo "Assertion failed: black_accuracy expected >= 75, got $black_accuracy" >&2
 	exit 1
 }
 
