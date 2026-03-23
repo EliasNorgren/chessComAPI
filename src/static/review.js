@@ -44,6 +44,7 @@ async function loadReviewData() {
     document.getElementById('move-classifications').style.display = 'none';
     document.getElementById('error-message').style.display = 'none';
     document.getElementById('chessground_board').style.display = 'none';
+    document.getElementById('eval-graph-container').style.display = 'none';
 
     let url = '/review_data?' + new URLSearchParams(window.location.search).toString();
     console.log("Fetching review data from:", url);
@@ -91,6 +92,7 @@ async function loadReviewData() {
                 document.getElementById('lower-board-value').style.display = '';
                 document.getElementById('move-classifications').style.display = '';
                 document.getElementById('chessground_board').style.display = '';
+                document.getElementById('eval-graph-container').style.display = '';
 
                 entries = statusData.analysis;
                 meta = statusData;
@@ -297,6 +299,7 @@ function showMove(idx) {
     }
     renderEvalBar(evalCp, user_playing_as_white);
     renderBoardValue(user_playing_as_white, entry.board);
+    renderEvalGraph(idx);
 }
 
 function setShapesForMove(best_move_uci, played_uci, classification) {
@@ -447,6 +450,94 @@ function renderEvalBar(evalCp, user_playing_as_white) {
     };
     document.getElementById('eval-bar-fill').style.height = percent + "%";
     document.getElementById('eval-bar-fill').style.bottom = 0;
+}
+
+function renderEvalGraph(currentIdx) {
+    const canvas = document.getElementById('eval-graph');
+    if (!canvas || !entries.length) return;
+
+    const container = canvas.parentElement;
+    const width = container.clientWidth || 600;
+    const height = 80;
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    const n = entries.length;
+    const midY = height / 2;
+
+    function entryToCp(entry) {
+        const ev = entry.evaluation || {};
+        if (ev.type === 'mate') return ev.value > 0 ? 1000 : -1000;
+        if (ev.type === 'cp') return Math.max(-1000, Math.min(1000, ev.value));
+        return 0;
+    }
+
+    function cpToY(cp) {
+        return midY - (cp / 1000) * midY;
+    }
+
+    const points = entries.map((e, i) => ({
+        x: n === 1 ? width / 2 : (i / (n - 1)) * width,
+        y: cpToY(entryToCp(e))
+    }));
+
+    // Background
+    ctx.fillStyle = '#262522';
+    ctx.fillRect(0, 0, width, height);
+
+    // White advantage fill (above midline)
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, midY);
+    for (const p of points) ctx.lineTo(p.x, Math.min(p.y, midY));
+    ctx.lineTo(points[n - 1].x, midY);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(210,210,210,0.9)';
+    ctx.fill();
+
+    // Black advantage fill (below midline)
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, midY);
+    for (const p of points) ctx.lineTo(p.x, Math.max(p.y, midY));
+    ctx.lineTo(points[n - 1].x, midY);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(70,70,70,0.9)';
+    ctx.fill();
+
+    // Midline
+    ctx.strokeStyle = '#504d49';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, midY);
+    ctx.lineTo(width, midY);
+    ctx.stroke();
+
+    // Current move cursor
+    if (currentIdx >= 0 && currentIdx < points.length) {
+        ctx.strokeStyle = 'rgba(100,180,255,0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(points[currentIdx].x, 0);
+        ctx.lineTo(points[currentIdx].x, height);
+        ctx.stroke();
+    }
+
+    // Classification dots
+    const dotColors = {
+        "Blunder": "#fa412d",
+        "Mistake": "#ff7769",
+        "Inaccuracy": "#f7c631",
+        "Missed mate": "#c3c2c1",
+    };
+    for (let i = 0; i < entries.length; i++) {
+        const color = dotColors[entries[i].classification];
+        if (color) {
+            ctx.beginPath();
+            ctx.arc(points[i].x, points[i].y, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+    }
 }
 
 function getColor(classification) {
@@ -788,6 +879,13 @@ document.getElementById('prev').onclick = () => showMove(move_idx - 1);
 document.getElementById('next').onclick = () => showMove(move_idx + 1);
 document.getElementById('lastMove').onclick = () => showMove(entries.length - 1);
 document.getElementById('get-position-stats').onclick = () => getPositionStats();
+document.getElementById('eval-graph').addEventListener('click', function (e) {
+    if (!entries.length) return;
+    const rect = this.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const idx = Math.round((x / rect.width) * (entries.length - 1));
+    showMove(Math.max(0, Math.min(entries.length - 1, idx)));
+});
 document.addEventListener('keydown', function (event) {
     if (event.key === "ArrowLeft" && move_idx > 0) showMove(move_idx - 1);
     if (event.key === "ArrowRight" && move_idx < entries.length - 1) showMove(move_idx + 1);
