@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Port to use for the test
-PORT=5001
+PORT=5002
 
 # Check that port is free
 if lsof -i:"$PORT" >/dev/null 2>&1; then
