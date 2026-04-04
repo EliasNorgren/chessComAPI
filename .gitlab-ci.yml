@@ -24,7 +24,7 @@ build_and_push:
         - "--tls=false"
 
   variables:
-    IMAGE_TAG: "registry.eliashouse.ddns.net/root/chess-api:latest"
+    IMAGE_TAG: "registry.eliashouse.ddns.net/root/chesscomapi:latest"
 
   before_script:
     - docker info
