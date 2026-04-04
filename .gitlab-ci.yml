@@ -1,5 +1,6 @@
 stages:
   - install
+  - build
 
 install_everything:
   variables:
@@ -10,3 +11,15 @@ install_everything:
     - echo "Installation complete"
     - ./test/test_flask_server.sh
     - echo "All tests passed"
+
+build_and_push:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - master
