@@ -1,6 +1,7 @@
 let entries = [];
 let move_idx = 0;
 let meta = {};
+let servedByHostname = '';
 
 const circle = document.getElementById('progress-ring');
 const radius = circle.r.baseVal.value;
@@ -52,9 +53,7 @@ async function loadReviewData() {
     const initialData = await initialResponse.json();
     console.log("Received review data:", initialData);
     uuid = initialData.uuid;
-    if (initialData.hostname) {
-        document.getElementById('served-by').textContent = initialData.hostname;
-    }
+    servedByHostname = initialData.hostname || '';
     attempts = 0;
     await sleep(150);
     while (attempts < 60) {
@@ -348,7 +347,7 @@ function showMove(idx) {
                 ${blackResult ? `<span class="result-chip ${blackResult}">${capitalize(blackResult)}</span>` : ''}
             </div>
         </div>
-        <div class="header-meta">${meta.archiveDate || ''} &middot; Move ${move_idx + 1} / ${entries.length} &middot; #${url_id} &middot; <span id="served-by" style="opacity:0.6"></span></div>
+        <div class="header-meta">${meta.archiveDate || ''} &middot; Move ${move_idx + 1} / ${entries.length} &middot; #${url_id}${servedByHostname ? ` &middot; <span style="opacity:0.6">${servedByHostname}</span>` : ''}</div>
     `;
     document.getElementById('prev').disabled = move_idx === 0;
     document.getElementById('firstMove').disabled = move_idx === 0;
