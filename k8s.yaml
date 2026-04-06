@@ -1,0 +1,127 @@
+# Primary: pinned to bolen, will not reschedule if node goes down
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess-api-primary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess-api
+      role: primary
+  template:
+    metadata:
+      labels:
+        app: chess-api
+        role: primary
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - bolen-b660-ds3h-ddr4
+      imagePullSecrets:
+      - name: gitlab-registry
+      containers:
+      - name: chess-api
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: STOCKFISH_ENGINE_PATH
+          value: src/stockfish-ubuntu-x86-64-avx2
+        - name: FLASK_PORT
+          value: "5000"
+        volumeMounts:
+        - name: db
+          mountPath: /app/SQL/chess_games.db
+          subPath: chess_games.db
+      volumes:
+      - name: db
+        hostPath:
+          path: /opt/chess-api
+          type: Directory
+---
+# Fallback: pinned to coolermaster
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess-api-fallback
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess-api
+      role: fallback
+  template:
+    metadata:
+      labels:
+        app: chess-api
+        role: fallback
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - coolermaster
+      imagePullSecrets:
+      - name: gitlab-registry
+      containers:
+      - name: chess-api
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: STOCKFISH_ENGINE_PATH
+          value: src/stockfish-ubuntu-x86-64-avx2
+        - name: FLASK_PORT
+          value: "5000"
+        volumeMounts:
+        - name: db
+          mountPath: /app/SQL/chess_games.db
+          subPath: chess_games.db
+      volumes:
+      - name: db
+        hostPath:
+          path: /opt/chess-api
+          type: Directory
+---
+# NodePort 30501 — primary (bolen)
+apiVersion: v1
+kind: Service
+metadata:
+  name: chess-api-primary
+spec:
+  type: NodePort
+  selector:
+    app: chess-api
+    role: primary
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30501
+---
+# NodePort 30502 — fallback (coolermaster)
+apiVersion: v1
+kind: Service
+metadata:
+  name: chess-api-fallback
+spec:
+  type: NodePort
+  selector:
+    app: chess-api
+    role: fallback
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30502

@@ -4,6 +4,7 @@ from parser import Parser
 import uuid
 import threading
 import copy
+import socket
 from entryCache import EntryCache
 from database import DataBase
 from filter_info import FilterInfo
@@ -31,7 +32,8 @@ def review_data():
         return jsonify({"error": "User parameter is required"}), 400
     threading.Thread(target=calculate_entries, args=(game_id, user, new_uuid, head_minus)).start()
     response = {
-        "uuid": str(new_uuid)
+        "uuid": str(new_uuid),
+        "hostname": socket.gethostname()
     }
     return jsonify(response)
 

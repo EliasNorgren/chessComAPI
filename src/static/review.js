@@ -52,6 +52,9 @@ async function loadReviewData() {
     const initialData = await initialResponse.json();
     console.log("Received review data:", initialData);
     uuid = initialData.uuid;
+    if (initialData.hostname) {
+        document.getElementById('served-by').textContent = initialData.hostname;
+    }
     attempts = 0;
     await sleep(150);
     while (attempts < 60) {
@@ -345,7 +348,7 @@ function showMove(idx) {
                 ${blackResult ? `<span class="result-chip ${blackResult}">${capitalize(blackResult)}</span>` : ''}
             </div>
         </div>
-        <div class="header-meta">${meta.archiveDate || ''} &middot; Move ${move_idx + 1} / ${entries.length} &middot; #${url_id}</div>
+        <div class="header-meta">${meta.archiveDate || ''} &middot; Move ${move_idx + 1} / ${entries.length} &middot; #${url_id} &middot; <span id="served-by" style="opacity:0.6"></span></div>
     `;
     document.getElementById('prev').disabled = move_idx === 0;
     document.getElementById('firstMove').disabled = move_idx === 0;
