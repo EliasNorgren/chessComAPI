@@ -1,6 +1,7 @@
 stages:
   - install
   - build
+  - deploy
 
 install_everything:
   variables:
@@ -35,5 +36,14 @@ build_and_push:
     - docker build -t "$IMAGE_TAG" .
     - docker push "$IMAGE_TAG"
 
+  only:
+    - master
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl rollout restart deployment/chess-api-primary deployment/chess-api-fallback
+    - kubectl rollout status deployment/chess-api-primary
+    - kubectl rollout status deployment/chess-api-fallback
   only:
     - master
