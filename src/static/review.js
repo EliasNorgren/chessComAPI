@@ -576,7 +576,7 @@ function renderEvalGraph(currentIdx) {
     };
     const userPlaysWhite = meta.user_playing_as_white;
     for (let i = 0; i < entries.length; i++) {
-        const isUserMove = userPlaysWhite === (i % 2 === 0);
+        const isUserMove = !!userPlaysWhite === (i % 2 === 0);
         if (!isUserMove) continue;
         const color = dotColors[entries[i].classification];
         if (color) {
