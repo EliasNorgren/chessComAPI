@@ -5,6 +5,6 @@
 *.pdf
 *env/*
 */myenv/**
-src/stockfish-*
+#src/stockfish-*
 SQL/regression_parameters.json
 src/builds/**

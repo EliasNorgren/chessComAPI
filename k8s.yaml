@@ -41,6 +41,9 @@ spec:
         - name: db
           mountPath: /app/SQL/chess_games.db
           subPath: chess_games.db
+        - name: db
+          mountPath: /app/cfg/stockfish_settings.yaml
+          subPath: stockfish_settings.yaml
       volumes:
       - name: db
         hostPath:
@@ -90,6 +93,9 @@ spec:
         - name: db
           mountPath: /app/SQL/chess_games.db
           subPath: chess_games.db
+        - name: db
+          mountPath: /app/cfg/stockfish_settings.yaml
+          subPath: stockfish_settings.yaml
       volumes:
       - name: db
         hostPath:
