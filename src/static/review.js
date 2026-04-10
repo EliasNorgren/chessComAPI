@@ -472,7 +472,7 @@ function renderEvalBar(evalCp, user_playing_as_white) {
     if (user_playing_as_white) {
         percent = 50 + (evalClamped / 20); // 100 = white wins
     } else {
-        percent = 50 + (evalClamped / 20); // 100 = black wins
+        percent = 50 - (evalClamped / 20); // invert: positive eval = white winning = less fill from black's side
     }
     percent = Math.max(0, Math.min(100, percent));
     // Let CSS control dimensions; only update fill color direction based on player color
