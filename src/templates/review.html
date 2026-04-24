@@ -400,6 +400,23 @@
         #get-position-stats:hover:not(:disabled) { background: #33312e; }
         #get-position-stats:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        /* ── Get responses ─────────────────────────────────── */
+        #get-responses {
+            font-size: 0.9em;
+            padding: 0.55em 1.1em;
+            border-radius: 8px;
+            background: #262420;
+            color: #c3c2c1;
+            border: 1px solid #383532;
+            cursor: pointer;
+            transition: background 0.15s;
+            align-self: flex-start;
+            letter-spacing: 0.02em;
+        }
+
+        #get-responses:hover:not(:disabled) { background: #33312e; }
+        #get-responses:disabled { opacity: 0.4; cursor: not-allowed; }
+
         /* ── Loading ───────────────────────────────────────── */
         #progress-ring { transition: stroke-dashoffset 0.35s ease; }
 
@@ -492,6 +509,8 @@
             <div id="move-classifications" class="move-classifications"></div>
             <button id="get-position-stats"><i class="fa-solid fa-chart-bar" style="margin-right:0.4em"></i>Position stats</button>
             <div id="position-stats"></div>
+            <button id="get-responses"><i class="fa-solid fa-reply-all" style="margin-right:0.4em"></i>Responses</button>
+            <div id="responses-stats"></div>
         </div>
 
     </div>

@@ -8,3 +8,4 @@
 #src/stockfish-*
 SQL/regression_parameters.json
 src/builds/**
+SQL/chess_games.db**

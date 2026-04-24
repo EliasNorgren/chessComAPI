@@ -41,6 +41,7 @@ async function loadReviewData() {
     document.getElementById('nav-btns').style.display = 'none';
     document.getElementById('best-line-btns').style.display = 'none';
     document.getElementById('get-position-stats').style.display = 'none';
+    document.getElementById('get-responses').style.display = 'none';
     document.getElementById('lower-board-value').style.display = 'none';
     document.getElementById('move-classifications').style.display = 'none';
     document.getElementById('error-message').style.display = 'none';
@@ -91,6 +92,7 @@ async function loadReviewData() {
                 document.getElementById('nav-btns').style.display = '';
                 document.getElementById('best-line-btns').style.display = '';
                 document.getElementById('get-position-stats').style.display = '';
+                document.getElementById('get-responses').style.display = '';
                 document.getElementById('lower-board-value').style.display = '';
                 document.getElementById('move-classifications').style.display = '';
                 document.getElementById('chessground_board').style.display = '';
@@ -951,6 +953,76 @@ function handlePieceMove(orig, dest, captured) {
         .catch(err => console.error('Error sending move to backend:', err));
 }
 
+function getResponses() {
+    const entry = entries[move_idx];
+    if (!entry || !entry.board) return;
+    const fen = entry.board;
+    const user = meta.user;
+    const time_control = meta.time_control;
+    const playing_as_white = meta.user_playing_as_white;
+    const url = `/get_total_fens_at_depth_2?` + new URLSearchParams({
+        fen,
+        user,
+        time_control,
+        playing_as_white: playing_as_white ? '1' : '0',
+        substring: fen,
+    }).toString();
+    fetch(url)
+        .then(r => r.json())
+        .then(data => renderResponses(data))
+        .catch(err => {
+            console.error('Error fetching responses:', err);
+            alert('Error fetching responses. See console for details.');
+        });
+}
+
+function renderResponses(data) {
+    const container = document.getElementById('responses-stats');
+    if (!container) return;
+    const fens = (data && data.total_fens) ? data.total_fens : [];
+    if (!fens.length) {
+        container.innerHTML = `<div style="padding:0.7em 1em;color:#666;font-size:0.9em;">No responses found for this position.</div>`;
+        return;
+    }
+
+    const rows = fens.map(item => {
+        const move = item.move || '?';
+        const s = item.stats || {};
+        const games = (item.games || []).length;
+        const winPct = s.win_percentage || 0;
+        const lossPct = s.loss_percentage || 0;
+        const drawPct = s.draw_percentage || 0;
+        return `
+            <div style="padding:0.65em 1em;border-bottom:1px solid #2e2c29;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4em;">
+                    <span style="font-size:1em;font-weight:700;color:#e8e6e3;font-family:monospace;">${move}</span>
+                    <span style="font-size:0.78em;color:#666;">${games} game${games !== 1 ? 's' : ''}</span>
+                </div>
+                <div style="height:8px;border-radius:4px;overflow:hidden;display:flex;background:#1a1917;margin-bottom:0.35em;">
+                    <div style="background:#81b64c;width:${winPct}%;transition:width 0.3s;" title="Win ${winPct}%"></div>
+                    <div style="background:#fa412d;width:${lossPct}%;transition:width 0.3s;" title="Loss ${lossPct}%"></div>
+                    <div style="background:#484542;width:${drawPct}%;transition:width 0.3s;" title="Draw ${drawPct}%"></div>
+                </div>
+                <div style="display:flex;gap:0.8em;font-size:0.8em;font-weight:600;">
+                    <span style="color:#81b64c;">W ${winPct}%</span>
+                    <span style="color:#fa412d;">L ${lossPct}%</span>
+                    <span style="color:#888;">D ${drawPct}%</span>
+                </div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div style="background:#262420;border:1px solid #353230;border-radius:14px;overflow:hidden;color:#d4d2d0;margin-top:0.4em;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75em 1em;border-bottom:1px solid #2e2c29;">
+                <span style="font-size:0.75em;font-weight:700;color:#666;letter-spacing:0.08em;text-transform:uppercase;">Opponent responses</span>
+                <button id="hide-responses" style="font-size:0.8em;padding:0.25em 0.7em;border-radius:6px;background:#1a1917;color:#888;border:1px solid #2e2c29;cursor:pointer;"
+                    onmouseover="this.style.background='#33312e'" onmouseout="this.style.background='#1a1917'">Hide</button>
+            </div>
+            ${rows}
+        </div>`;
+    document.getElementById('hide-responses').onclick = () => { container.innerHTML = ''; };
+}
+
 document.getElementById('firstMove').onclick = () => showMove(0);
 document.getElementById('playBestLine').onclick = () => togglePlayBestLine();
 document.getElementById('stopBestLine').onclick = () => cancelPlayingBestLine();
@@ -958,6 +1030,7 @@ document.getElementById('prev').onclick = () => showMove(move_idx - 1);
 document.getElementById('next').onclick = () => showMove(move_idx + 1);
 document.getElementById('lastMove').onclick = () => showMove(entries.length - 1);
 document.getElementById('get-position-stats').onclick = () => getPositionStats();
+document.getElementById('get-responses').onclick = () => getResponses();
 document.getElementById('eval-graph').addEventListener('click', function (e) {
     if (!entries.length) return;
     const rect = this.getBoundingClientRect();

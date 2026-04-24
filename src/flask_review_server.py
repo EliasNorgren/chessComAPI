@@ -130,6 +130,30 @@ def analyze_move():
         return jsonify(result), 400
     return jsonify(result)
 
+@app.route('/get_total_fens_at_depth_2', methods=['GET'])
+def get_total_fens_at_depth_2():
+    # Curl example: curl -G http://localhost:5000/get_total_fens_at_depth_2 --data-urlencode "user=someuser" --data-urlencode "time_control=300" --data-urlencode "playing_as_white=1" --data-urlencode "substring=some_substring"
+    # Required parameters: user, time_control, playing_as_white, substring 
+    substring = request.args.get('substring', default='', type=str)
+    user = request.args.get('user', default='', type=str)
+    if user == '':
+        return jsonify({"error": "User parameter is required"}), 400
+    time_control = request.args.get('time_control', default='', type=int)
+    if time_control == '':
+        return jsonify({"error": "time_control parameter is required"}), 400
+    playing_as_white_str = request.args.get('playing_as_white', default=None, type=str)
+    if playing_as_white_str is not None:
+        playing_as_white = playing_as_white_str == "1"
+    else:
+        return jsonify({"error": "playing_as_white parameter is required"}), 400
+    filter_info = FilterInfo(user)
+    filter_info.playing_as_white = playing_as_white
+    filter_info.time_class = FilterInfo.TimeClass().time_in_seconds(time_control)
+    parser = Parser()
+    total_fens = parser.get_total_fens_at_depth_2(filter_info, substring)
+
+    return jsonify({"total_fens": total_fens})
+
 if __name__ == '__main__':
     import argparse
     import os
