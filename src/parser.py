@@ -482,6 +482,7 @@ class Parser():
 
     def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid : str) -> dict:
         database = DataBase()
+        user = user.lower()
         if url != None :
             game = database.query(f'''
                 SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
@@ -534,7 +535,11 @@ class Parser():
         time_control = game['time_control']
         if '+' in time_control:
             time_control = time_control.split('+')[0]
-        time_control = int(time_control)
+        try:
+            time_control = int(time_control)
+        except ValueError:
+            print(f"Invalid time control value: {time_control}")
+            time_control = 1440  # Default to 24 hours if parsing fails
         analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
         white_accuracy, black_accuracy, classification_frequency = self.average_accuracy(analysis)
         user_time, user_total_score, opponent_time, opponent_total_score = self.compute_total_times(analysis, time_control, user_playing_as_white)
