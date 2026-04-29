@@ -129,9 +129,13 @@ class WoodpeckerDB:
         conn.execute('''
             UPDATE woodpecker_attempts
             SET completed_at = ?,
-                duration_seconds = CAST(ROUND((julianday(?) - julianday(started_at)) * 86400) AS INTEGER)
+                duration_seconds = (
+                    SELECT CAST(ROUND(SUM(time_taken_seconds)) AS INTEGER)
+                    FROM woodpecker_puzzle_results
+                    WHERE attempt_id = ?
+                )
             WHERE id = ?
-        ''', (now, now, attempt_id))
+        ''', (now, attempt_id, attempt_id))
         conn.commit()
         conn.close()
 

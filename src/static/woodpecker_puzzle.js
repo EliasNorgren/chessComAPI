@@ -13,6 +13,7 @@ let acceptingMoves   = false;
 let puzzleStartTime  = null;
 let timerInterval    = null;
 let chessground      = null;
+let totalSeconds     = 0;
 
 function setMovable(color) {
     chessground.set({ movable: { color, free: true, events: { after: onUserMove } } });
@@ -156,6 +157,7 @@ function handleWrongMove() {
     setTimeout(() => {
         const trigger = puzzleMoves[0];
         chessground.move(trigger.substring(0, 2), trigger.substring(2, 4));
+        chessground.set({ turnColor: userColor });
         expectedMoveIdx = 1;
         setMovable(userColor);
         acceptingMoves  = true;
@@ -182,6 +184,9 @@ async function giveUp() {
 
 async function submitResult(solved, elapsed) {
     if (!currentPuzzle) return;
+    totalSeconds += elapsed;
+    const el = document.getElementById('total-val');
+    if (el) el.textContent = fmtSeconds(Math.round(totalSeconds));
     await fetch(`/woodpecker/api/attempt/${attemptId}/result`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -264,8 +269,8 @@ function updateProgressUI(position, total, rating) {
             <div class="stat-value"><span id="timer-val">0.0s</span></div>
         </div>
         <div class="stat-cell">
-            <div class="stat-label">Attempt</div>
-            <div class="stat-value">#${attemptNumber}</div>
+            <div class="stat-label">Total</div>
+            <div class="stat-value"><span id="total-val">${fmtSeconds(Math.round(totalSeconds))}</span></div>
         </div>`;
 }
 

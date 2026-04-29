@@ -1,7 +1,8 @@
 import csv
+import os
 import random
 
-LICHESS_CSV_PATH = "SQL/lichess_db_puzzle.csv"
+LICHESS_CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'SQL', 'lichess_db_puzzle.csv')
 
 
 def sample_puzzles(rating_min: int, rating_max: int, count: int) -> list:
