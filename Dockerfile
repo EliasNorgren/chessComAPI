@@ -16,6 +16,9 @@ RUN rm -rf src/__pycache__
 RUN rm -rf src/builds
 RUN rm -rf SQL/chess_games.db
 
+RUN useradd -u 1001 -m appuser && chown -R appuser /app
+USER appuser
+
 ENV STOCKFISH_ENGINE_PATH=src/stockfish-ubuntu-x86-64-avx2
 ENV FLASK_PORT=5000
 

@@ -26,6 +26,9 @@ spec:
                 - bolen-b660-ds3h-ddr4
       imagePullSecrets:
       - name: gitlab-registry
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
       containers:
       - name: chess-api
         image: registry.eliashouse.ddns.net/root/chesscomapi:latest
@@ -78,6 +81,9 @@ spec:
                 - coolermaster
       imagePullSecrets:
       - name: gitlab-registry
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
       containers:
       - name: chess-api
         image: registry.eliashouse.ddns.net/root/chesscomapi:latest
