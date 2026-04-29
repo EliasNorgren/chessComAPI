@@ -4,29 +4,155 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess Puzzle</title>
-    <script src="{{ url_for('static', filename='chessground.umd.js') }}"></script>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.brown.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/puzzle.css') }}">
-    <script src="/static/puzzle.js"></script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: #1e1c19;
+            color: #d4d2d0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #game-header {
+            padding: 1em 1.5em 0.8em;
+            text-align: center;
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .puzzle-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 1.2em;
+            padding: 0 1.2em 2em;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .board-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .chessground_board {
+            width: clamp(280px, 40vw, 580px);
+            height: clamp(280px, 40vw, 580px);
+        }
+
+        #feedback {
+            margin-top: 0.6em;
+            font-size: 1.05em;
+            font-weight: 600;
+            min-height: 1.5em;
+            text-align: center;
+            width: clamp(280px, 40vw, 580px);
+        }
+
+        .nav-btns {
+            display: flex;
+            justify-content: center;
+            gap: 0.4em;
+            margin-top: 0.6em;
+            width: clamp(280px, 40vw, 580px);
+        }
+
+        .nav-btns button {
+            flex: 1;
+            font-size: 0.95em;
+            padding: 0.55em 0;
+            border-radius: 8px;
+            background: #262420;
+            color: #c3c2c1;
+            border: 1px solid #383532;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-family: inherit;
+        }
+
+        .nav-btns button:hover:not(:disabled) { background: #33312e; }
+        .nav-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .info-column {
+            flex: 1;
+            min-width: 0;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9em;
+        }
+
+        .info-card {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .classification-badge {
+            font-size: 0.78em;
+            font-weight: 700;
+            padding: 0.3em 0.75em;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: color-mix(in srgb, var(--cls-color) 15%, transparent);
+            color: var(--cls-color);
+            border: 1px solid color-mix(in srgb, var(--cls-color) 30%, transparent);
+        }
+
+        .error-message {
+            text-align: center;
+            font-size: 1.1em;
+            color: #fa412d;
+        }
+
+        @media (max-width: 900px) {
+            .puzzle-layout {
+                flex-direction: column;
+                align-items: center;
+                padding: 0 0.5em 2em;
+            }
+
+            .info-column { max-width: 98vw; width: 98vw; }
+
+            .chessground_board,
+            #feedback,
+            .nav-btns { width: clamp(280px, 94vw, 580px) !important; }
+            .chessground_board { height: clamp(280px, 94vw, 580px) !important; }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container">
-        <h2>Chess Puzzle</h2>
-        <div class="puzzle-grid">
-            <div class="chess-card">
-                <div id="chessground_board"></div>
-                <div id="feedback"></div>
-                <div id="reset-container"></div>
-            </div>
-            <div class="info-card">
-                <div id="puzzle-info"></div>
-                <div id="error-message"></div>
-            </div>
+    <div id="game-header">Chess Puzzle</div>
+
+    <div class="puzzle-layout">
+        <div class="board-column">
+            <div class="chessground_board" id="chessground_board"></div>
+            <div id="feedback"></div>
+            <div class="nav-btns" id="reset-container"></div>
+        </div>
+
+        <div class="info-column">
+            <div class="info-card" id="puzzle-info"></div>
+            <div id="error-message" class="error-message"></div>
         </div>
     </div>
+
+    <script src="{{ url_for('static', filename='chessground.umd.js') }}"></script>
+    <script src="/static/puzzle.js"></script>
 </body>
 
 </html>

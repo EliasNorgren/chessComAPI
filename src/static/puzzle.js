@@ -1,3 +1,15 @@
+function getClassificationColor(classification) {
+    const colors = {
+        "Best Move":  "#749bbf",
+        "Good Move":  "#81b64c",
+        "Inaccuracy": "#f7c631",
+        "Mistake":    "#ff7769",
+        "Blunder":    "#fa412d",
+        "Missed mate":"#c3c2c1",
+    };
+    return colors[classification] || '#888';
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
     const user = new URLSearchParams(window.location.search).get('user') || '';
     if (!user) {
@@ -77,42 +89,49 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    let solutionTimer = null;
+    let solutionPaused = false;
+    let solutionCurrentMoves = [];
+    let solutionIndex = 0;
+
     function showSolutionMoves(moves) {
-        let currentFen = initialFen;
-        let index = 0;
+        if (solutionTimer) clearTimeout(solutionTimer);
+        solutionCurrentMoves = moves;
+        solutionIndex = 0;
+        solutionPaused = false;
+        pauseResumeButton.textContent = 'Pause';
+        pauseResumeButton.style.display = '';
+        resetLineButton.style.display = '';
+        playNextSolutionMove();
+    }
 
-        async function playNextMove() {
-            if (index >= moves.length) {
-                resetButton.style.display = "block"; // Show reset button after solution is complete
-                await markPuzzleAsSolved(); // Mark the puzzle as solved
-                // Show the user's played move (if available)
-                try {
-                    const playedSan = puzzle.user_move_san || '';
-                    const playedUci = puzzle.user_move_uci || '';
-                    if (playedSan || playedUci) {
-                        const playedHtml = `<div><strong>Your move:</strong> ${playedSan} ${playedUci ? `(${playedUci})` : ''}</div>`;
-                        document.getElementById('puzzle-info').insertAdjacentHTML('beforeend', playedHtml);
-                    }
-                } catch (e) {
-                    console.warn('Failed to display played move:', e);
-                }
-                return;
-            }
-
-            const move = moves[index];
-            const orig = move.substring(0, 2);
-            const dest = move.substring(2, 4);
-
-            chessground.move(orig, dest);
-
-            // Simulate the move (this is a stub; replace with actual FEN update logic if needed)
-            currentFen = currentFen; // Replace with updated FEN after the move
-
-            index++;
-            setTimeout(playNextMove, 1000); // Delay between moves
+    function playNextSolutionMove() {
+        if (solutionPaused) return;
+        if (solutionIndex >= solutionCurrentMoves.length) {
+            pauseResumeButton.style.display = 'none';
+            resetLineButton.style.display = 'none';
+            resetButton.style.display = 'block';
+            markPuzzleAsSolved();
+            return;
         }
+        const move = solutionCurrentMoves[solutionIndex];
+        chessground.move(move.substring(0, 2), move.substring(2, 4));
+        solutionIndex++;
+        solutionTimer = setTimeout(playNextSolutionMove, 1000);
+    }
 
-        playNextMove();
+    function toggleSolutionPlayback() {
+        solutionPaused = !solutionPaused;
+        pauseResumeButton.textContent = solutionPaused ? 'Resume' : 'Pause';
+        if (!solutionPaused) playNextSolutionMove();
+    }
+
+    function resetSolutionLine() {
+        if (solutionTimer) clearTimeout(solutionTimer);
+        solutionIndex = 0;
+        solutionPaused = true;
+        pauseResumeButton.textContent = 'Resume';
+        chessground.set({ fen: initialFen, orientation: userColor, turnColor: userColor });
     }
 
     async function markPuzzleAsSolved() {
@@ -153,11 +172,55 @@ document.addEventListener('DOMContentLoaded', async function () {
         el.style.color = success ? 'green' : 'red';
     }
 
+    const clsColor = getClassificationColor(puzzle.classification);
+    const row = (label, value) => `
+        <div style="padding:0.55em 1em;border-bottom:1px solid #2e2c29;border-right:1px solid #2e2c29;">
+            <div style="font-size:0.72em;font-weight:600;color:#666;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">${label}</div>
+            <div style="font-size:0.92em;color:#c8c6c3;font-weight:500;">${value}</div>
+        </div>`;
+    const rowLast = (label, value) => `
+        <div style="padding:0.55em 1em;border-bottom:1px solid #2e2c29;">
+            <div style="font-size:0.72em;font-weight:600;color:#666;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">${label}</div>
+            <div style="font-size:0.92em;color:#c8c6c3;font-weight:500;">${value}</div>
+        </div>`;
     document.getElementById('puzzle-info').innerHTML = `
-        <strong>Puzzle ID:</strong> ${puzzle.puzzle_id}<br>
-        <strong>Game ID:</strong> ${puzzle.game_id}<br>
-        <strong>Date:</strong> ${puzzle.archive_date || 'N/A'}<br>
-        <strong>Classification:</strong> ${puzzle.classification}<br>
-        <strong>User move: </strong> ${puzzle.user_move_san || 'N/A'} ${puzzle.user_move_uci ? `(${puzzle.user_move_uci})` : ''}<br>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.8em 1em 0.7em;border-bottom:1px solid #2e2c29;">
+            <span style="font-size:0.75em;font-weight:700;color:#666;letter-spacing:0.08em;text-transform:uppercase;">Puzzle #${puzzle.puzzle_id}</span>
+            <span class="classification-badge" style="--cls-color:${clsColor}">${puzzle.classification}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;">
+            ${row('Game ID', puzzle.game_id)}
+            ${rowLast('Date', puzzle.archive_date || '–')}
+            <div style="padding:0.55em 1em;border-right:1px solid #2e2c29;">
+                <div style="font-size:0.72em;font-weight:600;color:#666;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Your move</div>
+                <div style="font-size:0.92em;color:#c8c6c3;font-weight:500;">${puzzle.user_move_san || '–'} <span style="color:#555;">${puzzle.user_move_uci ? `(${puzzle.user_move_uci})` : ''}</span></div>
+            </div>
+            <div id="best-move-cell" style="padding:0.55em 1em;display:none;">
+                <div style="font-size:0.72em;font-weight:600;color:#666;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.2em;">Best move</div>
+                <div style="font-size:0.92em;color:#c8c6c3;font-weight:500;">${puzzle.best_move_san || '–'} <span style="color:#555;">${puzzle.best_move_uci ? `(${puzzle.best_move_uci})` : ''}</span></div>
+            </div>
+        </div>
     `;
+
+    const giveUpButton = document.createElement('button');
+    giveUpButton.textContent = "Give Up";
+    giveUpButton.onclick = () => {
+        document.getElementById('best-move-cell').style.display = '';
+        showFeedback("Better luck next time.", false);
+        giveUpButton.disabled = true;
+    };
+
+    const pauseResumeButton = document.createElement('button');
+    pauseResumeButton.textContent = 'Pause';
+    pauseResumeButton.style.display = 'none';
+    pauseResumeButton.onclick = toggleSolutionPlayback;
+
+    const resetLineButton = document.createElement('button');
+    resetLineButton.textContent = 'Reset Line';
+    resetLineButton.style.display = 'none';
+    resetLineButton.onclick = resetSolutionLine;
+
+    resetContainer.appendChild(giveUpButton);
+    resetContainer.appendChild(pauseResumeButton);
+    resetContainer.appendChild(resetLineButton);
 });
