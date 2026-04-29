@@ -55,6 +55,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         console.log(`User moved from ${orig} to ${dest}`);
         let moveUci = orig + dest;
         let expectedMove = solutionMoves[0]; // Only check the first move
+        // Handle pawn promotion: append the promotion piece from the expected move
+        if (expectedMove.length === 5 && expectedMove.startsWith(moveUci)) {
+            moveUci += expectedMove[4];
+        }
         console.log(`Expected move: ${expectedMove}, User move: ${moveUci}`);
         if (moveUci === expectedMove) {
             showFeedback("Correct!", true);
