@@ -152,6 +152,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('puzzle-info').innerHTML = `
         <strong>Puzzle ID:</strong> ${puzzle.puzzle_id}<br>
         <strong>Game ID:</strong> ${puzzle.game_id}<br>
+        <strong>Date:</strong> ${puzzle.archive_date || 'N/A'}<br>
         <strong>Classification:</strong> ${puzzle.classification}<br>
         <strong>User move: </strong> ${puzzle.user_move_san || 'N/A'} ${puzzle.user_move_uci ? `(${puzzle.user_move_uci})` : ''}<br>
     `;

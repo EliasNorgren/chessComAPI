@@ -79,7 +79,7 @@ class Game():
         self.black_uuid = game_json["black"]["uuid"]
         
         # Convert UNIX timestamp to datetime object
-        self.archive_date = datetime.datetime.fromtimestamp(game_json["end_time"])
+        self.archive_date = datetime.datetime.fromtimestamp(game_json["end_time"], tz=datetime.timezone.utc).astimezone()
 
         self.user_playing_as_white : bool
         self.user_rating : int

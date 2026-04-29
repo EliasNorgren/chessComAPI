@@ -1,20 +1,7 @@
-import sys
-import os
-
-# root_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)))
-# SQL_path = os.path.join(root_dir, "SQL")
-# database_updater_path = os.path.join(root_dir, "database_updater")
-# database_parser_path = os.path.join(root_dir, "data_parser")
-# sys.path.append(SQL_path)
-# sys.path.append(database_updater_path)
-# sys.path.append(database_parser_path)
-
 from game import Game
 from PGN_to_fen_list import extract_fens
 from database import DataBase
 from api import API
-
-import json
 
 class DataBaseUpdater :
 
@@ -49,7 +36,6 @@ class DataBaseUpdater :
         return inserted_games
 
     def latest_game_date_is_after_month_url(self, latest_game: Game, month_url: str):
-        # https://api.chess.com/pub/player/erik/games/2008/03
         month_url_year = int(month_url.split("/")[-2])
         month_url_month = int(month_url.split("/")[-1])
         if latest_game.archive_date.year > month_url_year :
@@ -57,7 +43,3 @@ class DataBaseUpdater :
         if latest_game.archive_date.year == month_url_year and month_url_month < latest_game.archive_date.month :
             return True
         return False
-
-
-# updateDB("Elias661")
-# updateDB("amraub")

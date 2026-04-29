@@ -386,11 +386,10 @@ class DataBase():
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
         query = '''
-            SELECT * FROM puzzles
-            WHERE solved = 0 AND game_id IN (
-                SELECT id FROM matches WHERE user = ?
-            )
-            ORDER BY id DESC
+            SELECT puzzles.*, matches.archiveDate FROM puzzles
+            JOIN matches ON puzzles.game_id = matches.id
+            WHERE puzzles.solved = 0 AND matches.user = ?
+            ORDER BY puzzles.id DESC
             LIMIT 1
         '''
         cursor.execute(query, (user,))
@@ -410,8 +409,9 @@ class DataBase():
                 user_playing_as_white=bool(result[9]),
                 game_id=result[10],
                 solution_line=result[11],
+                archive_date=result[13],
             )
-            puzzle.solved = bool(result[11])
+            puzzle.solved = bool(result[12])
             return puzzle
         return None
     
