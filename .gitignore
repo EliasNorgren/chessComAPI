@@ -9,3 +9,4 @@
 SQL/regression_parameters.json
 src/builds/**
 SQL/chess_games.db**
+SQL/lichess_db_puzzle.csv

@@ -36,16 +36,15 @@ fi
 echo "Creating DB"
 
 if [ -f "SQL/chess_games.db" ]; then
-    echo "SQL/chess_games.db already exists.. Exiting"
-    exit 1
-fi
-
-python3 SQL/createTable.py
-if [ -f "SQL/chess_games.db" ]; then
-    echo "Database file created SQL/chess_games.db"
+    echo "SQL/chess_games.db already exists.. skipping DB creation"
 else
-    echo "Error: DB file SQL/chess_games.db could not be created." >&2
-    exit 1
+    python3 SQL/createTable.py
+    if [ -f "SQL/chess_games.db" ]; then
+        echo "Database file created SQL/chess_games.db"
+    else
+        echo "Error: DB file SQL/chess_games.db could not be created." >&2
+        exit 1
+    fi
 fi
 
 

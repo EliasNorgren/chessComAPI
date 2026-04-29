@@ -8,6 +8,8 @@ import socket
 from entryCache import EntryCache
 from database import DataBase
 from filter_info import FilterInfo
+from woodpecker_db import WoodpeckerDB
+from woodpecker_csv import sample_puzzles
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
@@ -153,6 +155,89 @@ def get_total_fens_at_depth_2():
     total_fens = parser.get_total_fens_at_depth_2(filter_info, substring)
 
     return jsonify({"total_fens": total_fens})
+
+@app.route('/woodpecker')
+def woodpecker_page():
+    return render_template('woodpecker.html')
+
+@app.route('/woodpecker/puzzle')
+def woodpecker_puzzle_page():
+    return render_template('woodpecker_puzzle.html')
+
+@app.route('/woodpecker/api/create_set', methods=['POST'])
+def woodpecker_create_set():
+    data = request.json or {}
+    user       = data.get('user', '')
+    name       = data.get('name', '')
+    rating_min = int(data.get('rating_min', 1000))
+    rating_max = int(data.get('rating_max', 1500))
+    count      = min(int(data.get('count', 1000)), 2000)
+    if not user or not name:
+        return jsonify({"error": "user and name are required"}), 400
+    puzzles = sample_puzzles(rating_min, rating_max, count)
+    if not puzzles:
+        return jsonify({"error": "No puzzles found in that rating range"}), 404
+    db = WoodpeckerDB()
+    set_id = db.create_set(user, name, rating_min, rating_max, puzzles)
+    return jsonify({"set_id": set_id, "count": len(puzzles)})
+
+@app.route('/woodpecker/api/sets')
+def woodpecker_get_sets():
+    user = request.args.get('user', '')
+    if not user:
+        return jsonify({"error": "user is required"}), 400
+    return jsonify(WoodpeckerDB().get_sets(user))
+
+@app.route('/woodpecker/api/set/<int:set_id>/start', methods=['POST'])
+def woodpecker_start_attempt(set_id):
+    data = request.json or {}
+    user = data.get('user', '')
+    if not user:
+        return jsonify({"error": "user is required"}), 400
+    return jsonify(WoodpeckerDB().get_or_create_attempt(set_id, user))
+
+@app.route('/woodpecker/api/attempt/<int:attempt_id>/next')
+def woodpecker_next_puzzle(attempt_id):
+    set_id = request.args.get('set_id', type=int)
+    if not set_id:
+        return jsonify({"error": "set_id is required"}), 400
+    puzzle = WoodpeckerDB().get_next_puzzle(attempt_id, set_id)
+    if puzzle is None:
+        return jsonify({"done": True})
+    return jsonify(puzzle)
+
+@app.route('/woodpecker/api/attempt/<int:attempt_id>/result', methods=['POST'])
+def woodpecker_puzzle_result(attempt_id):
+    data = request.json or {}
+    set_puzzle_id = data.get('set_puzzle_id')
+    if set_puzzle_id is None:
+        return jsonify({"error": "set_puzzle_id is required"}), 400
+    WoodpeckerDB().submit_puzzle_result(
+        attempt_id, set_puzzle_id,
+        bool(data.get('solved', False)),
+        float(data.get('time_taken_seconds', 0))
+    )
+    return jsonify({"status": "ok"})
+
+@app.route('/woodpecker/api/attempt/<int:attempt_id>/complete', methods=['POST'])
+def woodpecker_complete_attempt(attempt_id):
+    WoodpeckerDB().complete_attempt(attempt_id)
+    return jsonify({"status": "ok"})
+
+@app.route('/woodpecker/api/set/<int:set_id>/stats')
+def woodpecker_set_stats(set_id):
+    return jsonify(WoodpeckerDB().get_set_stats(set_id))
+
+@app.route('/woodpecker/api/set/<int:set_id>', methods=['DELETE'])
+def woodpecker_delete_set(set_id):
+    data = request.json or {}
+    user = data.get('user', '')
+    if not user:
+        return jsonify({"error": "user is required"}), 400
+    deleted = WoodpeckerDB().delete_set(set_id, user)
+    if not deleted:
+        return jsonify({"error": "Set not found or not owned by user"}), 404
+    return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
     import argparse

@@ -47,11 +47,16 @@ spec:
         - name: db
           mountPath: /app/cfg/stockfish_settings.yaml
           subPath: stockfish_settings.yaml
+        - name: lichess-csv
+          mountPath: /app/SQL/lichess_db_puzzle.csv
       volumes:
       - name: db
         hostPath:
           path: /opt/chess-api
           type: Directory
+      - name: lichess-csv
+        hostPath:
+          path: /opt/chess-api/lichess_db_puzzle.csv
 ---
 # Fallback: pinned to coolermaster
 apiVersion: apps/v1
@@ -102,11 +107,16 @@ spec:
         - name: db
           mountPath: /app/cfg/stockfish_settings.yaml
           subPath: stockfish_settings.yaml
+        - name: lichess-csv
+          mountPath: /app/SQL/lichess_db_puzzle.csv
       volumes:
       - name: db
         hostPath:
           path: /opt/chess-api
           type: Directory
+      - name: lichess-csv
+        hostPath:
+          path: /opt/chess-api/lichess_db_puzzle.csv
 ---
 # NodePort 30501 — primary (bolen)
 apiVersion: v1

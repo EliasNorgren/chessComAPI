@@ -69,6 +69,56 @@ CREATE TABLE IF NOT EXISTS puzzles (
 
 ''')
 
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS woodpecker_sets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user TEXT NOT NULL,
+    name TEXT NOT NULL,
+    rating_min INTEGER NOT NULL,
+    rating_max INTEGER NOT NULL,
+    size INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+)
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS woodpecker_set_puzzles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    set_id INTEGER NOT NULL,
+    puzzle_id TEXT NOT NULL,
+    fen TEXT NOT NULL,
+    moves TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    FOREIGN KEY(set_id) REFERENCES woodpecker_sets(id) ON DELETE CASCADE
+)
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS woodpecker_attempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    set_id INTEGER NOT NULL,
+    user TEXT NOT NULL,
+    attempt_number INTEGER NOT NULL,
+    started_at TEXT NOT NULL,
+    completed_at TEXT,
+    duration_seconds INTEGER,
+    FOREIGN KEY(set_id) REFERENCES woodpecker_sets(id) ON DELETE CASCADE
+)
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS woodpecker_puzzle_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    attempt_id INTEGER NOT NULL,
+    set_puzzle_id INTEGER NOT NULL,
+    solved BOOLEAN NOT NULL,
+    time_taken_seconds REAL,
+    FOREIGN KEY(attempt_id) REFERENCES woodpecker_attempts(id) ON DELETE CASCADE,
+    FOREIGN KEY(set_puzzle_id) REFERENCES woodpecker_set_puzzles(id) ON DELETE CASCADE
+)
+''')
+
 # Commit changes and close connection
 conn.commit()
 conn.close()

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Woodpecker — Solve</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.brown.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: #1e1c19;
+            color: #d4d2d0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #game-header {
+            padding: 0.8em 1.5em;
+            text-align: center;
+        }
+
+        .header-title {
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .header-meta {
+            margin-top: 0.3em;
+            font-size: 0.82em;
+            color: #555;
+        }
+
+        .puzzle-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 1.2em;
+            padding: 0 1.2em 2em;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .board-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .chessground_board {
+            width: clamp(280px, 40vw, 560px);
+            height: clamp(280px, 40vw, 560px);
+        }
+
+        #feedback {
+            margin-top: 0.6em;
+            font-size: 1.05em;
+            font-weight: 600;
+            min-height: 1.5em;
+            text-align: center;
+            width: clamp(280px, 40vw, 560px);
+        }
+
+        .nav-btns {
+            display: flex;
+            justify-content: center;
+            gap: 0.4em;
+            margin-top: 0.6em;
+            width: clamp(280px, 40vw, 560px);
+        }
+
+        .nav-btns button {
+            flex: 1;
+            font-size: 0.9em;
+            padding: 0.55em 0;
+            border-radius: 8px;
+            background: #262420;
+            color: #c3c2c1;
+            border: 1px solid #383532;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-family: inherit;
+        }
+
+        .nav-btns button:hover:not(:disabled) { background: #33312e; }
+        .nav-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .info-column {
+            flex: 1;
+            min-width: 0;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9em;
+        }
+
+        .info-card {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .progress-bar-outer {
+            height: 4px;
+            background: #1a1917;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0.75em 1em 0;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            background: #81b64c;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .stat-cell {
+            padding: 0.55em 1em;
+            border-bottom: 1px solid #2e2c29;
+            border-right: 1px solid #2e2c29;
+        }
+
+        .stat-cell:nth-child(even) { border-right: none; }
+        .stat-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+        .stat-label {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: #666;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 0.2em;
+        }
+
+        .stat-value {
+            font-size: 0.92em;
+            color: #c8c6c3;
+            font-weight: 500;
+        }
+
+        /* Completion screen */
+        #completion-screen {
+            display: none;
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .completion-header {
+            padding: 1em 1em 0.6em;
+            border-bottom: 1px solid #2e2c29;
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #81b64c;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .attempt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5em 1em;
+            border-bottom: 1px solid #2e2c29;
+            font-size: 0.88em;
+        }
+
+        .attempt-row:last-child { border-bottom: none; }
+        .attempt-row.current { color: #81b64c; }
+
+        #error-message {
+            text-align: center;
+            font-size: 1.1em;
+            color: #fa412d;
+        }
+
+        @media (max-width: 900px) {
+            .puzzle-layout {
+                flex-direction: column;
+                align-items: center;
+                padding: 0 0.5em 2em;
+            }
+
+            .info-column { max-width: 98vw; width: 98vw; }
+
+            .chessground_board,
+            #feedback,
+            .nav-btns { width: clamp(280px, 94vw, 560px) !important; }
+            .chessground_board { height: clamp(280px, 94vw, 560px) !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-header">
+        <div class="header-title">Woodpecker</div>
+        <div class="header-meta" id="header-meta"></div>
+    </div>
+
+    <div class="puzzle-layout">
+        <div class="board-column">
+            <div class="chessground_board" id="chessground_board"></div>
+            <div id="feedback"></div>
+            <div class="nav-btns" id="btn-row"></div>
+        </div>
+
+        <div class="info-column">
+            <div class="info-card" id="puzzle-info-card">
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="progress-bar" style="width:0%"></div>
+                </div>
+                <div class="stat-grid" id="stat-grid"></div>
+            </div>
+            <div id="completion-screen"></div>
+            <div id="error-message"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chessground.umd.js') }}"></script>
+    <script src="/static/woodpecker_puzzle.js"></script>
+</body>
+</html>
