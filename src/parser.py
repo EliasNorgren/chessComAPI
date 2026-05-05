@@ -342,7 +342,7 @@ class Parser():
             #     print(f"{key} - {game[key]}")
             # break
             sum += 1
-            archive_date = datetime.strptime(game['archiveDate'], '%Y-%m-%d %H:%M:%S')
+            archive_date = datetime.fromisoformat(game['archiveDate'])
             day_of_week = archive_date.weekday()
             stats_per_week_day[index_to_week_day[day_of_week]][self.__winLossOrDraw(game)] += 1
             acc = self.__get_accuracy(game)
@@ -439,7 +439,7 @@ class Parser():
         labels = []
         for game in res :
             
-            archive_date = datetime.strptime(game['archiveDate'], '%Y-%m-%d %H:%M:%S').date().__str__()
+            archive_date = datetime.fromisoformat(game['archiveDate']).date().__str__()
             if archive_date not in stats_per_day.keys() :
                 labels.append(archive_date)
                 stats_per_day[archive_date] = {}

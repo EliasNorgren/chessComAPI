@@ -117,6 +117,10 @@
             <span class="card-icon">⚔️</span>
             <span class="card-label">Play</span>
         </a>
+        <a class="card" id="link-stats" href="/stats">
+            <span class="card-icon">📊</span>
+            <span class="card-label">Insights</span>
+        </a>
     </div>
 
     <script>
@@ -145,6 +149,7 @@
             document.getElementById('link-review').href      = user ? `/review?user=${enc}` : '/review';
             document.getElementById('link-puzzle').href      = user ? `/puzzle?user=${enc}` : '/puzzle';
             document.getElementById('link-woodpecker').href  = user ? `/woodpecker?user=${enc}` : '/woodpecker';
+            document.getElementById('link-stats').href       = user ? `/stats?user=${enc}` : '/stats';
         }
     </script>
 </body>

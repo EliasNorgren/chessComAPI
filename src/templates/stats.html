@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Insights</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: #1e1c19;
+            color: #d4d2d0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0; padding: 0 0 3em;
+        }
+
+        #page-header {
+            padding: 1.1em 1.5em 0.5em;
+            text-align: center;
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #555;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.6em;
+            padding: 0 1.2em 1.2em;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input {
+            background: #1a1917;
+            border: 1px solid #353230;
+            border-radius: 6px;
+            color: #e8e6e3;
+            padding: 0.4em 0.7em;
+            font-size: 0.88em;
+            font-family: inherit;
+            outline: none;
+            width: 160px;
+        }
+
+        .tab-group {
+            display: flex;
+            background: #1a1917;
+            border: 1px solid #353230;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tab-group button {
+            font-family: inherit;
+            border: none;
+            background: transparent;
+            color: #666;
+            padding: 0.4em 0.85em;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+            transition: background 0.12s, color 0.12s;
+        }
+
+        .tab-group button.active {
+            background: #262420;
+            color: #e8e6e3;
+        }
+
+        .tab-group button:hover:not(.active) { color: #999; }
+
+        #load-btn {
+            font-family: inherit;
+            background: #2e4a2e;
+            border: 1px solid #3d6b3d;
+            color: #81b64c;
+            border-radius: 8px;
+            padding: 0.4em 1em;
+            font-size: 0.88em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+
+        #load-btn:hover { background: #354f35; }
+
+        /* Layout */
+        .layout {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.2em;
+        }
+
+        /* Overview chips */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8em;
+            margin-bottom: 1em;
+        }
+
+        .chip {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 12px;
+            padding: 0.9em 1em;
+            text-align: center;
+        }
+
+        .chip-val {
+            font-size: 1.7em;
+            font-weight: 700;
+            color: #e8e6e3;
+            line-height: 1.1;
+        }
+
+        .chip-lbl {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: #555;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-top: 0.3em;
+        }
+
+        /* Card grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1em;
+        }
+
+        .card {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .card.full { grid-column: 1 / -1; }
+
+        .card-header {
+            padding: 0.7em 1em;
+            border-bottom: 1px solid #2e2c29;
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .card-body { padding: 1em; }
+
+        canvas { max-height: 240px; }
+
+        /* Openings table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+
+        th {
+            padding: 0.4em 0.7em;
+            text-align: left;
+            font-size: 0.78em;
+            font-weight: 600;
+            color: #555;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #2e2c29;
+        }
+
+        td { padding: 0.45em 0.7em; border-bottom: 1px solid #222; color: #c8c6c3; }
+        tr:last-child td { border-bottom: none; }
+
+        .wld-bar {
+            display: flex;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #1a1917;
+            width: 80px;
+        }
+
+        .wld-w { background: #81b64c; }
+        .wld-l { background: #fa412d; }
+        .wld-d { background: #555; }
+
+        /* Opponents */
+        .opp-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45em 0;
+            border-bottom: 1px solid #222;
+            font-size: 0.87em;
+        }
+
+        .opp-row:last-child { border-bottom: none; }
+        .opp-name { color: #c8c6c3; }
+        .opp-count {
+            font-size: 0.8em;
+            font-weight: 700;
+            color: #555;
+            background: #1a1917;
+            border-radius: 12px;
+            padding: 0.1em 0.6em;
+        }
+
+        /* Loading / error */
+        #loading, #error-msg {
+            text-align: center;
+            padding: 2em;
+            font-size: 0.9em;
+        }
+
+        #loading { color: #555; }
+        #error-msg { color: #fa412d; display: none; }
+
+        @media (max-width: 700px) {
+            .overview-grid { grid-template-columns: 1fr 1fr; }
+            .card-grid { grid-template-columns: 1fr; }
+            .card.full { grid-column: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div id="page-header">Chess Insights</div>
+
+    <div class="filter-bar">
+        <input id="user-input" type="text" placeholder="Username">
+        <div class="tab-group" id="tc-tabs">
+            <button class="active" data-tc="all">All</button>
+            <button data-tc="bullet">Bullet</button>
+            <button data-tc="blitz">Blitz</button>
+            <button data-tc="rapid">Rapid</button>
+        </div>
+        <button id="load-btn" onclick="loadStats()">Load Stats</button>
+    </div>
+
+    <div class="layout">
+        <div id="loading">Enter a username and click Load Stats.</div>
+        <div id="error-msg"></div>
+
+        <div id="content" style="display:none">
+            <div class="overview-grid" id="overview-grid"></div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-header">Results</div>
+                    <div class="card-body"><canvas id="chart-results"></canvas></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">By Day of Week</div>
+                    <div class="card-body"><canvas id="chart-day"></canvas></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Top Openings</div>
+                    <div class="card-body" id="openings-body"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Most Played Opponents</div>
+                    <div class="card-body" id="opponents-body"></div>
+                </div>
+                <div class="card full">
+                    <div class="card-header">Performance Over Time</div>
+                    <div class="card-body"><canvas id="chart-time" style="max-height:180px"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/stats.js"></script>
+</body>
+</html>

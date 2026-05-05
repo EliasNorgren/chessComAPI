@@ -56,6 +56,38 @@ def get_entry_status():
         return jsonify({"error": "No entry found for the given UUID"}), 404
     return jsonify(entry_copy)
 
+@app.route('/stats')
+def stats_page():
+    return render_template('stats.html')
+
+@app.route('/stats/data')
+def stats_data():
+    user       = request.args.get('user', '')
+    time_class = request.args.get('time_class', '')
+    if not user:
+        return jsonify({"error": "user required"}), 400
+
+    filter_info = FilterInfo(user)
+    if time_class and time_class != 'all':
+        filter_info.time_class = time_class
+
+    parser = Parser()
+    result  = {}
+
+    def safe(fn):
+        try:    return fn()
+        except Exception as e:
+            print(f"stats error: {e}")
+            return None
+
+    result['overview']  = safe(lambda: parser.get_win_percentage_and_accuracy(filter_info))
+    result['by_day']    = safe(lambda: parser.get_wins_by_day_of_week(filter_info))
+    result['openings']  = safe(lambda: parser.get_win_percentage_per_opening(filter_info)[:15])
+    result['opponents'] = safe(lambda: parser.get_most_played_players(filter_info)[:10])
+    result['per_day']   = safe(lambda: parser.get_stats_per_day(filter_info))
+
+    return jsonify(result)
+
 @app.route('/')
 def index():
     return render_template('index.html')
