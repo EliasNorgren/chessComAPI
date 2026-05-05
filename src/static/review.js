@@ -129,6 +129,12 @@ async function loadReviewData() {
                         }
                     }
                 });
+                if (!entries.length) {
+                    document.getElementById('loading-container').style.display = 'none';
+                    document.getElementById('error-message').style.display = 'block';
+                    document.getElementById('error-message').textContent = 'No moves to analyze for this game.';
+                    break;
+                }
                 showMove(0)
                 break
             }
@@ -426,6 +432,7 @@ function renderBoardValue(user_playing_as_white, fen) {
 }
 
 function renderClockTime(clock_time, render_lower_time_control, user_playing_as_white) {
+    if (clock_time == null) return;
     let clock_time_str = clock_time.toString()
     let decimal = ""
     if (clock_time_str.includes('.')) {
@@ -612,7 +619,7 @@ function getColor(classification) {
     };
     if (!colors[classification]) {
         console.warn(`No color defined for classification: ${classification}`);
-        throw new Error(`Unknown classification: ${classification}`);
+        return '#888';
     }
     return colors[classification];
 }
@@ -627,7 +634,7 @@ function getSvg(classification) {
     };
     if (!svgs[classification]) {
         console.warn(`No SVG defined for classification: ${classification}`);
-        throw new Error(`Unknown classification: ${classification}`);
+        return '';
     }
     return svgs[classification];
 }
