@@ -32,7 +32,9 @@ function setupColorUI() {
 }
 
 async function startGame() {
-    currentFen     = startFen;
+    const fenInputVal = document.getElementById('fen-input')?.value.trim();
+    startFen   = fenInputVal || _params.get('fen') || STARTING_FEN;
+    currentFen = startFen;
     gameOver       = false;
     acceptingMoves = false;
     moves          = [];

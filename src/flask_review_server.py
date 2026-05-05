@@ -56,6 +56,10 @@ def get_entry_status():
         return jsonify({"error": "No entry found for the given UUID"}), 404
     return jsonify(entry_copy)
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 @app.route('/review')
 def review_page():
     return render_template('review.html')

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chess</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: #1e1c19;
+            color: #d4d2d0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2em;
+        }
+
+        h1 {
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #555;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .cards {
+            display: flex;
+            gap: 1em;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        a.card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5em;
+            width: 160px;
+            height: 130px;
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            text-decoration: none;
+            color: #c8c6c3;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        a.card:hover {
+            background: #2e2c29;
+            border-color: #4a4744;
+        }
+
+        .card-icon {
+            font-size: 2em;
+        }
+
+        .card-label {
+            font-size: 0.82em;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #888;
+        }
+
+        .user-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6em;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .user-row input {
+            background: #1a1917;
+            border: 1px solid #353230;
+            border-radius: 6px;
+            color: #e8e6e3;
+            padding: 0.35em 0.6em;
+            font-size: 0.9em;
+            font-family: inherit;
+            outline: none;
+            width: 160px;
+        }
+
+        .user-row input:focus { border-color: #555; }
+    </style>
+</head>
+<body>
+    <h1>Chess</h1>
+
+    <div class="user-row">
+        <span>User</span>
+        <input id="user-input" type="text" placeholder="username">
+    </div>
+
+    <div class="cards">
+        <a class="card" id="link-review" href="/review">
+            <span class="card-icon">🔍</span>
+            <span class="card-label">Review</span>
+        </a>
+        <a class="card" id="link-puzzle" href="/puzzle">
+            <span class="card-icon">♟</span>
+            <span class="card-label">User Puzzles</span>
+        </a>
+        <a class="card" id="link-woodpecker" href="/woodpecker">
+            <span class="card-icon">🪶</span>
+            <span class="card-label">Woodpecker</span>
+        </a>
+        <a class="card" id="link-play" href="/play">
+            <span class="card-icon">⚔️</span>
+            <span class="card-label">Play</span>
+        </a>
+    </div>
+
+    <script>
+        const input = document.getElementById('user-input');
+        const saved = new URLSearchParams(window.location.search).get('user') || localStorage.getItem('chess_user') || '';
+        input.value = saved;
+        if (saved) updateLinks(saved);
+
+        input.addEventListener('input', () => {
+            const u = input.value.trim();
+            localStorage.setItem('chess_user', u);
+            updateLinks(u);
+        });
+
+        function updateLinks(user) {
+            const enc = encodeURIComponent(user);
+            document.getElementById('link-review').href      = user ? `/review?user=${enc}` : '/review';
+            document.getElementById('link-puzzle').href      = user ? `/puzzle?user=${enc}` : '/puzzle';
+            document.getElementById('link-woodpecker').href  = user ? `/woodpecker?user=${enc}` : '/woodpecker';
+        }
+    </script>
+</body>
+</html>
