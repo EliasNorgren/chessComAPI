@@ -16,7 +16,7 @@ nohup ./start_review_server.sh -p "$PORT" > server.log 2>&1 &
 echo $! > server.pid
 
 # wait until server responds, but give up after MAX_ATTEMPTS
-MAX_ATTEMPTS=10
+MAX_ATTEMPTS=20
 ATTEMPT=0
 PID=$(cat server.pid)
 URL="http://127.0.0.1:${PORT}/review_data?user=helloyou2g&id=141897647477"
