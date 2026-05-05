@@ -389,7 +389,7 @@ class DataBase():
             SELECT puzzles.*, matches.archiveDate FROM puzzles
             JOIN matches ON puzzles.game_id = matches.id
             WHERE puzzles.solved = 0 AND matches.user = ?
-            ORDER BY puzzles.id DESC
+            ORDER BY matches.archiveDate DESC
             LIMIT 1
         '''
         cursor.execute(query, (user,))
