@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play vs Stockfish</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.brown.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: #1e1c19;
+            color: #d4d2d0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0; padding: 0;
+        }
+
+        #game-header {
+            padding: 0.8em 1.5em;
+            text-align: center;
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .play-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 1.2em;
+            padding: 0 1.2em 2em;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .board-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .opponent-label, .player-label {
+            width: clamp(280px, 40vw, 560px);
+            padding: 0.4em 0;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+
+        .player-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .white-dot { background: #f0ede8; border: 1.5px solid #999; }
+        .black-dot { background: #2a2825; border: 1.5px solid #888; }
+
+        .chessground_board {
+            width: clamp(280px, 40vw, 560px);
+            height: clamp(280px, 40vw, 560px);
+        }
+
+        .info-column {
+            flex: 1;
+            min-width: 0;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9em;
+            padding-top: 2em;
+        }
+
+        .card {
+            background: #262420;
+            border: 1px solid #353230;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 0.7em 1em;
+            border-bottom: 1px solid #2e2c29;
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        #status {
+            padding: 0.7em 1em;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #c8c6c3;
+            min-height: 2.4em;
+        }
+
+        #status.check  { color: #f7c631; }
+        #status.over   { color: #81b64c; }
+        #status.thinking { color: #555; }
+
+        .btn-row {
+            padding: 0.7em 1em;
+            display: flex;
+            gap: 0.5em;
+            border-top: 1px solid #2e2c29;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.85em;
+            padding: 0.45em 0.9em;
+            border: 1px solid #383532;
+            background: #262420;
+            color: #c3c2c1;
+            transition: background 0.15s;
+        }
+        button:hover:not(:disabled) { background: #33312e; }
+        button:disabled { opacity: 0.35; cursor: not-allowed; }
+        button.active {
+            background: #2e4a2e;
+            border-color: #3d6b3d;
+            color: #81b64c;
+        }
+
+        /* Move history */
+        #move-history {
+            max-height: 320px;
+            overflow-y: auto;
+            font-size: 0.88em;
+        }
+
+        .move-pair {
+            display: grid;
+            grid-template-columns: 2em 1fr 1fr;
+            gap: 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .move-pair:last-child { border-bottom: none; }
+
+        .move-num {
+            padding: 0.4em 0.6em;
+            color: #555;
+            font-size: 0.85em;
+            border-right: 1px solid #2e2c29;
+        }
+
+        .move-cell {
+            padding: 0.4em 0.7em;
+            cursor: default;
+            font-family: 'Courier New', monospace;
+        }
+
+        .move-cell:first-of-type { border-right: 1px solid #2e2c29; }
+        .move-cell.engine { color: #8ab4d4; }
+        .move-cell.user   { color: #c8c6c3; }
+
+        @media (max-width: 900px) {
+            .play-layout { flex-direction: column; align-items: center; padding: 0 0.5em 2em; }
+            .info-column { max-width: 98vw; width: 98vw; padding-top: 0; }
+            .chessground_board,
+            .opponent-label, .player-label { width: clamp(280px, 94vw, 560px) !important; }
+            .chessground_board { height: clamp(280px, 94vw, 560px) !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-header">Play vs Stockfish</div>
+
+    <div class="play-layout">
+        <div class="board-column">
+            <div class="opponent-label" id="opponent-label">
+                <div class="player-dot" id="engine-dot"></div>
+                <span>Stockfish</span>
+            </div>
+            <div class="chessground_board" id="chessground_board"></div>
+            <div class="player-label" id="player-label">
+                <div class="player-dot" id="user-dot"></div>
+                <span>You</span>
+            </div>
+        </div>
+
+        <div class="info-column">
+            <div class="card">
+                <div id="status" class="thinking">Setting up…</div>
+                <div class="btn-row">
+                    <button id="btn-white" onclick="newGame('white')">White</button>
+                    <button id="btn-black" onclick="newGame('black')">Black</button>
+                    <button onclick="newGame(currentUserColor)" style="margin-left:auto">New Game</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Moves</div>
+                <div id="move-history"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chessground.umd.js') }}"></script>
+    <script src="/static/play.js"></script>
+</body>
+</html>

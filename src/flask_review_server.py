@@ -156,6 +156,98 @@ def get_total_fens_at_depth_2():
 
     return jsonify({"total_fens": total_fens})
 
+@app.route('/play')
+def play_page():
+    return render_template('play.html')
+
+@app.route('/legal_moves')
+def legal_moves():
+    import chess
+    fen = request.args.get('fen', '')
+    if not fen:
+        return jsonify({"error": "fen required"}), 400
+    try:
+        board = chess.Board(fen)
+    except Exception:
+        return jsonify({"error": "invalid fen"}), 400
+    dests = {}
+    for move in board.legal_moves:
+        o = chess.square_name(move.from_square)
+        d = chess.square_name(move.to_square)
+        dests.setdefault(o, []).append(d)
+    return jsonify({
+        "dests": dests,
+        "turn": "white" if board.turn else "black",
+        "is_check": board.is_check(),
+        "is_game_over": board.is_game_over(),
+    })
+
+@app.route('/play_move', methods=['POST'])
+def play_move():
+    import chess
+    data = request.json or {}
+    fen       = data.get('fen', '')
+    user_move = data.get('move', '')   # empty string = engine moves first
+    if not fen:
+        return jsonify({"error": "fen required"}), 400
+    try:
+        board = chess.Board(fen)
+    except Exception:
+        return jsonify({"error": "invalid fen"}), 400
+
+    after_user_fen = fen
+
+    if user_move:
+        try:
+            uci = chess.Move.from_uci(user_move)
+            if uci not in board.legal_moves:
+                return jsonify({"error": "Illegal move"}), 400
+            san = board.san(uci)
+            board.push(uci)
+            after_user_fen = board.fen()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+    else:
+        san = None
+
+    if board.is_game_over():
+        return jsonify({
+            "after_user_fen": after_user_fen, "user_san": san,
+            "engine_move": None, "engine_san": None,
+            "final_fen": after_user_fen, "game_over": True,
+            "result": board.result(), "is_check": False, "dests": {}
+        })
+
+    analyzer = Analyzer()
+    analyzer.engine.set_fen_position(board.fen())
+    top = analyzer.engine.get_top_moves(1)
+    engine_uci = top[0]['Move'] if top else None
+    engine_san = None
+
+    if engine_uci:
+        emove = chess.Move.from_uci(engine_uci)
+        engine_san = board.san(emove)
+        board.push(emove)
+
+    final_fen  = board.fen()
+    game_over  = board.is_game_over()
+    dests = {}
+    if not game_over:
+        for m in board.legal_moves:
+            o = chess.square_name(m.from_square)
+            d = chess.square_name(m.to_square)
+            dests.setdefault(o, []).append(d)
+
+    return jsonify({
+        "after_user_fen": after_user_fen, "user_san": san,
+        "engine_move": engine_uci,        "engine_san": engine_san,
+        "final_fen":   final_fen,
+        "game_over":   game_over,
+        "result":      board.result() if game_over else None,
+        "is_check":    board.is_check(),
+        "dests":       dests,
+    })
+
 @app.route('/woodpecker')
 def woodpecker_page():
     return render_template('woodpecker.html')
