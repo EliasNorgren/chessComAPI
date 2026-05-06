@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Notation Practice</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='android-chrome-512x512.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.brown.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessground/assets/chessground.cburnett.css') }}">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background: #1e1c19;
+            color: #d4d2d0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #game-header {
+            padding: 1em 1.5em 0.8em;
+            text-align: center;
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #666;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1em;
+            padding: 0 1.2em 2em;
+        }
+
+        .prompt-area {
+            text-align: center;
+        }
+
+        .prompt-label {
+            font-size: 0.78em;
+            font-weight: 700;
+            color: #555;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.3em;
+        }
+
+        #prompt-square {
+            font-size: 3.5em;
+            font-weight: 800;
+            color: #e8e6e3;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            min-width: 2ch;
+        }
+
+        .board-wrapper {
+            position: relative;
+            width: clamp(280px, 70vmin, 560px);
+            height: clamp(280px, 70vmin, 560px);
+        }
+
+        .chessground_board {
+            width: 100%;
+            height: 100%;
+        }
+
+        #click-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+        }
+
+        .click-cell {
+            cursor: pointer;
+            transition: background 0.08s;
+        }
+
+        .click-cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .click-cell.correct {
+            background: rgba(129, 182, 76, 0.55);
+        }
+
+        .click-cell.wrong {
+            background: rgba(250, 65, 45, 0.55);
+        }
+
+        #feedback {
+            font-size: 1.05em;
+            font-weight: 600;
+            min-height: 1.6em;
+            text-align: center;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 2.5em;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.15em;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #c3c2c1;
+        }
+
+        .stat-label {
+            font-size: 0.72em;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #555;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.6em;
+        }
+
+        .controls button {
+            font-size: 0.9em;
+            padding: 0.5em 1.3em;
+            border-radius: 8px;
+            background: #262420;
+            color: #c3c2c1;
+            border: 1px solid #383532;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-family: inherit;
+        }
+
+        .controls button:hover { background: #33312e; }
+    </style>
+</head>
+
+<body>
+    <div id="game-header">Notation Practice</div>
+
+    <div class="layout">
+        <div class="prompt-area">
+            <div class="prompt-label">Find this square</div>
+            <div id="prompt-square">–</div>
+        </div>
+
+        <div class="board-wrapper">
+            <div class="chessground_board" id="chessground_board"></div>
+            <div id="click-overlay"></div>
+        </div>
+
+        <div id="feedback"></div>
+
+        <div class="stats-row">
+            <div class="stat">
+                <div class="stat-value" id="score-correct">0</div>
+                <div class="stat-label">Correct</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="score-total">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="score-streak">0</div>
+                <div class="stat-label">Streak</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="score-best">0</div>
+                <div class="stat-label">Best</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="flip-btn">Flip Board</button>
+            <button id="reset-btn">Reset Score</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chessground.umd.js') }}"></script>
+    <script src="/static/notation_practice.js"></script>
+</body>
+
+</html>

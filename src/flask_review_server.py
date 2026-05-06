@@ -96,6 +96,10 @@ def index():
 def review_page():
     return render_template('review.html')
 
+@app.route('/notation-practice')
+def notation_practice_page():
+    return render_template('notation_practice.html')
+
 @app.route('/board_test')
 def board_test():
     return render_template('board_test.html')
