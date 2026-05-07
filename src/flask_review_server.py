@@ -10,6 +10,7 @@ from database import DataBase
 from filter_info import FilterInfo
 from woodpecker_db import WoodpeckerDB
 from woodpecker_csv import sample_puzzles
+from chess import Board
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
@@ -200,6 +201,23 @@ def get_total_fens_at_depth_2():
 def play_page():
     return render_template('play.html')
 
+@app.route('/eval_fen')
+def eval_fen():
+    import chess
+    fen = request.args.get('fen', '')
+    if not fen:
+        return jsonify({"error": "fen required"}), 400
+    try:
+        chess.Board(fen)
+    except Exception:
+        return jsonify({"error": "invalid fen"}), 400
+    analyzer_obj = Analyzer()
+    analyzer_obj.engine.set_fen_position(fen)
+    top = analyzer_obj.engine.get_top_moves(1)
+    if not top:
+        return jsonify({"centipawns": None, "mate": None})
+    return jsonify({"centipawns": top[0]['Centipawn'], "mate": top[0]['Mate']})
+
 @app.route('/legal_moves')
 def legal_moves():
     import chess
@@ -261,7 +279,11 @@ def play_move():
     analyzer = Analyzer()
     analyzer.engine.set_fen_position(board.fen())
     top = analyzer.engine.get_top_moves(1)
+    print(f"Engine top moves: {top}")
     engine_uci = top[0]['Move'] if top else None
+    engine_centipawns = top[0]['Centipawn'] if top else None
+    engine_mate = top[0]['Mate'] if top else None
+    print(engine_centipawns, " ", engine_mate)
     engine_san = None
 
     if engine_uci:
@@ -286,6 +308,8 @@ def play_move():
         "result":      board.result() if game_over else None,
         "is_check":    board.is_check(),
         "dests":       dests,
+        "engine_centipawns": engine_centipawns,
+        "engine_mate": engine_mate,
     })
 
 @app.route('/woodpecker')
@@ -370,6 +394,16 @@ def woodpecker_delete_set(set_id):
     if not deleted:
         return jsonify({"error": "Set not found or not owned by user"}), 404
     return jsonify({"status": "ok"})
+
+@app.route('/shuffle_fen', methods=['POST'])
+def shuffle_fen():
+    data = request.json or {}
+    fen = data.get('fen', '')
+    if not fen:
+        return jsonify({"error": "fen is required"}), 400
+    
+    shuffled_fen = Parser().shuffle_fen(fen)
+    return jsonify({"fen": shuffled_fen})
 
 if __name__ == '__main__':
     import argparse

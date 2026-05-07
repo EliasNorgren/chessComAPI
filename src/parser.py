@@ -38,6 +38,7 @@ import time
 import json
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import random
 
 class Parser():
 
@@ -844,6 +845,47 @@ class Parser():
         plt.grid(True, alpha=0.3)
         plt.savefig('rating_accuracy_regression.pdf')
         plt.close()
+
+
+    def shuffle_fen(self, fen: str) -> str:
+        board = chess.Board(fen)
+
+        pieces_to_move = list(board.piece_map().items())
+        random.shuffle(pieces_to_move)
+
+        for orig_sq, piece in pieces_to_move:
+            if board.piece_at(orig_sq) != piece:
+                continue
+
+            piece_moved = False
+            target_squares = list(chess.SQUARES)
+            random.shuffle(target_squares)
+
+            for new_sq in target_squares:
+                if new_sq == orig_sq:
+                    continue
+                if board.piece_at(new_sq) is not None:
+                    continue
+                if piece.piece_type == chess.PAWN and chess.square_rank(new_sq) in (0, 7):
+                    continue
+
+                board.remove_piece_at(orig_sq)
+                board.set_piece_at(new_sq, piece)
+
+                if board.is_valid():
+                    piece_moved = True
+                    break
+
+                board.remove_piece_at(new_sq)
+                board.set_piece_at(orig_sq, piece)
+
+            if not piece_moved:
+                print(f"Could not move piece {piece} at {chess.square_name(orig_sq)}")
+
+        return board.fen()
+
+
+
 
 
 # parser = Parser()
