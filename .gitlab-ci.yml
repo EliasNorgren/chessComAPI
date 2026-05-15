@@ -26,15 +26,17 @@ build_and_push:
 
   variables:
     IMAGE_TAG: "registry.eliashouse.ddns.net/root/chesscomapi:latest"
+    DOCKER_DRIVER: overlay2
 
   before_script:
     - docker info
     - echo "$CI_REGISTRY_PASSWORD" | docker login registry.eliashouse.ddns.net -u "$CI_REGISTRY_USER" --password-stdin
+    - docker run --privileged --rm tonistiigi/binfmt --install all
+    - docker buildx create --use --name multiarch
 
   script:
     - echo building image with tag "$IMAGE_TAG"
-    - docker build -t "$IMAGE_TAG" .
-    - docker push "$IMAGE_TAG"
+    - docker buildx build --platform linux/amd64,linux/arm64 -t "$IMAGE_TAG" --push .
 
   only:
     - master
@@ -42,8 +44,20 @@ build_and_push:
 deploy:
   stage: deploy
   script:
-    - kubectl rollout restart deployment/chess-api-primary deployment/chess-api-fallback
-    - kubectl rollout status deployment/chess-api-primary
-    - kubectl rollout status deployment/chess-api-fallback
+    - kubectl create secret docker-registry gitlab-registry
+        -n chess-api
+        --docker-server=registry.eliashouse.ddns.net
+        --docker-username="$CI_REGISTRY_USER"
+        --docker-password="$CI_REGISTRY_PASSWORD"
+        --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl rollout restart -n chess-api
+        deployment/chess-api-primary
+        deployment/chess-api-fallback
+        deployment/chess-api-elias-pc
+        deployment/chess-api-raspberrypi
+    - kubectl rollout status -n chess-api deployment/chess-api-primary
+    - kubectl rollout status -n chess-api deployment/chess-api-fallback
+    - kubectl rollout status -n chess-api deployment/chess-api-elias-pc
+    - kubectl rollout status -n chess-api deployment/chess-api-raspberrypi
   only:
     - master

@@ -1,8 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chess-api
+---
 # Primary: pinned to bolen, will not reschedule if node goes down
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chess-api-primary
+  namespace: chess-api
 spec:
   replicas: 1
   selector:
@@ -37,7 +43,7 @@ spec:
         - containerPort: 5000
         env:
         - name: STOCKFISH_ENGINE_PATH
-          value: src/stockfish-ubuntu-x86-64-avx2
+          value: src/stockfish
         - name: FLASK_PORT
           value: "5000"
         volumeMounts:
@@ -47,6 +53,9 @@ spec:
         - name: db
           mountPath: /app/cfg/stockfish_settings.yaml
           subPath: stockfish_settings.yaml
+        - name: db
+          mountPath: /app/src/stockfish
+          subPath: stockfish
         - name: lichess-csv
           mountPath: /app/SQL/lichess_db_puzzle.csv
       volumes:
@@ -63,6 +72,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chess-api-fallback
+  namespace: chess-api
 spec:
   replicas: 1
   selector:
@@ -97,7 +107,7 @@ spec:
         - containerPort: 5000
         env:
         - name: STOCKFISH_ENGINE_PATH
-          value: src/stockfish-ubuntu-x86-64-avx2
+          value: src/stockfish
         - name: FLASK_PORT
           value: "5000"
         volumeMounts:
@@ -107,6 +117,137 @@ spec:
         - name: db
           mountPath: /app/cfg/stockfish_settings.yaml
           subPath: stockfish_settings.yaml
+        - name: db
+          mountPath: /app/src/stockfish
+          subPath: stockfish
+        - name: lichess-csv
+          mountPath: /app/SQL/lichess_db_puzzle.csv
+      volumes:
+      - name: db
+        hostPath:
+          path: /opt/chess-api
+          type: Directory
+      - name: lichess-csv
+        hostPath:
+          path: /opt/chess-api/lichess_db_puzzle.csv
+---
+# elias-pc: pinned to elias-pc
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess-api-elias-pc
+  namespace: chess-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess-api
+      role: elias-pc
+  template:
+    metadata:
+      labels:
+        app: chess-api
+        role: elias-pc
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - elias-pc
+      imagePullSecrets:
+      - name: gitlab-registry
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
+      containers:
+      - name: chess-api
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: STOCKFISH_ENGINE_PATH
+          value: src/stockfish
+        - name: FLASK_PORT
+          value: "5000"
+        volumeMounts:
+        - name: db
+          mountPath: /app/SQL/chess_games.db
+          subPath: chess_games.db
+        - name: db
+          mountPath: /app/cfg/stockfish_settings.yaml
+          subPath: stockfish_settings.yaml
+        - name: db
+          mountPath: /app/src/stockfish
+          subPath: stockfish
+        - name: lichess-csv
+          mountPath: /app/SQL/lichess_db_puzzle.csv
+      volumes:
+      - name: db
+        hostPath:
+          path: /opt/chess-api
+          type: Directory
+      - name: lichess-csv
+        hostPath:
+          path: /opt/chess-api/lichess_db_puzzle.csv
+---
+# raspberrypi: pinned to raspberrypi
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chess-api-raspberrypi
+  namespace: chess-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chess-api
+      role: raspberrypi
+  template:
+    metadata:
+      labels:
+        app: chess-api
+        role: raspberrypi
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - raspberrypi
+      imagePullSecrets:
+      - name: gitlab-registry
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
+      containers:
+      - name: chess-api
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: STOCKFISH_ENGINE_PATH
+          value: src/stockfish
+        - name: FLASK_PORT
+          value: "5000"
+        volumeMounts:
+        - name: db
+          mountPath: /app/SQL/chess_games.db
+          subPath: chess_games.db
+        - name: db
+          mountPath: /app/cfg/stockfish_settings.yaml
+          subPath: stockfish_settings.yaml
+        - name: db
+          mountPath: /app/src/stockfish
+          subPath: stockfish
         - name: lichess-csv
           mountPath: /app/SQL/lichess_db_puzzle.csv
       volumes:
@@ -123,6 +264,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: chess-api-primary
+  namespace: chess-api
 spec:
   type: NodePort
   selector:
@@ -138,6 +280,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: chess-api-fallback
+  namespace: chess-api
 spec:
   type: NodePort
   selector:
@@ -147,3 +290,48 @@ spec:
   - port: 5000
     targetPort: 5000
     nodePort: 30502
+---
+# NodePort 30503 — elias-pc
+apiVersion: v1
+kind: Service
+metadata:
+  name: chess-api-elias-pc
+  namespace: chess-api
+spec:
+  type: NodePort
+  selector:
+    app: chess-api
+    role: elias-pc
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30503
+---
+# NodePort 30504 — raspberrypi
+apiVersion: v1
+kind: Service
+metadata:
+  name: chess-api-raspberrypi
+  namespace: chess-api
+spec:
+  type: NodePort
+  selector:
+    app: chess-api
+    role: raspberrypi
+  ports:
+  - port: 5000
+    targetPort: 5000
+    nodePort: 30504
+---
+# Headless service that resolves each pod.
+apiVersion: v1
+kind: Service
+metadata:
+  name: chess-api-all
+  namespace: chess-api
+spec:
+  clusterIP: None
+  selector:
+    app: chess-api
+  ports:
+  - port: 5000
