@@ -9,6 +9,9 @@ import yaml
 import sys
 import shutil
 import math
+import socket
+import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class Analyzer:
     def __init__(self, chess_960 : bool = False):
@@ -42,9 +45,7 @@ class Analyzer:
         terminal_columns, terminal_rows = shutil.get_terminal_size()
         print()
         for move, clock_time in move_list:
-            # print(f"Analyzing move {current_move + 1}/{no_moves}: {move} (Clock: {clock_time})")
             current_move += 1
-            # print(f"Terminal size: columns={terminal_columns}, current move={current_move}, no moves={no_moves}")
             percent = f"{(current_move / no_moves) * 100 :.2f}%"
             bars = "█" * int((current_move / no_moves) * (terminal_columns - 10))
             sys.stdout.write(f"\r{'\033[92m'}|{bars}| {percent}")
@@ -94,13 +95,85 @@ class Analyzer:
         print("\033[0m")
         return result
     
-    def analyze_position(self, initial_fen: str, move_list: list) -> dict:
+    def analyze_game_with_k8s(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
+        infos = socket.getaddrinfo('chess-api-all.chess-api.svc.cluster.local', 5000)
+        ips = list({i[4][0] for i in infos})
+
+        starting_fen = chess.Board().fen()
+        chess_board = chess.Board()
+        moves_data = []
+        white_turn = True
+        moves_so_far = []
+        for move, clock_time in move_list:
+            uci_move = chess.Move.from_uci(move)
+            san_move = chess_board.san(uci_move)
+            board_fen_before = chess_board.fen()
+            moves_so_far.append(move)
+            chess_board.push(uci_move)
+            moves_data.append({
+                'starting_fen': starting_fen,
+                'move_list': list(moves_so_far),
+                'fen': board_fen_before,
+                'san': san_move,
+                'uci_move': str(uci_move),
+                'clock_time': clock_time,
+                'board_after': chess_board.fen(),
+            })
+            white_turn = not white_turn
+
+        no_moves = len(moves_data)
+        completed = [0]
+
+        def post_move(index, move_data):
+            ip = ips[index % len(ips)]
+            payload = {'fen': move_data['starting_fen'], 'move_list': move_data['move_list']}
+            resp = requests.post(f'http://{ip}:5000/analyze_move', json=payload, timeout=120)
+            resp.raise_for_status()
+            completed[0] += 1
+            if entryCache and uuid:
+                pct = f"{completed[0] / no_moves * 100:.2f}%"
+                entryCache.set_entry(uuid, f"loading {completed[0]}/{no_moves} ({pct})")
+            return index, resp.json()
+
+        results = [None] * no_moves
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(post_move, i, md): i for i, md in enumerate(moves_data)}
+            for future in as_completed(futures):
+                idx, analysis = future.result()
+                results[idx] = analysis
+
+        output = []
+        for idx, analysis in enumerate(results):
+            md = moves_data[idx]
+            eval_ = analysis.get('evaluation', {})
+            played_line = md['move'] + " - " + eval_['line'] if eval_.get('line') else md['move']
+            output.append({
+                "move": md['san'],
+                "uci_move": md['uci_move'],
+                "evaluation": eval_,
+                "classification": analysis['classification'],
+                "board": md['board_after'],
+                "board_before_move": md['fen'],
+                "score": analysis['score'],
+                "clock_time": md['clock_time'],
+                "best_move": analysis['best_move'],
+                "best_move_uci": analysis['best_move_uci'],
+                "best_line": analysis.get('best_line', ''),
+                "played_line": played_line,
+            })
+        return output
+
+    def analyze_position(self, initial_fen: str, move_list: list, depth: int = None) -> dict:
+        effective_depth = depth if depth is not None else self.engine_depth
         played_move = move_list[-1] if move_list else None
         self.engine.set_fen_position(initial_fen)
         self.engine.make_moves_from_current_position(move_list[:-1])  # Make all moves except the last one to get the correct position before the played move
         fen_after_moves = self.engine.get_fen_position()
         chess_board = chess.Board(fen_after_moves)
+        self.engine.set_depth(effective_depth)
         best_move = self.engine.get_top_moves(1, include_principal_variation=True)
+        self.engine.make_moves_from_current_position([played_move])
+        self.engine.set_depth(effective_depth - 1)
         eval = self.engine.get_evaluation(include_principal_variation=True)
         best_eval_cp = best_move[0]['Centipawn'] if best_move[0]['Centipawn'] is not None else best_move[0]['Mate']
         move_classification, move_score = self.classify_move(best_eval_cp=best_eval_cp,
@@ -110,8 +183,8 @@ class Analyzer:
                                                   best_eval_got_mate=best_move[0]['Mate'] != None,
                                                   played_move_got_mate=eval['type'] == 'mate',
                                                   player_is_white=chess_board.turn == chess.WHITE)
-        best_move_uci = chess.Move.from_uci(best_move[0]['Move']) 
-            
+        best_move_uci = chess.Move.from_uci(best_move[0]['Move'])
+
         entry = {
             "evaluation": eval,
             "classification": move_classification,

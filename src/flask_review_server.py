@@ -166,9 +166,10 @@ def analyze_move():
     analyzer = Analyzer()
     fen = data.get('fen', '')
     move_list = data.get('move_list', [])
+    depth = data.get('depth', None)
     if fen == '' or not move_list:
         return jsonify({"error": "FEN and move_list parameters are required"}), 400
-    result = analyzer.analyze_position(fen, move_list)
+    result = analyzer.analyze_position(fen, move_list, depth)
     if "error" in result:
         return jsonify(result), 400
     return jsonify(result)

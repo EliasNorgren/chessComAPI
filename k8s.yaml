@@ -46,6 +46,8 @@ spec:
           value: src/stockfish
         - name: FLASK_PORT
           value: "5000"
+        - name: RUNNING_IN_K8S
+          value: "true"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
@@ -110,6 +112,8 @@ spec:
           value: src/stockfish
         - name: FLASK_PORT
           value: "5000"
+        - name: RUNNING_IN_K8S
+          value: "true"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
@@ -174,6 +178,8 @@ spec:
           value: src/stockfish
         - name: FLASK_PORT
           value: "5000"
+        - name: RUNNING_IN_K8S
+          value: "true"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
@@ -238,6 +244,8 @@ spec:
           value: src/stockfish
         - name: FLASK_PORT
           value: "5000"
+        - name: RUNNING_IN_K8S
+          value: "true"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db

@@ -37,6 +37,8 @@ import sqlite3
 import time
 import json
 import numpy as np
+
+running_in_k8s = os.getenv("RUNNING_IN_K8S") == "true"
 from sklearn.linear_model import LinearRegression
 import random
 
@@ -541,7 +543,11 @@ class Parser():
         except ValueError:
             print(f"Invalid time control value: {time_control}")
             time_control = 1440  # Default to 24 hours if parsing fails
-        analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
+        if running_in_k8s :
+            analysis = analyzer.analyze_game_with_k8s(moves, user_playing_as_white, entryCache, uuid)
+        else :    
+            analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
+
         white_accuracy, black_accuracy, classification_frequency = self.average_accuracy(analysis)
         user_time, user_total_score, opponent_time, opponent_total_score = self.compute_total_times(analysis, time_control, user_playing_as_white)
         response = {
