@@ -32,8 +32,9 @@ build_and_push:
     - docker info
     - echo "$CI_REGISTRY_PASSWORD" | docker login registry.eliashouse.ddns.net -u "$CI_REGISTRY_USER" --password-stdin
     - docker run --privileged --rm tonistiigi/binfmt --install all
+    - printf '[registry."registry.eliashouse.ddns.net"]\n  http = true\n  insecure = true\n' > /tmp/buildkitd.toml
     - docker buildx rm multiarch 2>/dev/null || true
-    - docker buildx create --name multiarch --driver docker-container --driver-opt network=host
+    - docker buildx create --name multiarch --driver docker-container --driver-opt network=host --config /tmp/buildkitd.toml
     - docker buildx use multiarch
     - docker buildx inspect --bootstrap
 
