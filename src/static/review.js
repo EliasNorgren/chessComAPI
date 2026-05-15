@@ -311,6 +311,10 @@ function showMove(idx) {
                 <div class="stat-label">Score / min</div>
                 <div class="stat-value">${meta.user_score_per_min ?? '–'} · ${meta.opponent_score_per_min ?? '–'}</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-label">Analysis time</div>
+                <div class="stat-value">${entry.time_taken != null ? entry.time_taken + 's' : '–'}</div>
+            </div>
         </div>
     `;
     console.log(entry)

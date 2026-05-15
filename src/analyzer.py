@@ -146,7 +146,7 @@ class Analyzer:
         jq.cleanup(uuid)
 
         output = []
-        for idx, analysis in enumerate(results):
+        for idx, analysis in enumerate(raw_results):
             md = moves_data[idx]
             eval_ = analysis.get('evaluation', {})
             uci = md['move_list'][-1]
@@ -164,10 +164,13 @@ class Analyzer:
                 "best_move_uci": analysis['best_move_uci'],
                 "best_line": analysis.get('best_line', ''),
                 "played_line": played_line,
+                "time_taken": analysis.get('time_taken'),
             })
         return output
 
     def analyze_position(self, initial_fen: str, move_list: list, depth: int = None) -> dict:
+        import time as _time
+        t_start = _time.monotonic()
         effective_depth = depth if depth is not None else self.engine_depth
         played_move = move_list[-1] if move_list else None
         self.engine.set_fen_position(initial_fen)
@@ -197,6 +200,7 @@ class Analyzer:
             "best_move" : best_move,
             "best_move_uci": str(best_move_uci),
             "best_line": best_move[0]['Line'] if 'Line' in best_move[0] else "",
+            "time_taken": round(_time.monotonic() - t_start, 2),
         }
         return entry         
 
