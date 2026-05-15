@@ -44,12 +44,7 @@ build_and_push:
 deploy:
   stage: deploy
   script:
-    - kubectl create secret docker-registry gitlab-registry
-        -n chess-api
-        --docker-server=registry.eliashouse.ddns.net
-        --docker-username="$CI_REGISTRY_USER"
-        --docker-password="$CI_REGISTRY_PASSWORD"
-        --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl create secret docker-registry gitlab-registry -n chess-api --docker-server=registry.eliashouse.ddns.net --docker-username="$REGISTRY_DEPLOY_USER" --docker-password="$REGISTRY_DEPLOY_TOKEN" --dry-run=client -o yaml | kubectl apply -f -
     - |
       for dep in chess-api-primary chess-api-fallback chess-api-elias-pc chess-api-raspberrypi; do
         kubectl set image -n chess-api deployment/$dep chess-api=registry.eliashouse.ddns.net/root/chesscomapi:$CI_COMMIT_SHORT_SHA

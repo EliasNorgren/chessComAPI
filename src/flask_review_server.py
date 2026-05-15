@@ -159,6 +159,23 @@ def get_win_percentage_and_accuracy():
     print(f"Stats for user {user} and FEN {fen}: {stats}")
     return jsonify(stats)
 
+@app.route('/analyze_batch', methods=['POST'])
+def analyze_batch():
+    data = request.json
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    moves = data.get('moves', [])
+    depth = data.get('depth', None)
+    if not moves:
+        return jsonify({"error": "moves list is required"}), 400
+    with analyzer_lock:
+        _analyzer = Analyzer()
+        try:
+            results = [_analyzer.analyze_position(m['fen'], m['move_list'], depth) for m in moves]
+        finally:
+            _analyzer.close_engine()
+    return jsonify(results)
+
 @app.route('/analyze_move', methods=['POST'])
 def analyze_move():
     data = request.json

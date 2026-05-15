@@ -122,31 +122,43 @@ class Analyzer:
             white_turn = not white_turn
 
         no_moves = len(moves_data)
-        completed = [0]
+        n = len(ips)
 
-        def post_move(index, move_data):
-            ip = ips[index % len(ips)]
-            payload = {'fen': move_data['starting_fen'], 'move_list': move_data['move_list']}
-            resp = requests.post(f'http://{ip}:5000/analyze_move', json=payload, timeout=120)
+        # Split moves into N batches, one per pod, preserving order
+        batches = [[] for _ in range(n)]
+        batch_indices = [[] for _ in range(n)]
+        for i, md in enumerate(moves_data):
+            slot = i % n
+            batches[slot].append({'fen': md['starting_fen'], 'move_list': md['move_list']})
+            batch_indices[slot].append(i)
+
+        completed = [0]
+        results = [None] * no_moves
+
+        def post_batch(ip, batch, indices):
+            resp = requests.post(f'http://{ip}:5000/analyze_batch',
+                                 json={'moves': batch}, timeout=600)
             resp.raise_for_status()
-            completed[0] += 1
+            analyses = resp.json()
+            for local_i, global_i in enumerate(indices):
+                results[global_i] = analyses[local_i]
+            completed[0] += len(indices)
             if entryCache and uuid:
                 pct = f"{completed[0] / no_moves * 100:.2f}%"
                 entryCache.set_entry(uuid, f"loading {completed[0]}/{no_moves} ({pct})")
-            return index, resp.json()
 
-        results = [None] * no_moves
-        with ThreadPoolExecutor(max_workers=len(ips)) as executor:
-            futures = {executor.submit(post_move, i, md): i for i, md in enumerate(moves_data)}
+        with ThreadPoolExecutor(max_workers=n) as executor:
+            futures = [executor.submit(post_batch, ips[i], batches[i], batch_indices[i])
+                       for i in range(n) if batches[i]]
             for future in as_completed(futures):
-                idx, analysis = future.result()
-                results[idx] = analysis
+                future.result()
 
         output = []
         for idx, analysis in enumerate(results):
             md = moves_data[idx]
             eval_ = analysis.get('evaluation', {})
-            played_line = md['move'] + " - " + eval_['line'] if eval_.get('line') else md['move']
+            uci = md['move_list'][-1]
+            played_line = uci + " - " + eval_['line'] if eval_.get('line') else uci
             output.append({
                 "move": md['san'],
                 "uci_move": md['uci_move'],
