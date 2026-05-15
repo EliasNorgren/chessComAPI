@@ -37,8 +37,8 @@ spec:
         runAsNonRoot: true
       containers:
       - name: chess-api
-        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
-        imagePullPolicy: Always
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest-placeholder
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
         env:
@@ -103,8 +103,8 @@ spec:
         runAsNonRoot: true
       containers:
       - name: chess-api
-        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
-        imagePullPolicy: Always
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest-placeholder
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
         env:
@@ -169,8 +169,8 @@ spec:
         runAsNonRoot: true
       containers:
       - name: chess-api
-        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
-        imagePullPolicy: Always
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest-placeholder
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
         env:
@@ -235,8 +235,8 @@ spec:
         runAsNonRoot: true
       containers:
       - name: chess-api
-        image: registry.eliashouse.ddns.net/root/chesscomapi:latest
-        imagePullPolicy: Always
+        image: registry.eliashouse.ddns.net/root/chesscomapi:latest-placeholder
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
         env:

@@ -15,21 +15,12 @@ install_everything:
 
 build_and_push:
   stage: build
-  image: docker:latest
-
-  services:
-    - name: docker:dind
-      command:
-        - "--insecure-registry=registry.eliashouse.ddns.net"
-        - "--host=tcp://0.0.0.0:2375"
-        - "--tls=false"
 
   variables:
-    IMAGE_TAG: "registry.eliashouse.ddns.net/root/chesscomapi:latest"
-    DOCKER_DRIVER: overlay2
+    IMAGE_TAG: "registry.eliashouse.ddns.net/root/chesscomapi:$CI_COMMIT_SHORT_SHA"
+    CACHE_TAG: "registry.eliashouse.ddns.net/root/chesscomapi:buildcache"
 
   before_script:
-    - docker info
     - echo "$CI_REGISTRY_PASSWORD" | docker login registry.eliashouse.ddns.net -u "$CI_REGISTRY_USER" --password-stdin
     - docker run --privileged --rm tonistiigi/binfmt --install all
     - printf '[registry."registry.eliashouse.ddns.net"]\n  http = true\n  insecure = true\n' > /tmp/buildkitd.toml
@@ -40,7 +31,12 @@ build_and_push:
 
   script:
     - echo building image with tag "$IMAGE_TAG"
-    - docker buildx build --platform linux/amd64,linux/arm64 -t "$IMAGE_TAG" --push .
+    - docker buildx build
+        --platform linux/amd64,linux/arm64
+        -t "$IMAGE_TAG"
+        --cache-from type=registry,ref="$CACHE_TAG"
+        --cache-to type=registry,ref="$CACHE_TAG",mode=max
+        --push .
 
   only:
     - master
@@ -54,14 +50,14 @@ deploy:
         --docker-username="$CI_REGISTRY_USER"
         --docker-password="$CI_REGISTRY_PASSWORD"
         --dry-run=client -o yaml | kubectl apply -f -
-    - kubectl rollout restart -n chess-api
-        deployment/chess-api-primary
-        deployment/chess-api-fallback
-        deployment/chess-api-elias-pc
-        deployment/chess-api-raspberrypi
-    - kubectl rollout status -n chess-api deployment/chess-api-primary
-    - kubectl rollout status -n chess-api deployment/chess-api-fallback
-    - kubectl rollout status -n chess-api deployment/chess-api-elias-pc
-    - kubectl rollout status -n chess-api deployment/chess-api-raspberrypi
+    - |
+      for dep in chess-api-primary chess-api-fallback chess-api-elias-pc chess-api-raspberrypi; do
+        kubectl set image -n chess-api deployment/$dep chess-api=registry.eliashouse.ddns.net/root/chesscomapi:$CI_COMMIT_SHORT_SHA
+      done
+    - kubectl rollout status -n chess-api deployment/chess-api-primary &
+      kubectl rollout status -n chess-api deployment/chess-api-fallback &
+      kubectl rollout status -n chess-api deployment/chess-api-elias-pc &
+      kubectl rollout status -n chess-api deployment/chess-api-raspberrypi &
+      wait
   only:
     - master
