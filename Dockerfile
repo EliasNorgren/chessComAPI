@@ -19,7 +19,7 @@ RUN rm -rf SQL/chess_games.db
 RUN useradd -u 1001 -m appuser && chown -R appuser /app
 USER appuser
 
-ENV STOCKFISH_ENGINE_PATH=src/stockfish-ubuntu-x86-64-avx2
+ENV STOCKFISH_ENGINE_PATH=src/stockfish
 ENV FLASK_PORT=5000
 
 EXPOSE 5000
