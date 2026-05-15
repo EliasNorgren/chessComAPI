@@ -15,6 +15,8 @@ from chess import Board
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
 entryCache : EntryCache = None
+analyzer : Analyzer = None
+analyzer_lock = threading.Lock()
 
 def calculate_entries(game_id, user, uuid, head_minus):
     print(f"Fetching review data for game ID: {game_id}, user: {user}")
@@ -163,13 +165,13 @@ def analyze_move():
     data = request.json
     if not data:
         return jsonify({"error": "No JSON data provided"}), 400
-    analyzer = Analyzer()
     fen = data.get('fen', '')
     move_list = data.get('move_list', [])
     depth = data.get('depth', None)
     if fen == '' or not move_list:
         return jsonify({"error": "FEN and move_list parameters are required"}), 400
-    result = analyzer.analyze_position(fen, move_list, depth)
+    with analyzer_lock:
+        result = analyzer.analyze_position(fen, move_list, depth)
     if "error" in result:
         return jsonify(result), 400
     return jsonify(result)
@@ -277,9 +279,9 @@ def play_move():
             "result": board.result(), "is_check": False, "dests": {}
         })
 
-    analyzer = Analyzer()
-    analyzer.engine.set_fen_position(board.fen())
-    top = analyzer.engine.get_top_moves(1)
+    with analyzer_lock:
+        analyzer.engine.set_fen_position(board.fen())
+        top = analyzer.engine.get_top_moves(1)
     print(f"Engine top moves: {top}")
     engine_uci = top[0]['Move'] if top else None
     engine_centipawns = top[0]['Centipawn'] if top else None
@@ -416,6 +418,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     entryCache = EntryCache()
+    analyzer = Analyzer()
     # Determine debug mode: CLI flag takes precedence, then FLASK_DEBUG env var
     debug_mode = args.debug or os.environ.get('FLASK_DEBUG', '0') in ('1', 'true', 'True')
     # Determine port: CLI arg takes precedence, then PORT env, then FLASK_PORT, then default 5000

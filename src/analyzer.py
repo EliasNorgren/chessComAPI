@@ -136,7 +136,7 @@ class Analyzer:
             return index, resp.json()
 
         results = [None] * no_moves
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=len(ips)) as executor:
             futures = {executor.submit(post_move, i, md): i for i, md in enumerate(moves_data)}
             for future in as_completed(futures):
                 idx, analysis = future.result()
