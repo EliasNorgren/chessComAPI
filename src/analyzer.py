@@ -96,13 +96,15 @@ class Analyzer:
         return result
     
     def analyze_game_with_k8s(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
+        import job_queue as jq
+
         infos = socket.getaddrinfo('chess-api-all.chess-api.svc.cluster.local', 5000)
         ips = list({i[4][0] for i in infos})
+        my_ip = socket.gethostbyname(socket.gethostname())
 
         starting_fen = chess.Board().fen()
         chess_board = chess.Board()
         moves_data = []
-        white_turn = True
         moves_so_far = []
         for move, clock_time in move_list:
             uci_move = chess.Move.from_uci(move)
@@ -119,39 +121,29 @@ class Analyzer:
                 'clock_time': clock_time,
                 'board_after': chess_board.fen(),
             })
-            white_turn = not white_turn
 
         no_moves = len(moves_data)
-        n = len(ips)
+        jobs = [{'index': i, 'fen': md['starting_fen'], 'move_list': md['move_list']}
+                for i, md in enumerate(moves_data)]
 
-        # Split moves into N batches, one per pod, preserving order
-        batches = [[] for _ in range(n)]
-        batch_indices = [[] for _ in range(n)]
-        for i, md in enumerate(moves_data):
-            slot = i % n
-            batches[slot].append({'fen': md['starting_fen'], 'move_list': md['move_list']})
-            batch_indices[slot].append(i)
+        jq.create_job(uuid, jobs)
+        if entryCache:
+            jq.set_progress_callback(uuid, lambda done: entryCache.set_entry(
+                uuid, f"loading {done}/{no_moves} ({done / no_moves * 100:.2f}%)"))
 
-        completed = [0]
-        results = [None] * no_moves
+        batch_size = max(3, no_moves // (len(ips) * 4))
+        with ThreadPoolExecutor(max_workers=len(ips)) as executor:
+            futures = [executor.submit(requests.post,
+                                       f'http://{ip}:5000/chess_queue/start',
+                                       json={'orchestrator_ip': my_ip, 'job_id': uuid,
+                                             'batch_size': batch_size},
+                                       timeout=10)
+                       for ip in ips]
+            for f in as_completed(futures):
+                f.result()
 
-        def post_batch(ip, batch, indices):
-            resp = requests.post(f'http://{ip}:5000/analyze_batch',
-                                 json={'moves': batch}, timeout=600)
-            resp.raise_for_status()
-            analyses = resp.json()
-            for local_i, global_i in enumerate(indices):
-                results[global_i] = analyses[local_i]
-            completed[0] += len(indices)
-            if entryCache and uuid:
-                pct = f"{completed[0] / no_moves * 100:.2f}%"
-                entryCache.set_entry(uuid, f"loading {completed[0]}/{no_moves} ({pct})")
-
-        with ThreadPoolExecutor(max_workers=n) as executor:
-            futures = [executor.submit(post_batch, ips[i], batches[i], batch_indices[i])
-                       for i in range(n) if batches[i]]
-            for future in as_completed(futures):
-                future.result()
+        raw_results = jq.wait_for_completion(uuid, timeout=600)
+        jq.cleanup(uuid)
 
         output = []
         for idx, analysis in enumerate(results):

@@ -11,6 +11,8 @@ from filter_info import FilterInfo
 from woodpecker_db import WoodpeckerDB
 from woodpecker_csv import sample_puzzles
 from chess import Board
+import job_queue as jq
+import requests
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session
@@ -175,6 +177,48 @@ def analyze_batch():
         finally:
             _analyzer.close_engine()
     return jsonify(results)
+
+@app.route('/chess_queue/next', methods=['GET'])
+def chess_queue_next():
+    job_id = request.args.get('job_id')
+    count = int(request.args.get('count', 5))
+    return jsonify(jq.dequeue(job_id, count))
+
+@app.route('/chess_queue/results', methods=['POST'])
+def chess_queue_results():
+    job_id = request.args.get('job_id')
+    jq.submit_results(job_id, request.json)
+    return jsonify({'ok': True})
+
+@app.route('/chess_queue/start', methods=['POST'])
+def chess_queue_start():
+    data = request.json
+    orchestrator_ip = data['orchestrator_ip']
+    job_id = data['job_id']
+    batch_size = data.get('batch_size', 5)
+
+    def worker_loop():
+        with analyzer_lock:
+            _analyzer = Analyzer()
+            try:
+                while True:
+                    resp = requests.get(f'http://{orchestrator_ip}:5000/chess_queue/next',
+                                        params={'job_id': job_id, 'count': batch_size},
+                                        timeout=10)
+                    jobs = resp.json()
+                    if not jobs:
+                        break
+                    batch_results = []
+                    for job in jobs:
+                        result = _analyzer.analyze_position(job['fen'], job['move_list'])
+                        batch_results.append({'index': job['index'], 'result': result})
+                    requests.post(f'http://{orchestrator_ip}:5000/chess_queue/results',
+                                  params={'job_id': job_id}, json=batch_results, timeout=30)
+            finally:
+                _analyzer.close_engine()
+
+    threading.Thread(target=worker_loop, daemon=True).start()
+    return jsonify({'ok': True})
 
 @app.route('/analyze_move', methods=['POST'])
 def analyze_move():
