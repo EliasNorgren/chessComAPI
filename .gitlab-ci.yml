@@ -32,7 +32,7 @@ build_and_push:
     - docker info
     - echo "$CI_REGISTRY_PASSWORD" | docker login registry.eliashouse.ddns.net -u "$CI_REGISTRY_USER" --password-stdin
     - docker run --privileged --rm tonistiigi/binfmt --install all
-    - docker buildx create --name multiarch --driver docker-container
+    - docker buildx create --name multiarch --driver docker-container --driver-opt network=host
     - docker buildx use multiarch
     - docker buildx inspect --bootstrap
 
