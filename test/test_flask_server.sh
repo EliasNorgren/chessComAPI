@@ -6,7 +6,7 @@ set -euo pipefail
 PORT=5002
 
 # Check that port is free
-if lsof -i:"$PORT" >/dev/null 2>&1; then
+if ss -ltn | grep -q ":$PORT "; then
 	echo "Error: Port $PORT is already in use. Please free it before running"
 	exit 1
 fi
