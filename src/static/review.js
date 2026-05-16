@@ -313,7 +313,7 @@ function showMove(idx) {
             </div>
             <div class="stat-item">
                 <div class="stat-label">Analysis time</div>
-                <div class="stat-value">${entry.time_taken != null ? entry.time_taken + 's' : '–'}</div>
+                <div class="stat-value">${meta.analysis_time_taken != null ? meta.analysis_time_taken + 's' : '–'}</div>
             </div>
         </div>
     `;

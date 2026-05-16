@@ -3,7 +3,6 @@
 from stockfish_fork.stockfish.models import Stockfish
 import os
 import chess
-import chess.svg
 from entryCache import EntryCache
 import yaml
 import sys
@@ -12,6 +11,7 @@ import math
 import socket
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+running_in_k8s = os.getenv("RUNNING_IN_K8S") == "true"
 
 class Analyzer:
     def __init__(self, chess_960 : bool = False):
@@ -35,6 +35,9 @@ class Analyzer:
         print(f"\nLoaded configuration settings: {settings}")
         self.engine : Stockfish = Stockfish(path=stockfish_engine_path, parameters=settings)
         self.engine_depth = 17
+        self.k8s_batch_size = config.get("k8s_batch_size", 3)
+        if running_in_k8s:
+            print(f"Using K8s batch size: {self.k8s_batch_size}")
 
     def analyze_game(self, move_list: list, user_playing_as_white: bool, entryCache: EntryCache, uuid) -> list:
         result = []
@@ -131,12 +134,11 @@ class Analyzer:
             jq.set_progress_callback(uuid, lambda done: entryCache.set_entry(
                 uuid, f"loading {done}/{no_moves} ({done / no_moves * 100:.2f}%)"))
 
-        batch_size = max(3, no_moves // (len(ips) * 4))
         with ThreadPoolExecutor(max_workers=len(ips)) as executor:
             futures = [executor.submit(requests.post,
                                        f'http://{ip}:5000/chess_queue/start',
                                        json={'orchestrator_ip': my_ip, 'job_id': uuid,
-                                             'batch_size': batch_size},
+                                             'batch_size': self.k8s_batch_size},
                                        timeout=10)
                        for ip in ips]
             for f in as_completed(futures):
@@ -164,13 +166,10 @@ class Analyzer:
                 "best_move_uci": analysis['best_move_uci'],
                 "best_line": analysis.get('best_line', ''),
                 "played_line": played_line,
-                "time_taken": analysis.get('time_taken'),
             })
         return output
 
     def analyze_position(self, initial_fen: str, move_list: list, depth: int = None) -> dict:
-        import time as _time
-        t_start = _time.monotonic()
         effective_depth = depth if depth is not None else self.engine_depth
         played_move = move_list[-1] if move_list else None
         self.engine.set_fen_position(initial_fen)
@@ -200,7 +199,7 @@ class Analyzer:
             "best_move" : best_move,
             "best_move_uci": str(best_move_uci),
             "best_line": best_move[0]['Line'] if 'Line' in best_move[0] else "",
-            "time_taken": round(_time.monotonic() - t_start, 2),
+
         }
         return entry         
 

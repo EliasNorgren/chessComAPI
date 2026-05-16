@@ -543,10 +543,12 @@ class Parser():
         except ValueError:
             print(f"Invalid time control value: {time_control}")
             time_control = 1440  # Default to 24 hours if parsing fails
-        if running_in_k8s :
+        _t0 = time.monotonic()
+        if running_in_k8s:
             analysis = analyzer.analyze_game_with_k8s(moves, user_playing_as_white, entryCache, uuid)
-        else :    
+        else:
             analysis = analyzer.analyze_game(moves, user_playing_as_white, entryCache, uuid)
+        analysis_time_taken = round(time.monotonic() - _t0, 1)
 
         white_accuracy, black_accuracy, classification_frequency = self.average_accuracy(analysis)
         user_time, user_total_score, opponent_time, opponent_total_score = self.compute_total_times(analysis, time_control, user_playing_as_white)
@@ -570,7 +572,8 @@ class Parser():
             "user_total_score": user_total_score,
             "opponent_total_score": opponent_total_score,
             "user_score_per_min": 0 if user_time <= 0 else round(user_total_score / (user_time / 60), 2),
-            "opponent_score_per_min": 0 if opponent_time <= 0 else round(opponent_total_score / (opponent_time / 60), 2)
+            "opponent_score_per_min": 0 if opponent_time <= 0 else round(opponent_total_score / (opponent_time / 60), 2),
+            "analysis_time_taken": analysis_time_taken
         }
         database.update_analysis(id, response)
         self.add_puzzles_to_db(response, id, database)

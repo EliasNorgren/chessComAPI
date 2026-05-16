@@ -1,3 +1,5 @@
+k8s_batch_size: 3  # Number of moves per batch sent to each worker pod during parallel analysis
+
 stockfish_settings:
   Debug Log File: ""
   Contempt: 0

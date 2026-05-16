@@ -195,7 +195,7 @@ def chess_queue_start():
     data = request.json
     orchestrator_ip = data['orchestrator_ip']
     job_id = data['job_id']
-    batch_size = data.get('batch_size', 5)
+    batch_size = data.get('batch_size', 3)
 
     def worker_loop():
         with analyzer_lock:
