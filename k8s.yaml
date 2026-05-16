@@ -48,6 +48,8 @@ spec:
           value: "5000"
         - name: RUNNING_IN_K8S
           value: "true"
+        - name: PYTHONUNBUFFERED
+          value: "1"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
@@ -114,6 +116,8 @@ spec:
           value: "5000"
         - name: RUNNING_IN_K8S
           value: "true"
+        - name: PYTHONUNBUFFERED
+          value: "1"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
@@ -180,6 +184,8 @@ spec:
           value: "5000"
         - name: RUNNING_IN_K8S
           value: "true"
+        - name: PYTHONUNBUFFERED
+          value: "1"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
@@ -246,6 +252,8 @@ spec:
           value: "5000"
         - name: RUNNING_IN_K8S
           value: "true"
+        - name: PYTHONUNBUFFERED
+          value: "1"
         volumeMounts:
         - name: db
           mountPath: /app/SQL/chess_games.db
