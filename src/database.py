@@ -104,15 +104,11 @@ class DataBase():
     def get_all_ids(self, filter_info : FilterInfo) :
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
-        if filter_info.user == None :
-            query = f'''
-                SELECT id FROM matches
-            '''
-        else :
-            query = f'''
-                SELECT id FROM matches WHERE user = "{filter_info.user}"
-            '''
-        cursor.execute(query)
+        if filter_info.user is None:
+            query = 'SELECT id FROM matches'
+            cursor.execute(query)
+        else:
+            cursor.execute('SELECT id FROM matches WHERE user = ?', (filter_info.user,))
         results = cursor.fetchall()
         ids = [item[0] for item in results]
         ids_str = ','.join(map(str, ids))
@@ -129,28 +125,28 @@ class DataBase():
         return ids_str
 
     # Deprecated
-    def query(self, query_string: str) -> list[sqlite3.Row]:
+    def query(self, query_string: str, params: tuple = ()) -> list[sqlite3.Row]:
         conn = sqlite3.connect(self.database_file_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         results = None
         try:
-            cursor.execute(query_string)  # Execute the query
-            results = cursor.fetchall()   # Fetch all the results
+            cursor.execute(query_string, params)
+            results = cursor.fetchall()
         except sqlite3.Error as e:
             print(f"Error querying: {e}, {query_string}")
         finally:
-            conn.close()  # Ensure the connection is closed
-            return results  # Return the results
-    
-    def query_games(self, query_string: str) -> list[Game] | None:
+            conn.close()
+            return results
+
+    def query_games(self, query_string: str, params: tuple = ()) -> list[Game] | None:
         conn = sqlite3.connect(self.database_file_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         results = None
         try:
-            cursor.execute(query_string)  # Execute the query
-            results = cursor.fetchall()   # Fetch all the results
+            cursor.execute(query_string, params)
+            results = cursor.fetchall()
         except sqlite3.Error as e:
             print(f"Error querying: {e}, {query_string}")
         finally:
@@ -173,13 +169,10 @@ class DataBase():
         conn = sqlite3.connect(self.database_file_path)
         cursor = conn.cursor()
 
-        # Query to get the latest entry based on archiveDate
-        cursor.execute(f'''
-        SELECT * FROM matches
-        WHERE user = '{user}'
-        ORDER BY archiveDate DESC
-        LIMIT 1
-        ''')
+        cursor.execute(
+            'SELECT * FROM matches WHERE user = ? ORDER BY archiveDate DESC LIMIT 1',
+            (user,)
+        )
 
         # Fetch the result
         latest_entry = cursor.fetchone()

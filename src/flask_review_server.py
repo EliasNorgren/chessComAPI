@@ -10,7 +10,6 @@ from database import DataBase
 from filter_info import FilterInfo
 from woodpecker_db import WoodpeckerDB
 from woodpecker_csv import sample_puzzles
-from chess import Board
 import job_queue as jq
 import requests
 

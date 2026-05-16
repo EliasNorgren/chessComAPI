@@ -90,11 +90,10 @@ class Parser():
     def get_games_against_player(self, filter_info : FilterInfo, user : str):
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
-        res = database.query(f'''
-            SELECT url, user_result 
-            FROM matches
-            WHERE id in ({filtered_ids}) AND opponent_user = '{user}'
-        ''')
+        res = database.query(
+            f'SELECT url, user_result FROM matches WHERE id IN ({filtered_ids}) AND opponent_user = ?',
+            (user,)
+        )
         return [f"{url_list[0]} {url_list[1]}" for url_list in res]
     
     def get_total_fens_at_depth_2(self, filter_info : FilterInfo, sub_string : str):
@@ -190,11 +189,10 @@ class Parser():
     def get_total_fens_substring(self, filter_info : FilterInfo, sub_string : str):
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
-        res = database.query(f'''
-            SELECT url,archivedate,totalFens, user_playing_as_white, user_result
-            FROM matches 
-            WHERE id IN ({filtered_ids}) AND totalFens like '%{sub_string}%';
-        ''')
+        res = database.query(
+            f'SELECT url,archivedate,totalFens, user_playing_as_white, user_result FROM matches WHERE id IN ({filtered_ids}) AND totalFens LIKE ?',
+            (f'%{sub_string}%',)
+        )
         modified_res = []
         for r in res:
             fen_list = r[2].split("&")
@@ -303,12 +301,10 @@ class Parser():
     def get_games_by_eco(self, filter_info : FilterInfo, eco : str):
         database = DataBase()
         filtered_ids = database.get_filtered_ids(filter_info)
-        res = database.query(f'''
-            SELECT url, archivedate, user_result
-            FROM matches
-            WHERE id IN ({filtered_ids}) AND ECO = "{eco}"
-            ORDER BY archivedate
-        ''')      
+        res = database.query(
+            f'SELECT url, archivedate, user_result FROM matches WHERE id IN ({filtered_ids}) AND ECO = ? ORDER BY archivedate',
+            (eco,)
+        )      
         res_dict = {}
         res_dict['games'] = []
         for game in res :
@@ -453,62 +449,20 @@ class Parser():
 
         return stats_per_day
 
-    # def analyze_games(self, filter_info : FilterInfo, reanalyze_analyzed_games : bool):
-    #     database = DataBase()
-    #     filtered_ids = database.get_filtered_ids(filter_info)
-    #     games = database.query(f'''
-    #         SELECT pgn, analysis, id, user_playing_as_white, url
-    #         FROM matches
-    #         WHERE id IN ({filtered_ids})        
-    #     ''')
-
-    #     analyzer = Analyzer()
-    #     no_games = len(games)
-    #     no_analyzed_games = 0
-    #     print(f"Analyzing {no_games} games")
-    #     for game in games:
-    #         id = game['id']
-    #         pgn = game['pgn']
-    #         analysis = game['analysis']
-    #         user_playing_as_white = game['user_playing_as_white']
-    #         if not (analysis is None or reanalyze_analyzed_games):
-    #             print(f"Game with id {id} already analyzed, skipping")
-
-    #             continue
-    #         url = game['url']
-    #         print(f"Analyzing game {url}")
-    #         moves = pgn_to_move_list(pgn)
-    #         analysis = analyzer.analyze_game(moves, user_playing_as_white)
-    #         database.update_analysis(id, analysis)
-    #         no_analyzed_games += 1
-    #         print(f"{(no_analyzed_games / no_games) * 100} % analyzed")
-
     def analyze_games_by_url(self, url : str, user: str, entryCache: EntryCache, uuid : str) -> dict:
         database = DataBase()
         user = user.lower()
+        _select = 'SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated FROM matches'
         if url != None :
-            game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
-                FROM matches
-                WHERE url LIKE '%{url}%' AND user = '{user}'
-            ''')
+            game = database.query(f'{_select} WHERE url LIKE ? AND user = ?', (f'%{url}%', user))
             if game is None or len(game) == 0:
                 print(f"No games found with url {url}, updating database for user {user}")
                 DataBaseUpdater().updateDB(user)
-                game = database.query(f'''
-                    SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
-                    FROM matches
-                    WHERE url LIKE "%{url}%" AND user = "{user}"
-                ''')
+                game = database.query(f'{_select} WHERE url LIKE ? AND user = ?', (f'%{url}%', user))
         else :
             print(f"No url provided, fetching latest game for user {user}")
             DataBaseUpdater().updateDB(user)
-            game = database.query(f'''
-                SELECT pgn, analysis, id, user_playing_as_white, url, opponent_user, opponent_rating, user_rating, archiveDate, time_control, user_result, opponent_result, puzzles_calculated
-                FROM matches
-                WHERE user == "{user}" 
-                ORDER BY archivedate DESC
-            ''')
+            game = database.query(f'{_select} WHERE user = ? ORDER BY archivedate DESC', (user,))
 
         if game is None or len(game) == 0:
             print(f"No games found with url {url} and user {user}")

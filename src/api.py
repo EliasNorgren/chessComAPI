@@ -14,9 +14,10 @@ class API():
             return response.json()["archives"]
         elif response.status_code == 403:
             print(f"Access forbidden: {response.status_code}")
+            exit(0)
         else:
             print(f"Failed to retrieve data: {response.status_code}")        
-
+            exit(0)
 
     def get_games_from_month(self, month_url: str) -> list[dict]:
         headers = {
@@ -27,5 +28,7 @@ class API():
             return response.json()["games"]
         elif response.status_code == 403:
             print(f"Access forbidden: {response.status_code}")
+            exit(0)
         else:
             print(f"Failed to retrieve data: {response.status_code}")
+            exit(0)
